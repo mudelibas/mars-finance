@@ -345,7 +345,8 @@ acEl.style.color='';
 
     document.getElementById('m-dxy').textContent=dxy.toFixed(2);
     const dEl=document.getElementById('m-dxy-change');
-    dEl.textContent=cs(dxyD); dEl.style.color=cc(-dxyD);
+    dEl.textContent = dxyD>0 ? `${cs(dxyD)} · Dolar güçleniyor, gümüş düşebilir.` : dxyD<0 ? `${cs(dxyD)} · Dolar zayıflıyor, gümüş yükselebilir.` : `${cs(dxyD)} · Nötr`;
+    dEl.style.color = dxyD>0 ? 'var(--red)' : dxyD<0 ? 'var(--green)' : 'var(--muted2)';
 
     document.getElementById('m-petrol').textContent=`$${pet.toFixed(1)}`;
     const pEl=document.getElementById('m-petrol-change');
