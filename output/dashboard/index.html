@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mars Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0d1117;
+  --bg2:       #111827;
+  --surface:   #161f2e;
+  --surface2:  #1c2a3a;
+  --border:    #1e3048;
+  --border2:   #243550;
+  --text:      #f0f6fc;
+  --muted:     #7a9ab5;
+  --muted2:    #a0bcd4;
+  --silver:    #dceeff;
+  --gold:      #f0c050;
+  --green:     #3fb68b;
+  --red:       #e05c6a;
+  --yellow:    #d4a843;
+  --blue:      #4a9edd;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:'DM Sans',sans-serif; font-size:13px;
+  min-height:100vh; -webkit-font-smoothing:antialiased;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 90% 0%, rgba(74,158,221,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 70% at 5% 90%, rgba(63,182,139,0.03) 0%, transparent 60%);
+  pointer-events:none; z-index:0;
+}
+.wrap { position:relative; z-index:1; max-width:520px; margin:0 auto; padding:16px 14px 32px; }
+
+header { display:flex; align-items:center; justify-content:space-between; padding:18px 0 14px; border-bottom:1px solid var(--border); margin-bottom:18px; }
+.logo { font-family:'DM Mono',monospace; font-size:18px; font-weight:500; letter-spacing:4px; color:var(--silver); }
+.logo em { color:var(--gold); font-style:normal; }
+.live { display:flex; align-items:center; gap:7px; font-family:'DM Mono',monospace; font-size:11px; color:var(--muted2); letter-spacing:1px; }
+.dot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 2.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.price-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.price-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; position:relative; overflow:hidden; }
+.price-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius:2px 2px 0 0; }
+.price-card.silver::before { background:linear-gradient(90deg, var(--silver), transparent); }
+.price-card.gold::before   { background:linear-gradient(90deg, var(--gold), transparent); }
+.price-card.silver { border-top-color:rgba(220,238,255,0.3); }
+.price-card.gold   { border-top-color:rgba(240,192,80,0.3); }
+
+.pc-label { font-size:9px; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:10px; font-weight:600; }
+.price-card.silver .pc-label { color:var(--silver); }
+.price-card.gold   .pc-label { color:var(--gold); }
+
+.pc-try { font-family:'DM Sans',sans-serif; font-size:36px; font-weight:800; line-height:1; margin-bottom:6px; }
+.pc-try span { font-size:16px; font-weight:400; margin-right:3px; opacity:0.6; }
+.price-card.silver .pc-try { color:var(--silver); }
+.price-card.gold   .pc-try { color:var(--gold); }
+
+.pc-usd { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted2); margin-bottom:10px; }
+.pc-divider { height:1px; background:var(--border); margin-bottom:10px; }
+
+.pc-change { display:inline-flex; align-items:center; gap:5px; font-family:'DM Mono',monospace; font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px; letter-spacing:0.5px; }
+.pc-change.up   { background:#1e8449; color:#fff; }
+.pc-change.down { background:#c0392b; color:#fff; }
+.pc-change.flat { background:rgba(77,100,120,0.3); color:var(--muted2); }
+
+.indicators { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px; }
+.section-title { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; font-weight:500; }
+.ind-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.ind-item { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+.ind-key { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+.ind-desc { font-size:8px; color:var(--muted); opacity:0.6; margin-bottom:6px; font-style:italic; }
+.ind-val { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:var(--text); }
+.ind-sub { font-family:'DM Mono',monospace; font-size:10px; margin-top:3px; }
+
+.performance { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
+.perf-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.perf-rejim { font-size:10px; color:var(--muted2); font-family:'DM Mono',monospace; }
+
+.gauge-wrap { position:relative; margin-bottom:10px; }
+.gauge-track { height:6px; background:var(--border2); border-radius:3px; position:relative; overflow:visible; }
+.gauge-segments { position:absolute; inset:0; display:flex; border-radius:3px; overflow:hidden; }
+.seg-sat  { background:rgba(224,92,106,0.35); flex:0 0 30%; }
+.seg-notr { background:rgba(77,100,120,0.25); flex:0 0 40%; }
+.seg-al   { background:rgba(63,182,139,0.35); flex:1; }
+.gauge-fill { position:absolute; top:0; left:0; height:100%; border-radius:3px; transition:width 1s ease; background:linear-gradient(90deg, var(--red) 0%, var(--yellow) 50%, var(--green) 100%); z-index:1; }
+.gauge-pointer { position:absolute; top:-5px; width:2px; height:16px; background:var(--text); border-radius:1px; transform:translateX(-50%); z-index:2; transition:left 1s ease; box-shadow:0 0 6px rgba(255,255,255,0.4); }
+.gauge-pointer::after { content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); border:4px solid transparent; border-top:5px solid var(--text); }
+.gauge-labels { display:flex; justify-content:space-between; font-size:8px; color:var(--muted); letter-spacing:1px; margin-top:10px; text-transform:uppercase; }
+.perf-status { display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+.status-badge { font-size:10px; font-weight:600; letter-spacing:1.5px; padding:4px 10px; border-radius:5px; text-transform:uppercase; }
+.badge-guclu-al  { background:rgba(63,182,139,0.15); color:var(--green); border:1px solid rgba(63,182,139,0.3); }
+.badge-orta-al   { background:rgba(212,168,67,0.15); color:var(--yellow); border:1px solid rgba(212,168,67,0.3); }
+.badge-riskli-al { background:rgba(224,92,106,0.15); color:var(--red); border:1px solid rgba(224,92,106,0.3); }
+.badge-sessiz    { background:rgba(77,100,120,0.15); color:var(--muted2); border:1px solid rgba(77,100,120,0.3); }
+.badge-satis     { background:rgba(224,92,106,0.2); color:var(--red); border:1px solid rgba(224,92,106,0.4); }
+.perf-pct { font-family:'DM Mono',monospace; font-size:28px; font-weight:500; color:var(--text); }
+
+.skor { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
+.skor-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+.skor-item { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+.skor-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
+.skor-isim { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
+.skor-bar-wrap { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-bottom:7px; }
+.skor-bar { height:100%; border-radius:2px; transition:width 0.8s ease; }
+.bar-g { background:var(--green); } .bar-y { background:var(--yellow); } .bar-r { background:var(--red); }
+.skor-puan { font-family:'DM Mono',monospace; font-size:16px; font-weight:500; }
+.skor-not { font-size:9px; color:var(--muted); line-height:1.5; border-top:1px solid var(--border); padding-top:10px; font-style:italic; text-align:center; }
+
+.log-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
+.log-bos { font-size:11px; color:var(--muted); text-align:center; padding:12px 0; }
+.sinyal-item { padding:10px 0; border-bottom:1px solid var(--border); font-size:11px; line-height:1.6; }
+.sinyal-item:last-child { border-bottom:none; padding-bottom:0; }
+.sinyal-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.sinyal-tip { font-weight:600; font-size:10px; letter-spacing:1px; }
+.tip-al { color:var(--green); } .tip-sat { color:var(--red); } .tip-stop { color:var(--yellow); }
+.sinyal-zaman { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+.sinyal-detay { color:var(--muted2); font-size:10px; }
+.sinyal-kar { font-family:'DM Mono',monospace; font-size:11px; }
+.kar-pos { color:var(--green); } .kar-neg { color:var(--red); }
+.haber-item { padding:10px 0; border-bottom:1px solid var(--border); }
+.haber-item:last-child { border-bottom:none; padding-bottom:0; }
+.haber-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px; }
+.haber-tier { font-size:8px; padding:2px 6px; border-radius:3px; background:rgba(74,158,221,0.1); color:var(--blue); border:1px solid rgba(74,158,221,0.2); letter-spacing:1px; white-space:nowrap; flex-shrink:0; }
+.haber-zaman { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); white-space:nowrap; }
+.haber-baslik { font-size:10px; color:var(--text); line-height:1.5; }
+.haber-ozet { font-size:10px; color:var(--muted2); margin-top:3px; line-height:1.4; }
+
+.refresh-btn { width:100%; padding:11px; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-bottom:20px; }
+.refresh-btn:hover { border-color:var(--silver); color:var(--silver); }
+footer { text-align:center; padding:12px 0; font-size:9px; color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border); }
+.spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--silver); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">MARS<em>.</em>FINANCE</div>
+    <div class="live"><div class="dot"></div><span id="son-guncelleme">--:--</span></div>
+  </header>
+
+  <div class="price-row">
+    <div class="price-card silver">
+      <div class="pc-label">Gümüş</div>
+      <div class="pc-try"><span>₺</span><span id="gumus-tl">--</span></div>
+      <div class="pc-usd" id="gumus-usd">$-- / ons</div>
+      <div class="pc-divider"></div>
+      <div class="pc-change">
+        <span id="gumus-change" style="color:var(--muted2)">--%</span>
+      </div>
+    </div>
+    <div class="price-card gold">
+      <div class="pc-label">Altın</div>
+      <div class="pc-try"><span>₺</span><span id="altin-tl">--</span></div>
+      <div class="pc-usd" id="altin-usd">$-- / ons</div>
+      <div class="pc-divider"></div>
+      <div class="pc-change">
+        <span id="altin-change" style="color:var(--muted2)">--%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="indicators">
+    <div class="section-title">Piyasa Göstergeleri</div>
+    <div class="ind-grid">
+      <div class="ind-item">
+        <div class="ind-key">Korku Endeksi</div>
+        <div class="ind-desc">Piyasa belirsizliği</div>
+        <div class="ind-val" id="m-vix">--</div>
+        <div class="ind-sub" id="m-vix-yorum">--</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-key">Dolar Endeksi</div>
+        <div class="ind-desc">Güçlenirse gümüşe baskı</div>
+        <div class="ind-val" id="m-dxy">--</div>
+        <div class="ind-sub" id="m-dxy-change">--</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-key">Ham Petrol</div>
+        <div class="ind-desc">Düşerse gümüş için olumlu</div>
+        <div class="ind-val" id="m-petrol">--</div>
+        <div class="ind-sub" id="m-petrol-change">--</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-key">ABD 10Y Faiz</div>
+        <div class="ind-desc">Yükselirse gümüşe baskı</div>
+        <div class="ind-val" id="m-faiz">--</div>
+        <div class="ind-sub" id="m-faiz-yorum">--</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="performance">
+    <div class="perf-header">
+      <div class="section-title" style="margin-bottom:0">Piyasa Performansı</div>
+      <div class="perf-rejim" id="perf-rejim">--</div>
+    </div>
+    <div style="margin-top:14px"></div>
+    <div class="gauge-wrap">
+      <div class="gauge-track">
+        <div class="gauge-segments">
+          <div class="seg-sat"></div>
+          <div class="seg-notr"></div>
+          <div class="seg-al"></div>
+        </div>
+        <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
+        <div class="gauge-pointer" id="gauge-pointer" style="left:0%"></div>
+      </div>
+      <div class="gauge-labels">
+        <span style="color:var(--red)">Satım</span>
+        <span>Nötr</span>
+        <span style="color:var(--green)">Alım</span>
+      </div>
+    </div>
+    <div class="perf-status">
+      <span id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</span>
+      <span class="perf-pct" id="perf-pct">--%</span>
+    </div>
+  </div>
+
+  <div class="skor">
+    <div class="section-title">Skor Tablosu</div>
+    <div class="skor-grid" id="skor-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted)"><div class="spinner"></div></div>
+    </div>
+    <div class="skor-not">Bu tablo, 20 kişilik multidisipliner uzman kurulunun dinamik ağırlıklı görüşlerini yansıtmaktadır.</div>
+  </div>
+
+  <div class="log-card">
+    <div class="section-title">Son Sinyaller</div>
+    <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
+  </div>
+
+  <div class="log-card">
+    <div class="section-title">Kritik Haberler</div>
+    <div id="haber-log"><div class="log-bos">Kritik haber bekleniyor...</div></div>
+  </div>
+
+  <button class="refresh-btn" onclick="veriYukle()">↻ &nbsp; Yenile</button>
+  <footer>MARS FINANCE v2.0 &nbsp;·&nbsp; 20 UZMAN &nbsp;·&nbsp; KURUL KARARI</footer>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:5000';
+const MODUL = {
+  teknik:'Teknik Analiz', matematiksel:'Matematiksel', haberler:'Jeopolitik',
+  balina:'Balina Faktörü', panikci:'Panikçi Faktör', risk:'Risk', makro:'Makro Rejim'
+};
+let sinyalLog = [], haberLog = [];
+
+function cc(v) { return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted2)'; }
+function cs(v) { if(v==null) return '--%'; return (v>0?'+':'') + v.toFixed(2) + '%'; }
+
+function skorRenk(p) {
+  if(p>=70) return ['bar-g','var(--green)','✅'];
+  if(p>=50) return ['bar-y','var(--yellow)','⚠️'];
+  return ['bar-r','var(--red)','❌'];
+}
+function badgeSec(g) {
+  if(g>=80) return ['badge-guclu-al','🟢 GÜÇLÜ ALIM'];
+  if(g>=70) return ['badge-orta-al','🟡 ORTA ALIM'];
+  if(g>=60) return ['badge-riskli-al','🔴 RİSKLİ ALIM'];
+  if(g<=30) return ['badge-satis','🔴 SATIŞ BÖLGE'];
+  return ['badge-sessiz','⏸ SİNYAL YOK'];
+}
+
+function skorGridRender(m) {
+  const g = document.getElementById('skor-grid');
+  if(!m) return;
+  g.innerHTML = Object.entries(MODUL).map(([k,isim]) => {
+    const p = m[k]?.puan ?? 50;
+    const [bc,renk,icon] = skorRenk(p);
+    return `<div class="skor-item">
+      <div class="skor-ust"><span class="skor-isim">${isim}</span><span>${icon}</span></div>
+      <div class="skor-bar-wrap"><div class="skor-bar ${bc}" style="width:${p}%"></div></div>
+      <div class="skor-puan" style="color:${renk}">${p.toFixed(0)}</div>
+    </div>`;
+  }).join('');
+}
+
+function sinyalLogRender() {
+  const el = document.getElementById('sinyal-log');
+  if(!sinyalLog.length) { el.innerHTML='<div class="log-bos">Henüz sinyal kaydı yok.</div>'; return; }
+  el.innerHTML = sinyalLog.slice(0,10).map(s => {
+    const tc = s.tip==='ALIM'?'tip-al':s.tip==='SATIS'?'tip-sat':'tip-stop';
+    const te = s.tip==='ALIM'?'⬆ ALIM':s.tip==='SATIS'?'⬇ SATIŞ':'⛔ STOP';
+    const kh = s.kar_yuzde!=null ? `<span class="sinyal-kar ${s.kar_yuzde>=0?'kar-pos':'kar-neg'}">${s.kar_yuzde>=0?'+':''}${s.kar_yuzde.toFixed(1)}%</span>` : '';
+    const hh = s.hedef_tl ? `Hedef ₺${s.hedef_tl.toFixed(2)} · ` : '';
+    return `<div class="sinyal-item">
+      <div class="sinyal-ust"><span class="sinyal-tip ${tc}">${te}</span><span class="sinyal-zaman">${s.tarih||'--'}</span></div>
+      <div class="sinyal-detay">Giriş ₺${s.giris_tl?.toFixed(2)||'--'} · ${hh}${kh}</div>
+    </div>`;
+  }).join('');
+}
+
+function haberLogRender() {
+  const el = document.getElementById('haber-log');
+  if(!haberLog.length) { el.innerHTML='<div class="log-bos">Kritik haber bekleniyor...</div>'; return; }
+  el.innerHTML = haberLog.slice(0,10).map(h =>
+    `<div class="haber-item">
+      <div class="haber-ust"><span class="haber-tier">${h.tier?.toUpperCase()||'T1'}</span><span class="haber-zaman">${h.zaman||'--'}</span></div>
+      <div class="haber-baslik">${h.title}</div>
+      ${h.ozet?`<div class="haber-ozet">${h.ozet}</div>`:''}
+    </div>`
+  ).join('');
+}
+
+async function veriYukle() {
+  document.getElementById('son-guncelleme').textContent='···';
+  try {
+    const r = await fetch(API+'/api/durum');
+    if(!r.ok) throw new Error();
+    const d = await r.json();
+
+    const gt=d.gumus_tl, at=d.altin_tl, gu=d.gumus_usd, au=d.altin_usd;
+    const gd=d.gumus_degisim??0, ad=d.altin_degisim??0;
+
+    document.getElementById('gumus-tl').textContent = gt?gt.toFixed(2):'--';
+    document.getElementById('gumus-usd').textContent = gu?`$${gu.toFixed(2)} / ons`:'$-- / ons';
+    const gcEl=document.getElementById('gumus-change');
+gcEl.textContent= 'GÜNLÜK  ' + cs(gd);
+gcEl.className='pc-change ' + (gd>0?'up':gd<0?'down':'flat');
+gcEl.style.color='';
+
+    document.getElementById('altin-tl').textContent = at?at.toFixed(2):'--';
+    document.getElementById('altin-usd').textContent = au?`$${au.toFixed(2)} / ons`:'$-- / ons';
+    const acEl=document.getElementById('altin-change');
+acEl.textContent='GÜNLÜK  ' + cs(ad);
+acEl.className='pc-change ' + (ad>0?'up':ad<0?'down':'flat');
+acEl.style.color='';
+
+    const vix=d.vix??0, dxy=d.dxy??0, dxyD=d.dxy_degisim??0;
+    const pet=d.petrol??0, petD=d.petrol_degisim??0, faiz=d.faiz??0;
+
+    document.getElementById('m-vix').textContent=vix.toFixed(1);
+    const vyEl=document.getElementById('m-vix-yorum');
+    if(vix>30){vyEl.textContent='Yüksek risk';vyEl.style.color='var(--red)';}
+    else if(vix<15){vyEl.textContent='Düşük korku';vyEl.style.color='var(--green)';}
+    else{vyEl.textContent='Normal';vyEl.style.color='var(--muted2)';}
+
+    document.getElementById('m-dxy').textContent=dxy.toFixed(2);
+    const dEl=document.getElementById('m-dxy-change');
+    dEl.textContent=cs(dxyD); dEl.style.color=cc(-dxyD);
+
+    document.getElementById('m-petrol').textContent=`$${pet.toFixed(1)}`;
+    const pEl=document.getElementById('m-petrol-change');
+    pEl.textContent = petD<-1?`${cs(petD)} · Gümüş için olumlu`: petD>1?`${cs(petD)} · Gümüş için olumsuz`:`${cs(petD)} · Nötr`;
+    pEl.style.color = petD<-1?'var(--green)':petD>1?'var(--red)':'var(--muted2)';
+
+    document.getElementById('m-faiz').textContent=`%${faiz.toFixed(2)}`;
+    const fEl=document.getElementById('m-faiz-yorum');
+    if(faiz>5){fEl.textContent='Yüksek — baskı var';fEl.style.color='var(--red)';}
+    else if(faiz<3){fEl.textContent='Düşük — olumlu';fEl.style.color='var(--green)';}
+    else{fEl.textContent='Normal';fEl.style.color='var(--muted2)';}
+
+    const g=d.kurul_gorusu??0;
+    document.getElementById('gauge-fill').style.width=g+'%';
+    document.getElementById('gauge-pointer').style.left=g+'%';
+    document.getElementById('perf-pct').textContent=`%${g.toFixed(0)}`;
+    document.getElementById('perf-rejim').textContent=d.rejim||'--';
+    const [bcls,bet]=badgeSec(g);
+    const badge=document.getElementById('perf-badge');
+    badge.className='status-badge '+bcls; badge.textContent=bet;
+
+    skorGridRender(d.moduller);
+
+    if(d.sinyal_log?.length) sinyalLog=d.sinyal_log;
+    sinyalLogRender();
+
+    if(d.haberler?.length) {
+      const now=new Date();
+      const z=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+      d.haberler.filter(h=>!haberLog.find(x=>x.title===h.title)).forEach(h=>haberLog.unshift({...h,zaman:z}));
+      if(haberLog.length>50) haberLog=haberLog.slice(0,50);
+    }
+    haberLogRender();
+
+    const now=new Date();
+    document.getElementById('son-guncelleme').textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  } catch(e) {
+    document.getElementById('son-guncelleme').textContent='HATA';
+    console.error(e);
+  }
+}
+
+window.onload=veriYukle;
+setInterval(veriYukle,300000);
+</script>
+</body>
+</html>

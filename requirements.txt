@@ -1,0 +1,13 @@
+requests
+yfinance
+pandas
+numpy
+scipy
+arch
+python-telegram-bot==20.7
+apscheduler
+feedparser
+groq
+python-dotenv
+flask
+flask-cors
