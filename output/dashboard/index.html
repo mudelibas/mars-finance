@@ -350,7 +350,7 @@ acEl.style.color='';
 
     document.getElementById('m-petrol').textContent=`$${pet.toFixed(1)}`;
     const pEl=document.getElementById('m-petrol-change');
-    pEl.textContent = petD<-1?`${cs(petD)} · Gümüşte artış olabilir`: petD>1?`${cs(petD)} · Gümüşte düşüş olabilir`:`${cs(petD)} · Nötr`;
+    pEl.textContent = petD<-1?`${cs(petD)} · Gümüşte artış olabilir.`: petD>1?`${cs(petD)} · Gümüşte düşüş olabilir.`:`${cs(petD)} · Nötr`;
     pEl.style.color = petD<-1?'var(--green)':petD>1?'var(--red)':'var(--muted2)';
 
     document.getElementById('m-faiz').textContent=`%${faiz.toFixed(2)}`;
