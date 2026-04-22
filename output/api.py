@@ -1,10 +1,14 @@
 import json
 import os
 import sys
+import time
 import logging
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime, timezone, timedelta
+
+_cache = {"veri": None, "zaman": 0}
+CACHE_SURE = 30  # saniye
 
 # `python output/api.py` gibi çalıştırmalarda proje kökü sys.path'te olmazsa
 # `core` ve `config` import'ları patlayabiliyor. Bu dosyayı her iki şekilde de
@@ -33,6 +37,9 @@ def _sinyal_log_oku():
 @app.route('/api/durum')
 def durum():
     try:
+        if _cache["veri"] is not None and (time.time() - _cache["zaman"] < CACHE_SURE):
+            return jsonify(_cache["veri"])
+
         config_dict = {
             k: getattr(cfg, k)
             for k in dir(cfg)
@@ -54,7 +61,7 @@ def durum():
 
         haber_modulu = moduller_raw.get("haberler", {})
 
-        return jsonify({
+        veri = {
             "gumus_tl":       gumus_tl,
             "gumus_usd":      moduller_raw.get("teknik", {}).get("fiyat_usd"),
             "gumus_degisim":  ctx.get("gumus_degisim_yuzde", 0),
@@ -75,7 +82,10 @@ def durum():
             "veto":           oylama.get("veto", False),
             "veto_neden":     oylama.get("veto_neden"),
             "guncelleme":     datetime.now(TR).strftime("%H:%M"),
-        })
+        }
+        _cache["veri"] = veri
+        _cache["zaman"] = time.time()
+        return jsonify(veri)
     except Exception as e:
         logger.error(f"API hatası: {e}")
         return jsonify({"hata": str(e)}), 500

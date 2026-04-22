@@ -1,5 +1,5 @@
 import logging
-from config import MODUL_AGIRLIKLARI, GOrus_GUCLU, GORUS_ORTA, GORUS_RISKLI
+import config as cfg
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def hesapla(modul_sonuclari, ctx=None, haber_sonuc=None):
     döner: kurul_gorusu (0-100), sinyal_tipi, detay
     """
     rejim = _rejim_belirle(ctx or {}, haber_sonuc)
-    agirliklar = MODUL_AGIRLIKLARI[rejim]
+    agirliklar = cfg.MODUL_AGIRLIKLARI[rejim]
 
     # ─── VETO KONTROLLARI ───────────────────────────────────
     # 1. Manipülasyon veto
@@ -81,23 +81,39 @@ def hesapla(modul_sonuclari, ctx=None, haber_sonuc=None):
 
     kurul_gorusu = round(toplam_puan, 1)
 
-    # ─── SİNYAL TİPİ ────────────────────────────────────────
-    if kurul_gorusu >= GOrus_GUCLU:
-        sinyal = "GUCLU_AL"
-        ikon   = "🟢"
+    teknik_puan = modul_sonuclari.get("teknik", {}).get("puan", 50) or 0
+    sinyal_uret = (teknik_puan >= 60)
+
+    # ─── ETİKET (Kurul görüşü sadece etiketler) ──────────────
+    esik_guclu = getattr(cfg, "GOrus_GUCLU", 80)
+    esik_normal = getattr(cfg, "GORUS_ORTA", 65)
+    esik_riskli = getattr(cfg, "GORUS_RISKLI", 50)
+
+    if kurul_gorusu >= esik_guclu:
+        sinyal_sinif = "GUCLU_AL"
+        ikon = "🟢"
         etiket = "Güçlü Alım Sinyali"
-    elif kurul_gorusu >= GORUS_ORTA:
-        sinyal = "ORTA_AL"
-        ikon   = "🟡"
-        etiket = "Orta Alım Sinyali"
-    elif kurul_gorusu >= GORUS_RISKLI:
-        sinyal = "RISKLI_AL"
-        ikon   = "🔴"
+    elif kurul_gorusu >= esik_normal:
+        sinyal_sinif = "ORTA_AL"
+        ikon = "🟡"
+        etiket = "Normal Alım Sinyali"
+    elif kurul_gorusu >= esik_riskli:
+        sinyal_sinif = "RISKLI_AL"
+        ikon = "🔴"
         etiket = "Riskli Alım Sinyali"
     else:
+        # Kurul görüşü düşük olsa bile (teknik yeterliyse) sinyal üretim kararı ayrı verilir.
+        sinyal_sinif = "RISKLI_AL"
+        ikon = "🔴"
+        etiket = "Riskli Alım Sinyali"
+
+    # ─── SİNYAL ÜRET (sadece teknik puan ile) ────────────────
+    if not sinyal_uret:
         sinyal = None
-        ikon   = "⏸️"
+        ikon = "⏸️"
         etiket = "Sinyal Yok"
+    else:
+        sinyal = sinyal_sinif
 
     logger.info(
         f"Kurul Görüşü: %{kurul_gorusu} [{etiket}] | Rejim: {rejim}"

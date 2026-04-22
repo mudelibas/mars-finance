@@ -30,8 +30,8 @@ VOLATILITE_BITIS_MINUTE = 20
 
 # ─── KURUL GÖRÜŞÜ EŞİKLERİ ──────────────────────────────────
 GOrus_GUCLU = 80       # %80+ → Güçlü Sinyal 🟢
-GORUS_ORTA = 70        # %70-79 → Orta Sinyal 🟡
-GORUS_RISKLI = 60      # %60-69 → Riskli Sinyal 🔴
+GORUS_ORTA = 65        # %65-79 → Normal Sinyal 🟡
+GORUS_RISKLI = 50      # %50-64 → Riskli Sinyal 🔴
 GORUS_SESSIZ = 0       # <%60 → Sessizlik
 
 # ─── MODÜL AĞIRLIKLARI ───────────────────────────────────────
@@ -72,10 +72,11 @@ RSI_OVERBOUGHT = 68
 COT_MAX_SHORT_RATIO = 65.0
 
 # ─── RİSK PARAMETRELERİ ──────────────────────────────────────
-MAKAS_TL = 0.90
-NET_KAR_HEDEFI_YUZDE = 5.0
-ATR_CARPAN_TP = 3.0
-ATR_CARPAN_SL = 1.5
+MAKAS_TL = 0.75
+NET_KAR_HEDEFI_YUZDE = 1.5
+BSMV_KMV_YUZDE = 0.2      # Giriş + çıkış toplam vergi %0.2
+ATR_CARPAN_TP = 2.5        # 15dk ATR çarpanı hedef için
+ATR_CARPAN_SL = 1.0        # 15dk ATR çarpanı stop için
 KUMULATIF_BILDIRIM_ESIGI = 30.0
 
 # ─── MANİPÜLASYON TESPİTİ ───────────────────────────────────

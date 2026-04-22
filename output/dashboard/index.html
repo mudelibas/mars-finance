@@ -88,9 +88,14 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 .seg-sat  { background:rgba(224,92,106,0.35); flex:0 0 30%; }
 .seg-notr { background:rgba(77,100,120,0.25); flex:0 0 40%; }
 .seg-al   { background:rgba(63,182,139,0.35); flex:1; }
-.gauge-fill { position:absolute; top:0; left:0; height:100%; border-radius:3px; transition:width 1s ease; background:linear-gradient(90deg, var(--red) 0%, var(--yellow) 50%, var(--green) 100%); z-index:1; }
-.gauge-pointer { position:absolute; top:-5px; width:2px; height:16px; background:var(--text); border-radius:1px; transform:translateX(-50%); z-index:2; transition:left 1s ease; box-shadow:0 0 6px rgba(255,255,255,0.4); }
+.gauge-fill { position:absolute; top:0; left:0; height:100%; border-radius:3px; transition:width 0.3s ease; background:linear-gradient(90deg, var(--red) 0%, var(--yellow) 50%, var(--green) 100%); z-index:1; }
+.gauge-pointer { position:absolute; top:-5px; width:2px; height:16px; background:var(--text); border-radius:1px; transform:translateX(-50%); z-index:2; transition:left 0.3s ease; box-shadow:0 0 6px rgba(255,255,255,0.4); }
 .gauge-pointer::after { content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); border:4px solid transparent; border-top:5px solid var(--text); }
+.gauge-pointer.pulse { animation:gaugePulse 0.5s ease-in-out; }
+@keyframes gaugePulse {
+  0%, 100% { background:var(--text); box-shadow:0 0 6px rgba(255,255,255,0.4); }
+  50%      { background:#c9a84c;     box-shadow:0 0 12px rgba(201,168,76,0.75); }
+}
 .gauge-labels { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); letter-spacing:1px; margin-top:10px; text-transform:uppercase; }
 .perf-status { display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
 .status-badge { font-size:10px; font-weight:600; letter-spacing:1.5px; padding:4px 10px; border-radius:5px; text-transform:uppercase; }
@@ -117,7 +122,7 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 .sinyal-item:last-child { border-bottom:none; padding-bottom:0; }
 .sinyal-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
 .sinyal-tip { font-weight:600; font-size:10px; letter-spacing:1px; }
-.tip-al { color:var(--green); } .tip-sat { color:var(--red); } .tip-stop { color:var(--yellow); }
+.tip-al { color:var(--green); } .tip-sat { color:var(--red); }
 .sinyal-zaman { font-family:'Cantarell', sans-serif; font-size:9px; color:var(--muted); }
 .sinyal-detay { color:var(--muted2); font-size:10px; }
 .sinyal-kar { font-family:'Cantarell', sans-serif; font-size:11px; }
@@ -247,6 +252,7 @@ const MODUL = {
   balina:'Balina Faktörü', panikci:'Panikçi Faktör', risk:'Risk', makro:'Makro Rejim'
 };
 let sinyalLog = [], haberLog = [];
+let _lastGauge = null;
 
 function cc(v) { return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted2)'; }
 function cs(v) { if(v==null) return '--%'; return (v>0?'+':'') + v.toFixed(2) + '%'; }
@@ -297,14 +303,26 @@ function skorGridRender(m) {
 function sinyalLogRender() {
   const el = document.getElementById('sinyal-log');
   if(!sinyalLog.length) { el.innerHTML='<div class="log-bos">Henüz sinyal kaydı yok.</div>'; return; }
-  el.innerHTML = sinyalLog.slice(0,10).map(s => {
-    const tc = s.tip==='ALIM'?'tip-al':s.tip==='SATIS'?'tip-sat':'tip-stop';
-    const te = s.tip==='ALIM'?'⬆ ALIM':s.tip==='SATIS'?'⬇ SATIŞ':'⛔ STOP';
-    const kh = s.kar_yuzde!=null ? `<span class="sinyal-kar ${s.kar_yuzde>=0?'kar-pos':'kar-neg'}">${s.kar_yuzde>=0?'+':''}${s.kar_yuzde.toFixed(1)}%</span>` : '';
-    const hh = s.hedef_tl ? `Hedef ₺${s.hedef_tl.toFixed(2)} · ` : '';
+  const items = sinyalLog.filter(s => s.tip !== 'STOP').slice(0,10);
+  if(!items.length) { el.innerHTML='<div class="log-bos">Henüz sinyal kaydı yok.</div>'; return; }
+  el.innerHTML = items.map(s => {
+    const tarih = s.tarih || '--';
+    const giris = s.giris_tl!=null ? `₺${Number(s.giris_tl).toFixed(2)}` : '₺--';
+    const hedef = s.hedef_tl!=null ? `₺${Number(s.hedef_tl).toFixed(2)}` : '₺--';
+    const cikis = s.cikis_tl!=null ? `₺${Number(s.cikis_tl).toFixed(2)}` : '₺--';
+    const kar = s.kar_yuzde!=null ? `${Number(s.kar_yuzde)>=0?'+':''}${Number(s.kar_yuzde).toFixed(1)}%` : '--';
+
+    if(s.tip === 'ALIM') {
+      return `<div class="sinyal-item">
+        <div class="sinyal-ust"><span class="sinyal-tip tip-al">⬆ ALIM</span><span class="sinyal-zaman">${tarih}</span></div>
+        <div class="sinyal-detay">Giriş ${giris} · Hedef ${hedef} · Hedef: net +%1.5</div>
+      </div>`;
+    }
+
+    // SATIS
     return `<div class="sinyal-item">
-      <div class="sinyal-ust"><span class="sinyal-tip ${tc}">${te}</span><span class="sinyal-zaman">${s.tarih||'--'}</span></div>
-      <div class="sinyal-detay">Giriş ₺${s.giris_tl?.toFixed(2)||'--'} · ${hh}${kh}</div>
+      <div class="sinyal-ust"><span class="sinyal-tip tip-sat">⬇ SATIŞ</span><span class="sinyal-zaman">${tarih}</span></div>
+      <div class="sinyal-detay">Giriş ${giris} · Çıkış ${cikis} · <span class="sinyal-kar kar-pos">${kar}</span></div>
     </div>`;
   }).join('');
 }
@@ -382,8 +400,21 @@ acEl.style.color='';
     );
 
     const g=d.kurul_gorusu??0;
-    document.getElementById('gauge-fill').style.width=g+'%';
-    document.getElementById('gauge-pointer').style.left=g+'%';
+    const gFill = document.getElementById('gauge-fill');
+    const gPtr = document.getElementById('gauge-pointer');
+    const newGauge = Number(g);
+
+    if(_lastGauge === null || newGauge !== _lastGauge) {
+      gFill.style.width=newGauge+'%';
+      gPtr.style.left=newGauge+'%';
+
+      if(_lastGauge !== null && Math.abs(newGauge - _lastGauge) >= 5) {
+        gPtr.classList.remove('pulse');
+        void gPtr.offsetWidth;
+        gPtr.classList.add('pulse');
+      }
+      _lastGauge = newGauge;
+    }
     document.getElementById('perf-pct').textContent=`%${g.toFixed(0)}`;
     const [bcls,bet]=badgeSec(g);
     const badge=document.getElementById('perf-badge');
@@ -411,7 +442,7 @@ acEl.style.color='';
 }
 
 window.onload=veriYukle;
-setInterval(veriYukle,300000);
+setInterval(veriYukle,30000);
 </script>
 </body>
 </html>

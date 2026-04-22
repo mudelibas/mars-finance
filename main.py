@@ -6,7 +6,7 @@ import threading
 from datetime import datetime, timezone, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Bot
-from core.signal_engine import sinyal_uret, durum_analizi_calistir
+from core.signal_engine import sinyal_uret, durum_analizi_calistir, build_hedef_mesaji
 from filters.calendar import kilit_koy
 from output.api import flask_baslat
 import config as cfg
@@ -57,19 +57,23 @@ def pozisyon_oku():
     return None
 
 def sinyal_logla(tip, giris_tl, cikis_tl=None, kar_yuzde=None,
+                 giris_tarihi=None,
                  hedef_tl=None, stop_tl=None, kurul_gorusu=None):
     log = []
     if os.path.exists(LOG_DOSYA):
         with open(LOG_DOSYA) as f:
             log = json.load(f)
+    if giris_tarihi is None and tip == "ALIM":
+        giris_tarihi = datetime.now(TR).strftime("%Y-%m-%d %H:%M")
     log.append({
-        "tip":          tip,
-        "tarih":        datetime.now(TR).strftime("%Y-%m-%d %H:%M"),
-        "giris_tl":     giris_tl,
-        "cikis_tl":     cikis_tl,
-        "hedef_tl":     hedef_tl,
-        "stop_tl":      stop_tl,
-        "kar_yuzde":    kar_yuzde,
+        "tip": tip,
+        "tarih": datetime.now(TR).strftime("%Y-%m-%d %H:%M"),
+        "giris_tarihi": giris_tarihi,
+        "giris_tl": giris_tl,
+        "cikis_tl": cikis_tl,
+        "hedef_tl": hedef_tl,
+        "stop_tl": stop_tl,
+        "kar_yuzde": kar_yuzde,
         "kurul_gorusu": kurul_gorusu,
     })
     with open(LOG_DOSYA, "w") as f:
@@ -218,8 +222,8 @@ async def fiyat_takip_job():
 
         giris_tl = pozisyon["giris_tl"]
         hedef_tl = pozisyon["hedef_tl"]
-        stop_tl  = pozisyon.get("stop_tl")
         mesaj_id = pozisyon["mesaj_id"]
+        giris_tarihi = pozisyon.get("tarih")
         kar_yuzde = ((price_tl - giris_tl) / giris_tl) * 100
 
         logger.info(f"Pozisyon: ₺{giris_tl:.2f} → ₺{price_tl:.2f} (%{kar_yuzde:.2f})")
@@ -228,14 +232,8 @@ async def fiyat_takip_job():
 
         # Hedef vuruldu
         if price_tl >= hedef_tl:
-            net_kar = ((price_tl - giris_tl - cfg.MAKAS_TL) / giris_tl) * 100
-            mesaj = (
-                f"🎉 Müjde! Kârdasın...\n\n"
-                f"Giriş: ₺{giris_tl:.2f} → Şu an: ₺{price_tl:.2f}\n"
-                f"Net kâr: +%{net_kar:.1f}\n\n"
-                f"_Nefsinin tamahkarlığından korunabilmiş kimseler, "
-                f"işte onlar saadete erenlerdir. — Haşr 9_"
-            )
+            conf = config_dict()
+            mesaj, net_kar = build_hedef_mesaji(giris_tarihi, giris_tl, price_tl, conf)
             await bot.send_message(
                 chat_id=cfg.TELEGRAM_GROUP_ID,
                 text=mesaj,
@@ -243,7 +241,8 @@ async def fiyat_takip_job():
                 parse_mode="Markdown"
             )
             sinyal_logla("SATIS", giris_tl=giris_tl,
-                         cikis_tl=price_tl, kar_yuzde=net_kar)
+                         cikis_tl=price_tl, kar_yuzde=net_kar,
+                         giris_tarihi=giris_tarihi)
             perf = performans_guncelle(net_kar)
             if (perf["toplam_kar"] >= cfg.KUMULATIF_BILDIRIM_ESIGI
                     and not perf["bildirim"]):
@@ -255,25 +254,6 @@ async def fiyat_takip_job():
                 perf["bildirim"] = True
                 with open(PERFORMANS_DOSYA, "w") as f:
                     json.dump(perf, f)
-            pozisyon_sil()
-
-        # Stop vuruldu
-        elif stop_tl and price_tl <= stop_tl:
-            zarar = ((price_tl - giris_tl) / giris_tl) * 100
-            mesaj = (
-                f"🛑 Stop-Loss Tetiklendi\n\n"
-                f"Giriş: ₺{giris_tl:.2f} → Çıkış: ₺{price_tl:.2f}\n"
-                f"Zarar: %{zarar:.1f}\n\n"
-                f"_Zararın neresinden dönülse kârdır._"
-            )
-            await bot.send_message(
-                chat_id=cfg.TELEGRAM_GROUP_ID,
-                text=mesaj,
-                reply_to_message_id=mesaj_id,
-                parse_mode="Markdown"
-            )
-            sinyal_logla("STOP", giris_tl=giris_tl,
-                         cikis_tl=price_tl, kar_yuzde=zarar)
             pozisyon_sil()
 
     except Exception as e:

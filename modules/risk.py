@@ -52,11 +52,22 @@ def hesapla_stop_tp(fiyat_tl, atr_usd, usd_try, config):
         return None, None
 
     atr_tl = (atr_usd / 31.1035) * usd_try
-    makas   = config.get("MAKAS_TL", 0.90)
-    tp_carp = config.get("ATR_CARPAN_TP", 3.0)
-    sl_carp = config.get("ATR_CARPAN_SL", 1.5)
+    makas = config.get("MAKAS_TL", 0.75)
+    bsmv = config.get("BSMV_KMV_YUZDE", 0.2) / 100
+    net_kar = config.get("NET_KAR_HEDEFI_YUZDE", 1.5) / 100
+    tp_carp = config.get("ATR_CARPAN_TP", 2.5)
+    sl_carp = config.get("ATR_CARPAN_SL", 1.0)
 
-    tp_tl = fiyat_tl + makas + (atr_tl * tp_carp)
+    # Gerçek giriş maliyeti
+    giris_maliyeti = fiyat_tl + makas + (fiyat_tl * bsmv / 2)
+
+    # Brüt hedef: net %1.5 + çıkış vergisi
+    tp_tl = giris_maliyeti * (1 + net_kar) * (1 + bsmv / 2)
+
+    # ATR bazlı minimum kontrol
+    tp_atr = fiyat_tl + (atr_tl * tp_carp)
+    tp_tl = max(tp_tl, tp_atr)
+
     sl_tl = fiyat_tl - (atr_tl * sl_carp)
 
     return round(tp_tl, 2), round(sl_tl, 2)

@@ -246,6 +246,32 @@ def _sinyal_mesaji_formatla(oylama, modüller, fiyat_tl, altin_tl,
         f"_Yatırım tavsiyesi değildir. En doğrusunu Allah bilir._"
     )
 
+def build_hedef_mesaji(giris_tarihi, giris_tl, mevcut_tl, config):
+    """
+    Hedefe ulaşıldığında Telegram mesajı ve net kâr yüzdesi üretir.
+
+    Parametreler:
+    - giris_tarihi: string (ör. "2026-04-22 12:34")
+    - giris_tl: giriş fiyatı (TL/gram)
+    - mevcut_tl: anlık fiyat (TL/gram)
+    - config: config dict
+    """
+    makas = config.get("MAKAS_TL", 0.75)
+    bsmv = config.get("BSMV_KMV_YUZDE", 0.2) / 100  # toplam (giriş+çıkış)
+
+    giris_maliyeti = giris_tl + makas + (giris_tl * bsmv / 2)
+    net_cikis = mevcut_tl - (mevcut_tl * bsmv / 2)
+    net_kar_yuzde = ((net_cikis - giris_maliyeti) / giris_maliyeti) * 100 if giris_maliyeti else 0
+
+    mesaj = (
+        f"🎯 Hedef Görüldü\n\n"
+        f"Giriş ({giris_tarihi or '--'}): ₺{giris_tl:.2f} → Şu an: ₺{mevcut_tl:.2f}\n"
+        f"Net kâr: +%{net_kar_yuzde:.1f}\n\n"
+        f"_Nefsinin tamahkarlığından korunabilmiş kimseler, "
+        f"işte onlar saadete erenlerdir. — Haşr 9_"
+    )
+    return mesaj, net_kar_yuzde
+
 def durum_analizi_calistir(config):
     """Sinyal yokken sabah/periyodik durum özeti."""
     sonuc = tam_analiz_calistir(config)

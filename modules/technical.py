@@ -1,147 +1,217 @@
 import logging
-import pandas as pd
+from datetime import datetime, timezone, time
+
 import numpy as np
+import pandas as pd
+
 from core.data_engine import get_silver_data
 
 logger = logging.getLogger(__name__)
 
-def _rsi(close, period=14):
+
+# ──────────────────────────────────────────────────────────────
+# Indikatörler (pandas_ta YOK)
+# ──────────────────────────────────────────────────────────────
+
+def _ema(series: pd.Series, span: int) -> pd.Series:
+    return series.ewm(span=span, adjust=False, min_periods=span).mean()
+
+
+def _sma(series: pd.Series, period: int) -> pd.Series:
+    return series.rolling(window=period, min_periods=period).mean()
+
+
+def _rsi(close: pd.Series, period: int = 14) -> pd.Series:
     delta = close.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(com=period-1, min_periods=period).mean()
-    avg_loss = loss.ewm(com=period-1, min_periods=period).mean()
-    rs = avg_gain / avg_loss
+    gain = delta.where(delta > 0, 0.0)
+    loss = (-delta).where(delta < 0, 0.0)
+    avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
+    avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
+    rs = avg_gain / avg_loss.replace(0, np.nan)
     return 100 - (100 / (1 + rs))
 
-def _macd(close, fast=12, slow=26, signal=9):
-    ema_fast = close.ewm(span=fast, adjust=False).mean()
-    ema_slow = close.ewm(span=slow, adjust=False).mean()
+
+def _macd_hist(close: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> pd.Series:
+    ema_fast = _ema(close, fast)
+    ema_slow = _ema(close, slow)
     macd = ema_fast - ema_slow
-    sig  = macd.ewm(span=signal, adjust=False).mean()
-    return macd, sig, macd - sig
+    sig = _ema(macd, signal)
+    return macd - sig
 
-def _sma(series, period):
-    return series.rolling(window=period).mean()
 
-def _atr(high, low, close, period=14):
-    tr = pd.concat([
-        high - low,
-        (high - close.shift()).abs(),
-        (low  - close.shift()).abs()
-    ], axis=1).max(axis=1)
-    return tr.rolling(period).mean()
+def _atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    high = df["High"].astype(float)
+    low = df["Low"].astype(float)
+    close = df["Close"].astype(float)
+    prev_close = close.shift(1)
+    tr = pd.concat(
+        [
+            (high - low),
+            (high - prev_close).abs(),
+            (low - prev_close).abs(),
+        ],
+        axis=1,
+    ).max(axis=1)
+    return tr.rolling(window=period, min_periods=period).mean()
 
-def _bollinger(close, period=20, std=2):
-    mid   = _sma(close, period)
-    sigma = close.rolling(period).std()
-    upper = mid + std * sigma
-    lower = mid - std * sigma
-    return upper, mid, lower, (upper - lower) / mid
 
-def _hesapla(df):
-    if len(df) < 50:
-        raise ValueError("Yetersiz veri")
-    close  = df["Close"].squeeze()
-    high   = df["High"].squeeze()
-    low    = df["Low"].squeeze()
-    volume = df["Volume"].squeeze()
-    df = df.copy()
-    df["RSI"] = _rsi(close)
-    df["MACD"], df["MACD_SIG"], df["MACD_HIST"] = _macd(close)
-    df["MA20"]  = _sma(close, 20)
-    df["MA50"]  = _sma(close, 50)
-    df["MA200"] = _sma(close, 200)
-    df["ATR"]   = _atr(high, low, close)
-    df["VOL_MA20"] = _sma(volume, 20)
-    df["BB_UPPER"], df["BB_MID"], df["BB_LOWER"], df["BB_WIDTH"] = _bollinger(close)
-    return df.dropna()
+def _vwap_intraday(df: pd.DataFrame) -> pd.Series:
+    """
+    Gün içi kümülatif VWAP:
+    sum(typical_price * volume) / sum(volume), her gün sıfırlanır.
+    """
+    if "Volume" not in df.columns:
+        return pd.Series(index=df.index, dtype=float)
 
-def _sinyal_puan(df, config):
-    latest = df.iloc[-1]
-    prev   = df.iloc[-2]
-    prev2  = df.iloc[-3] if len(df) >= 3 else prev
-    rsi_oversold   = config.get("RSI_OVERSOLD", 35)
-    rsi_overbought = config.get("RSI_OVERBOUGHT", 68)
-    puan = 0
-    detay = {}
+    tp = (df["High"].astype(float) + df["Low"].astype(float) + df["Close"].astype(float)) / 3.0
+    vol = df["Volume"].astype(float).clip(lower=0)
 
-    rsi_donus = prev["RSI"] < rsi_oversold and latest["RSI"] >= rsi_oversold
-    if rsi_donus:
-        puan += 25; detay["rsi"] = f"RSI dip dönüşü ({latest['RSI']:.1f})"
-    elif latest["RSI"] < rsi_oversold:
-        puan += 10; detay["rsi"] = f"RSI aşırı satım ({latest['RSI']:.1f})"
-    elif latest["RSI"] > rsi_overbought:
-        puan -= 20; detay["rsi"] = f"RSI aşırı alım ({latest['RSI']:.1f})"
+    idx = df.index
+    if getattr(idx, "tz", None) is None:
+        days = idx.normalize()
     else:
-        detay["rsi"] = f"RSI nötr ({latest['RSI']:.1f})"
+        days = idx.tz_convert(timezone.utc).normalize()
 
-    macd_cross = (prev2["MACD_HIST"] < 0 and prev["MACD_HIST"] >= 0
-                  and latest["MACD_HIST"] > prev["MACD_HIST"])
-    if macd_cross:
-        puan += 25; detay["macd"] = "MACD yukarı kesişim"
-    elif latest["MACD_HIST"] > 0 and latest["MACD_HIST"] > prev["MACD_HIST"]:
-        puan += 10; detay["macd"] = "MACD pozitif momentum"
-    elif latest["MACD_HIST"] < 0 and latest["MACD_HIST"] < prev["MACD_HIST"]:
-        puan -= 15; detay["macd"] = "MACD negatif momentum"
-    else:
-        detay["macd"] = "MACD nötr"
+    pv = tp * vol
+    cum_pv = pv.groupby(days).cumsum()
+    cum_vol = vol.groupby(days).cumsum().replace(0, np.nan)
+    return cum_pv / cum_vol
 
-    ma50_yukseliyor = latest["MA50"] > prev["MA50"] and prev["MA50"] > prev2["MA50"]
-    if ma50_yukseliyor:
-        puan += 20; detay["ma50"] = "MA50 yukarı eğimli"
-    elif latest["MA50"] < prev["MA50"]:
-        puan -= 15; detay["ma50"] = "MA50 aşağı eğimli"
-    else:
-        detay["ma50"] = "MA50 yatay"
 
-    if latest["Close"] > latest["MA50"] > latest["MA200"]:
-        puan += 15; detay["ma_pozisyon"] = "Fiyat MA50 ve MA200 üzerinde"
-    elif latest["Close"] < latest["MA50"] < latest["MA200"]:
-        puan -= 15; detay["ma_pozisyon"] = "Fiyat MA50 ve MA200 altında"
-    else:
-        detay["ma_pozisyon"] = "MA pozisyonu karma"
+def _in_trade_window_utc(now: datetime) -> bool:
+    """
+    Londra penceresi: 06:00-09:00 UTC
+    COMEX penceresi: 10:30-13:00 UTC
+    """
+    t = now.time()
+    london = time(6, 0) <= t <= time(9, 0)
+    comex = time(10, 30) <= t <= time(13, 0)
+    return london or comex
 
-    if latest["BB_WIDTH"] < df["BB_WIDTH"].quantile(0.2):
-        puan += 10; detay["bollinger"] = "Bollinger sıkışması"
-    else:
-        detay["bollinger"] = "Bollinger normal"
 
-    if latest["Volume"] >= latest["VOL_MA20"] * 0.8:
-        puan += 5; detay["hacim"] = "Hacim yeterli"
-    else:
-        puan -= 5; detay["hacim"] = "Hacim yetersiz"
-
-    return max(0, min(100, puan)), detay, latest
+# ──────────────────────────────────────────────────────────────
+# Ana modül
+# ──────────────────────────────────────────────────────────────
 
 def calistir(config):
-    sonuclar = {}
-    agirliklar = {"1h": 0.30, "4h": 0.35, "1d": 0.35}
-    periyotlar  = {"1h": "60d", "4h": "180d", "1d": "365d"}
-    for interval, agirlik in agirliklar.items():
-        try:
-            df = get_silver_data(interval=interval, period=periyotlar[interval])
-            df_h = _hesapla(df)
-            puan, detay, latest = _sinyal_puan(df_h, config)
-            sonuclar[interval] = {
-                "puan": puan, "detay": detay,
-                "fiyat": float(latest["Close"]),
-                "atr": float(latest["ATR"]),
-                "rsi": float(latest["RSI"]),
-            }
-        except Exception as e:
-            logger.error(f"Teknik [{interval}]: {e}")
-            sonuclar[interval] = {"puan": 50, "detay": {}, "fiyat": None, "atr": None, "rsi": None}
+    """
+    15dk + 1h kombinasyonu.
 
-    toplam = sum(sonuclar[i]["puan"] * agirliklar[i] for i in agirliklar)
-    puanlar = [sonuclar[i]["puan"] for i in agirliklar]
-    if all(p >= 60 for p in puanlar): toplam = min(100, toplam + 10)
-    elif all(p <= 40 for p in puanlar): toplam = max(0, toplam - 10)
+    Veri çekimi:
+    - get_silver_data("15m", "5d")
+    - get_silver_data("1h", "30d")
+
+    Return formatı korunur:
+    {"modul": "teknik", "puan": X, "fiyat_usd": X, "atr_1h": X}
+    """
+    try:
+        df15 = get_silver_data(interval="15m", period="5d")
+        df1h = get_silver_data(interval="1h", period="30d")
+    except Exception as e:
+        logger.error(f"Teknik veri çekme hatası: {e}")
+        return {"modul": "teknik", "puan": 50, "detay": {}, "fiyat_usd": None, "atr_1h": None}
+
+    if df15 is None or df1h is None or len(df15) < 60 or len(df1h) < 60:
+        return {"modul": "teknik", "puan": 50, "detay": {}, "fiyat_usd": None, "atr_1h": None}
+
+    df15 = df15.copy()
+    df1h = df1h.copy()
+
+    # 15m indikatörler
+    close15 = df15["Close"].astype(float)
+    df15["rsi14"] = _rsi(close15, 14)
+    df15["macd_hist"] = _macd_hist(close15)
+    df15["atr14"] = _atr(df15, 14)
+    df15["vwap"] = _vwap_intraday(df15)
+    if "Volume" in df15.columns:
+        df15["vol_ma20"] = _sma(df15["Volume"].astype(float), 20)
+    else:
+        df15["vol_ma20"] = np.nan
+
+    # 1h indikatörler
+    close1h = df1h["Close"].astype(float)
+    df1h["rsi14"] = _rsi(close1h, 14)
+    df1h["ma50"] = _sma(close1h, 50)
+
+    df15 = df15.dropna()
+    df1h = df1h.dropna()
+    if len(df15) < 5 or len(df1h) < 5:
+        return {"modul": "teknik", "puan": 50, "detay": {}, "fiyat_usd": None, "atr_1h": None}
+
+    l15 = df15.iloc[-1]
+    p15 = df15.iloc[-2]
+    l1h = df1h.iloc[-1]
+    p1h = df1h.iloc[-2]
+    p1h2 = df1h.iloc[-3] if len(df1h) >= 3 else p1h
+
+    puan = 50
+
+    # Puan kuralları
+    ma50_up = bool(l1h["ma50"] > p1h["ma50"] and p1h["ma50"] > p1h2["ma50"])
+    if ma50_up:
+        puan += 20
+
+    rsi_break = bool((30 <= p15["rsi14"] <= 40) and (l15["rsi14"] > 40) and (l15["rsi14"] > p15["rsi14"]))
+    if rsi_break:
+        puan += 25
+
+    macd_flip = bool((p15["macd_hist"] < 0) and (l15["macd_hist"] > 0))
+    if macd_flip:
+        puan += 20
+
+    vwap_ok = False
+    if pd.notna(l15["vwap"]) and l15["vwap"] > 0:
+        vwap_ok = bool(l15["Close"] <= l15["vwap"] * 1.003)
+    if vwap_ok:
+        puan += 15
+
+    vol_spike = False
+    if "Volume" in df15.columns and pd.notna(l15["vol_ma20"]) and l15["vol_ma20"] > 0:
+        vol_spike = bool(float(l15["Volume"]) > float(l15["vol_ma20"]) * 1.5)
+    if vol_spike:
+        puan += 15
+
+    now_utc = datetime.now(timezone.utc)
+    window_ok = _in_trade_window_utc(now_utc)
+    if window_ok:
+        puan += 10
+
+    puan = max(0, min(100, float(puan)))
+
+    fiyat_usd = float(l15["Close"]) if pd.notna(l15["Close"]) else None
+    atr15 = float(l15["atr14"]) if pd.notna(l15["atr14"]) else None
+
+    detay = {
+        "15m": {
+            "fiyat": float(l15["Close"]),
+            "rsi14": float(l15["rsi14"]),
+            "macd_hist": float(l15["macd_hist"]),
+            "atr14": float(l15["atr14"]),
+            "vwap": float(l15["vwap"]) if pd.notna(l15["vwap"]) else None,
+            "vol": float(l15["Volume"]) if "Volume" in df15.columns else None,
+            "vol_ma20": float(l15["vol_ma20"]) if pd.notna(l15["vol_ma20"]) else None,
+        },
+        "1h": {
+            "fiyat": float(l1h["Close"]),
+            "rsi14": float(l1h["rsi14"]),
+            "ma50": float(l1h["ma50"]),
+        },
+        "kurallar": {
+            "ma50_1h_up": ma50_up,
+            "rsi15_break_30_40_up": rsi_break,
+            "macd_hist_15_flip_pos": macd_flip,
+            "price_vs_vwap_15_ok": vwap_ok,
+            "vol_spike_15": vol_spike,
+            "trade_window_utc": window_ok,
+        },
+        "zaman_utc": now_utc.strftime("%H:%M"),
+    }
 
     return {
         "modul": "teknik",
-        "puan": round(toplam, 1),
-        "detay": sonuclar,
-        "fiyat_usd": sonuclar["1h"].get("fiyat"),
-        "atr_1h": sonuclar["1h"].get("atr"),
+        "puan": round(puan, 1),
+        "detay": detay,
+        "fiyat_usd": fiyat_usd,
+        # İstenen: 15dk ATR değerini `atr_1h` anahtarında döndür.
+        "atr_1h": atr15,
     }
