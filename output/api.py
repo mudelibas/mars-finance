@@ -1,12 +1,21 @@
 import json
 import os
+import sys
 import logging
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime, timezone, timedelta
-from core.data_engine import get_silver_price_tl, get_gold_price_tl, get_market_context
-from core.signal_engine import tam_analiz_calistir
-import config as cfg
+
+# `python output/api.py` gibi çalıştırmalarda proje kökü sys.path'te olmazsa
+# `core` ve `config` import'ları patlayabiliyor. Bu dosyayı her iki şekilde de
+# (modül olarak veya script olarak) çalıştırılabilir tutmak için kökü ekliyoruz.
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
+from core.data_engine import get_silver_price_tl, get_gold_price_tl  # noqa: E402
+from core.signal_engine import tam_analiz_calistir  # noqa: E402
+import config as cfg  # noqa: E402
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__, static_folder='dashboard')

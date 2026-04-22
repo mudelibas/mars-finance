@@ -182,14 +182,14 @@ footer { text-align:center; padding:12px 0; font-size:9px; color:var(--muted); l
         <div class="ind-sub" id="m-dxy-change">--</div>
       </div>
       <div class="ind-item">
-        <div class="ind-key">Ham Petrol</div>
-        <div class="ind-val" id="m-petrol">--</div>
-        <div class="ind-sub" id="m-petrol-change">--</div>
+        <div class="ind-key">Altın Endeksi</div>
+        <div class="ind-val" id="m-altin-endeks">--</div>
+        <div class="ind-sub" id="m-altin-endeks-change">--</div>
       </div>
       <div class="ind-item">
-        <div class="ind-key">ABD 10Y Faiz</div>
-        <div class="ind-val" id="m-faiz">--</div>
-        <div class="ind-sub" id="m-faiz-yorum">--</div>
+        <div class="ind-key">Brent Petrol</div>
+        <div class="ind-val" id="m-petrol">--</div>
+        <div class="ind-sub" id="m-petrol-change">--</div>
       </div>
     </div>
   </div>
@@ -254,6 +254,22 @@ let sinyalLog = [], haberLog = [];
 
 function cc(v) { return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted2)'; }
 function cs(v) { if(v==null) return '--%'; return (v>0?'+':'') + v.toFixed(2) + '%'; }
+
+function setIndBorder(el, degisimYuzde) {
+  const item = el?.closest?.('.ind-item');
+  if(!item) return;
+  if(degisimYuzde > 0) item.style.borderColor = 'rgba(63,182,139,0.4)';
+  else if(degisimYuzde < 0) item.style.borderColor = 'rgba(224,92,106,0.4)';
+  else item.style.borderColor = 'var(--border)';
+}
+
+function setIndChangeText(el, degisimYuzde, aciklama) {
+  if(!el) return;
+  const renk = degisimYuzde > 0 ? 'var(--green)' : degisimYuzde < 0 ? 'var(--red)' : 'var(--muted2)';
+  const pct = cs(degisimYuzde ?? 0);
+  el.innerHTML = `<span style="color:${renk}">${pct}</span><span style="color:var(--muted2)"> · ${aciklama}</span>`;
+  setIndBorder(el, degisimYuzde ?? 0);
+}
 
 function skorRenk(p) {
   if(p>=70) return ['bar-g','var(--green)','✅'];
@@ -334,7 +350,8 @@ acEl.className='pc-change ' + (ad>0?'up':ad<0?'down':'flat');
 acEl.style.color='';
 
     const vix=d.vix??0, dxy=d.dxy??0, dxyD=d.dxy_degisim??0;
-    const pet=d.petrol??0, petD=d.petrol_degisim??0, faiz=d.faiz??0;
+    const altinEndeks=d.altin_usd??0, altinEndeksD=d.altin_degisim??0;
+    const pet=d.petrol??0, petD=d.petrol_degisim??0;
 
     document.getElementById('m-vix').textContent=vix.toFixed(1);
     const vyEl=document.getElementById('m-vix-yorum');
@@ -345,19 +362,28 @@ acEl.style.color='';
 
     document.getElementById('m-dxy').textContent=dxy.toFixed(2);
     const dEl=document.getElementById('m-dxy-change');
-    dEl.textContent = dxyD>0 ? `${cs(dxyD)} · Dolar güçleniyor, gümüş düşebilir.` : dxyD<0 ? `${cs(dxyD)} · Dolar zayıflıyor, gümüş yükselebilir.` : `${cs(dxyD)} · Nötr`;
-    dEl.style.color = dxyD>0 ? 'var(--red)' : dxyD<0 ? 'var(--green)' : 'var(--muted2)';
+    setIndChangeText(
+      dEl,
+      dxyD,
+      dxyD>0 ? 'Dolar güçleniyor, gümüş düşebilir.' : dxyD<0 ? 'Dolar zayıflıyor, gümüş yükselebilir.' : 'Nötr'
+    );
+
+    const aValEl=document.getElementById('m-altin-endeks');
+    aValEl.textContent = altinEndeks ? `$${altinEndeks.toFixed(2)}` : '$--';
+    const aEl=document.getElementById('m-altin-endeks-change');
+    setIndChangeText(
+      aEl,
+      altinEndeksD,
+      altinEndeksD>0 ? 'Altın yükseliyor, gümüş de yükselebilir.' : altinEndeksD<0 ? 'Altın zayıflıyor, gümüş de düşebilir.' : 'Nötr'
+    );
 
     document.getElementById('m-petrol').textContent=`$${pet.toFixed(1)}`;
     const pEl=document.getElementById('m-petrol-change');
-    pEl.textContent = petD<-1?`${cs(petD)} · Gümüşte artış olabilir.`: petD>1?`${cs(petD)} · Gümüşte düşüş olabilir.`:`${cs(petD)} · Nötr`;
-    pEl.style.color = petD<-1?'var(--green)':petD>1?'var(--red)':'var(--muted2)';
-
-    document.getElementById('m-faiz').textContent=`%${faiz.toFixed(2)}`;
-    const fEl=document.getElementById('m-faiz-yorum');
-    if(faiz>5){fEl.textContent='Yüksek — baskı var';fEl.style.color='var(--red)';}
-    else if(faiz<3){fEl.textContent='Düşük — olumlu';fEl.style.color='var(--green)';}
-    else{fEl.textContent='Normal';fEl.style.color='var(--muted2)';}
+    setIndChangeText(
+      pEl,
+      petD,
+      petD<-1 ? 'Gümüşte artış olabilir.' : petD>1 ? 'Gümüşte düşüş olabilir.' : 'Nötr'
+    );
 
     const g=d.kurul_gorusu??0;
     document.getElementById('gauge-fill').style.width=g+'%';

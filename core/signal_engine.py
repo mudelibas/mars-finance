@@ -1,5 +1,4 @@
 import logging
-from groq import Groq
 from config import GROQ_API_KEY, MAKAS_TL, ATR_CARPAN_TP, ATR_CARPAN_SL
 from core.data_engine import get_silver_price_tl, get_gold_price_tl, get_market_context
 from core.voting_engine import hesapla
@@ -15,6 +14,7 @@ from filters.calendar import kilit_kontrol
 logger = logging.getLogger(__name__)
 
 try:
+    from groq import Groq
     _groq = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 except:
     _groq = None
