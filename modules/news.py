@@ -116,21 +116,20 @@ haberler_turkce: sadece kritik haberleri çevir, maksimum 5 haber"""
             temperature=0.2,
             max_tokens=400,
         )
-temiz = r.choices[0].message.content.strip()
-if "```" in temiz:
-    temiz = temiz.split("```")[1]
-    if temiz.startswith("json"):
-        temiz = temiz[4:]
-try:
-    baslangic = temiz.index("{")
-    bitis = temiz.rindex("}") + 1
-    temiz = temiz[baslangic:bitis]
-except ValueError:
-    pass
-sonuc = json.loads(temiz.strip())
-        skor  = max(-100, min(100, int(sonuc.get("skor", 0))))
+        temiz = r.choices[0].message.content.strip()
+        if "```" in temiz:
+            temiz = temiz.split("```")[1]
+            if temiz.startswith("json"):
+                temiz = temiz[4:]
+        try:
+            baslangic = temiz.index("{")
+            bitis = temiz.rindex("}") + 1
+            temiz = temiz[baslangic:bitis]
+        except ValueError:
+            pass
+        sonuc = json.loads(temiz.strip())
+        skor = max(-100, min(100, int(sonuc.get("skor", 0))))
 
-        # Türkçe başlıkları orijinal haberlere eşle
         turkce_map = {}
         for t in sonuc.get("haberler_turkce", []):
             turkce_map[t.get("orijinal", "")] = t.get("turkce", "")
