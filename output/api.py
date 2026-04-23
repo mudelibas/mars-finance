@@ -14,7 +14,7 @@ _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from core.data_engine import get_silver_price_dunyakatilim, get_gold_price_tl
+from core.data_engine import get_silver_price_dunyakatilim, get_gold_price_dunyakatilim, get_gold_price_tl
 from core.signal_engine import tam_analiz_calistir
 import config as cfg
 
@@ -70,7 +70,8 @@ def durum():
         moduller_raw = sonuc.get("modul_sonuclari", {})
         ctx = sonuc.get("ctx", {})
 
-        gumus_alis, gumus_satis = get_silver_price_dunyakatilim()
+        gumus_alis, gumus_satis, gumus_makas = get_silver_price_dunyakatilim()
+        altin_alis, altin_satis, altin_makas = get_gold_price_dunyakatilim()
         altin_tl, _ = get_gold_price_tl()
 
         moduller = {
@@ -86,9 +87,13 @@ def durum():
         veri = {
             "gumus_alis":     gumus_alis,
             "gumus_satis":    gumus_satis,
+            "gumus_makas":    gumus_makas,
             "gumus_tl":       gumus_alis,  # Backward compatibility
             "gumus_usd":      moduller_raw.get("teknik", {}).get("fiyat_usd"),
             "gumus_degisim":  ctx.get("gumus_degisim_yuzde", 0),
+            "altin_alis":     altin_alis,
+            "altin_satis":    altin_satis,
+            "altin_makas":    altin_makas,
             "altin_tl":       altin_tl,
             "altin_usd":      ctx.get("altin"),
             "altin_degisim":  ctx.get("altin_degisim_yuzde", 0),

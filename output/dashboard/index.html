@@ -26,7 +26,7 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
   background:var(--bg); color:var(--text);
-  font-family:'Cantarell', sans-serif; font-size:13px;
+  font-family:'Cantarell', sans-serif; font-size:14px;
   min-height:100vh; -webkit-font-smoothing:antialiased;
 }
 body::before {
@@ -53,31 +53,31 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 .price-card.silver { border-top-color:rgba(220,238,255,0.3); }
 .price-card.gold   { border-top-color:rgba(240,192,80,0.3); }
 
-.pc-label { font-size:9px; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:10px; font-weight:600; }
+.pc-label { font-size:10px; letter-spacing:1.25px; text-transform:uppercase; margin-bottom:10px; font-weight:600; }
 .price-card.silver .pc-label { color:var(--silver); }
 .price-card.gold   .pc-label { color:var(--gold); }
 
-.pc-try { font-family:'Cantarell', sans-serif; font-size:36px; font-weight:800; line-height:1; margin-bottom:6px; }
+.pc-try { font-family:'Cantarell', sans-serif; font-size:37px; font-weight:800; line-height:1; margin-bottom:6px; }
 .pc-try span { font-size:16px; font-weight:400; margin-right:3px; opacity:0.6; }
 .price-card.silver .pc-try { color:var(--silver); }
 .price-card.gold   .pc-try { color:var(--gold); }
 
-.pc-usd { font-family:'Cantarell', sans-serif; font-size:12px; color:var(--muted2); margin-bottom:10px; }
+.pc-usd { font-family:'Cantarell', sans-serif; font-size:13px; color:var(--muted2); margin-bottom:10px; }
 .pc-divider { height:1px; background:var(--border); margin-bottom:10px; }
 
-.pc-change { display:inline-flex; align-items:center; gap:5px; font-family:'Cantarell', sans-serif; font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px; letter-spacing:0.5px; }
+.pc-change { display:inline-flex; align-items:center; gap:5px; font-family:'Cantarell', sans-serif; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; letter-spacing:0.5px; }
 .pc-change.up   { background:#1e8449; color:#fff; }
 .pc-change.down { background:#c0392b; color:#fff; }
 .pc-change.flat { background:rgba(77,100,120,0.3); color:var(--muted2); }
 
 .indicators { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px; }
-.section-title { font-size:13px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; font-weight:500; text-align:center; }
+.section-title { font-size:14px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; font-weight:700; text-align:center; }
 .ind-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .ind-item { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
-.ind-key { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+.ind-key { font-size:9px; letter-spacing:0.75px; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
 .ind-desc { font-size:8px; color:var(--muted); opacity:0.6; margin-bottom:6px; font-style:italic; }
-.ind-val { font-family:'Cantarell', sans-serif; font-size:14px; font-weight:500; color:var(--text); }
-.ind-sub { font-family:'Cantarell', sans-serif; font-size:10px; margin-top:3px; }
+.ind-val { font-family:'Cantarell', sans-serif; font-size:15px; font-weight:500; color:var(--text); }
+.ind-sub { font-family:'Cantarell', sans-serif; font-size:11px; margin-top:3px; }
 
 .performance { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
 .perf-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
@@ -110,37 +110,37 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 .skor-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
 .skor-item { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
 .skor-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
-.skor-isim { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
+.skor-isim { font-size:9px; letter-spacing:0.75px; text-transform:uppercase; color:var(--muted); }
 .skor-bar-wrap { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-bottom:7px; }
 .skor-bar { height:100%; border-radius:2px; transition:width 0.8s ease; }
 .bar-g { background:var(--green); } .bar-y { background:var(--yellow); } .bar-r { background:var(--red); }
-.skor-puan { font-family:'Cantarell', sans-serif; font-size:16px; font-weight:500; }
+.skor-puan { font-family:'Cantarell', sans-serif; font-size:17px; font-weight:500; }
 
 .log-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
 .log-bos { font-size:11px; color:var(--muted); text-align:center; padding:12px 0; }
 .sinyal-item { padding:10px 0; border-bottom:1px solid var(--border); font-size:11px; line-height:1.6; }
 .sinyal-item:last-child { border-bottom:none; padding-bottom:0; }
 .sinyal-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-.sinyal-tip { font-weight:600; font-size:10px; letter-spacing:1px; }
+.sinyal-tip { font-weight:600; font-size:11px; letter-spacing:0.5px; }
 .tip-al { color:var(--green); } .tip-sat { color:var(--red); }
-.sinyal-zaman { font-family:'Cantarell', sans-serif; font-size:9px; color:var(--muted); }
-.sinyal-detay { color:var(--muted2); font-size:10px; }
-.sinyal-kar { font-family:'Cantarell', sans-serif; font-size:11px; }
+.sinyal-zaman { font-family:'Cantarell', sans-serif; font-size:10px; color:var(--muted); }
+.sinyal-detay { color:var(--muted2); font-size:11px; }
+.sinyal-kar { font-family:'Cantarell', sans-serif; font-size:12px; }
 .kar-pos { color:var(--green); } .kar-neg { color:var(--red); }
 .haber-item { padding:10px 0; border-bottom:1px solid var(--border); }
 .haber-item:last-child { border-bottom:none; padding-bottom:0; }
 .haber-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px; }
-.haber-tier { font-size:8px; padding:2px 6px; border-radius:3px; letter-spacing:1px; white-space:nowrap; flex-shrink:0; border:1px solid; }
+.haber-tier { font-size:9px; padding:2px 6px; border-radius:3px; letter-spacing:0.5px; white-space:nowrap; flex-shrink:0; border:1px solid; }
 .haber-tier.t-kritik { background:rgba(224,92,106,0.15); color:#e05c6a; border-color:rgba(224,92,106,0.3); }
 .haber-tier.t-onemli { background:rgba(212,168,67,0.15); color:#d4a843; border-color:rgba(212,168,67,0.3); }
 .haber-tier.t-genel  { background:rgba(74,158,221,0.1);  color:#4a9edd; border-color:rgba(74,158,221,0.2); }
-.haber-zaman { font-family:'Cantarell', sans-serif; font-size:9px; color:var(--muted); white-space:nowrap; }
-.haber-baslik { font-size:10px; color:var(--text); line-height:1.5; white-space:normal; word-break:break-word; }
-.haber-ozet { font-size:10px; color:var(--muted2); margin-top:3px; line-height:1.4; }
+.haber-zaman { font-family:'Cantarell', sans-serif; font-size:10px; color:var(--muted); white-space:nowrap; }
+.haber-baslik { font-size:11px; color:var(--text); line-height:1.5; white-space:normal; word-break:break-word; }
+.haber-ozet { font-size:11px; color:var(--muted2); margin-top:3px; line-height:1.4; }
 
-.refresh-btn { width:100%; padding:11px; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Cantarell', sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-bottom:20px; }
+.refresh-btn { width:100%; padding:11px; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Cantarell', sans-serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-bottom:20px; }
 .refresh-btn:hover { border-color:var(--silver); color:var(--silver); }
-footer { text-align:center; padding:12px 0; font-size:9px; color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border); }
+footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); letter-spacing:1px; border-top:1px solid var(--border); }
 .spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--silver); border-radius:50%; animation:spin 0.8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
 </style>
@@ -153,38 +153,63 @@ footer { text-align:center; padding:12px 0; font-size:9px; color:var(--muted); l
     <div class="live"><div class="dot"></div><span id="son-guncelleme">--:--</span></div>
   </header>
 
-  <div class="price-row">
-    <div class="price-card silver">
-      <div class="pc-label">Gümüş</div>
+  <div class="price-card" style="display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden">
+    <div class="price-card::before" style="content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;background:linear-gradient(90deg, var(--silver), var(--gold))"></div>
+    
+    <!-- Sol Taraf: Gümüş -->
+    <div style="flex:1;padding-right:12px;border-right:1px solid var(--border)">
+      <div style="font-size:11px;letter-spacing:1.5px;font-weight:700;color:var(--silver);margin-bottom:12px">GÜMÜŞ</div>
+      
       <div style="display:flex;gap:12px;margin-bottom:8px">
         <div>
-          <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted)">SATIŞ</div>
-          <div style="font-size:22px;font-weight:700;color:var(--silver)">₺<span id="gumus-satis">--</span></div>
+          <div style="font-size:8px;letter-spacing:0.75px;color:var(--muted)">SATIŞ</div>
+          <div style="font-size:28px;font-weight:800;color:var(--silver)">₺<span id="gumus-satis">--</span></div>
         </div>
         <div>
-          <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted)">ALIŞ</div>
-          <div style="font-size:22px;font-weight:700;color:var(--silver)">₺<span id="gumus-alis">--</span></div>
+          <div style="font-size:8px;letter-spacing:0.75px;color:var(--muted)">ALIŞ</div>
+          <div style="font-size:28px;font-weight:800;color:var(--silver)">₺<span id="gumus-alis">--</span></div>
         </div>
       </div>
+      
       <div style="display:flex;gap:8px;margin-bottom:8px">
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Makas ₺0.75</div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Makas ₺<span id="gumus-makas">--</span></div>
         <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Vergi %0.2</div>
       </div>
-      <div class="pc-divider"></div>
-      <div class="pc-change">
+      
+      <div class="pc-change" style="display:inline-flex;align-items:center;gap:5px;font-family:'Cantarell', sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:0.5px">
         <span id="gumus-change" style="color:var(--muted2)">--%</span>
       </div>
-      <div style="color:var(--muted); font-size:8px; margin-top:6px">* 60 sn gecikmeli · Dünya Katılım</div>
     </div>
-    <div class="price-card gold">
-      <div class="pc-label">Altın</div>
-      <div class="pc-try"><span>₺</span><span id="altin-tl">--</span></div>
-      <div class="pc-usd" id="altin-usd">$-- / ons</div>
-      <div class="pc-divider"></div>
-      <div class="pc-change">
+    
+    <!-- Sağ Taraf: Altın -->
+    <div style="flex:1;padding-left:12px">
+      <div style="font-size:11px;letter-spacing:1.5px;font-weight:700;color:var(--gold);margin-bottom:12px">ALTIN</div>
+      
+      <div style="display:flex;gap:12px;margin-bottom:8px">
+        <div>
+          <div style="font-size:8px;letter-spacing:0.75px;color:var(--muted)">SATIŞ</div>
+          <div style="font-size:28px;font-weight:800;color:var(--gold)">₺<span id="altin-satis">--</span></div>
+        </div>
+        <div>
+          <div style="font-size:8px;letter-spacing:0.75px;color:var(--muted)">ALIŞ</div>
+          <div style="font-size:28px;font-weight:800;color:var(--gold)">₺<span id="altin-alis">--</span></div>
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Makas ₺<span id="altin-makas">--</span></div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Vergi %0.2</div>
+      </div>
+      
+      <div style="font-size:11px;color:var(--muted2);margin-bottom:8px">$<span id="altin-usd">--</span> / ons</div>
+      
+      <div class="pc-change" style="display:inline-flex;align-items:center;gap:5px;font-family:'Cantarell', sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:0.5px">
         <span id="altin-change" style="color:var(--muted2)">--%</span>
       </div>
     </div>
+    
+    <!-- Alt Bilgi -->
+    <div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:8px;color:var(--muted);letter-spacing:0.5px">Kaynak: Dünya Katılım (veriler 60 sn. gecikmeli olabilir)</div>
   </div>
 
   <div class="performance">
@@ -369,18 +394,21 @@ async function veriYukle() {
     if(!r.ok) throw new Error();
     const d = await r.json();
 
-    const ga=d.gumus_alis, gs=d.gumus_satis, at=d.altin_tl, gu=d.gumus_usd, au=d.altin_usd;
+    const ga=d.gumus_alis, gs=d.gumus_satis, gm=d.gumus_makas, aa=d.altin_alis, as=d.altin_satis, am=d.altin_makas, at=d.altin_tl, gu=d.gumus_usd, au=d.altin_usd;
     const gd=d.gumus_degisim??0, ad=d.altin_degisim??0;
 
     document.getElementById('gumus-alis').textContent = ga?ga.toFixed(2):'--';
     document.getElementById('gumus-satis').textContent = gs?gs.toFixed(2):'--';
+    document.getElementById('gumus-makas').textContent = gm?gm.toFixed(2):'--';
     const gcEl=document.getElementById('gumus-change');
 gcEl.textContent= 'GÜNLÜK  ' + cs(gd);
 gcEl.className='pc-change ' + (gd>0?'up':gd<0?'down':'flat');
 gcEl.style.color='';
 
-    document.getElementById('altin-tl').textContent = at?at.toFixed(2):'--';
-    document.getElementById('altin-usd').textContent = au ? `$${au.toFixed(2)} / ons` : '$-- / ons';
+    document.getElementById('altin-alis').textContent = aa?aa.toFixed(2):'--';
+    document.getElementById('altin-satis').textContent = as?as.toFixed(2):'--';
+    document.getElementById('altin-makas').textContent = am?am.toFixed(2):'--';
+    document.getElementById('altin-usd').textContent = au ? au.toFixed(2) : '--';
     const acEl=document.getElementById('altin-change');
 acEl.textContent='GÜNLÜK  ' + cs(ad);
 acEl.className='pc-change ' + (ad>0?'up':ad<0?'down':'flat');

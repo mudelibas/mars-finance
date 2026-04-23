@@ -9,6 +9,7 @@ from config import FRED_API_KEY, STALE_DATA_DAKIKA
 
 logger = logging.getLogger(__name__)
 _fiyat_cache = {"alis": None, "satis": None, "zaman": 0}
+_altin_cache = {"alis": None, "satis": None, "zaman": 0}
 FIYAT_CACHE_SURE = 60
 
 # ─── YARDIMCI ───────────────────────────────────────────────
@@ -73,19 +74,20 @@ def get_silver_price_dunyakatilim():
         if match:
             alis = float(match.group(1).replace(",", "."))
             satis = float(match.group(2).replace(",", "."))
+            makas = round(satis - alis, 4)
             _fiyat_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
-            logger.info(f"Gümüş fiyatı: alış={alis}, satış={satis}")
-            return alis, satis
+            logger.info(f"Gümüş fiyatı: alış={alis}, satış={satis}, makas={makas}")
+            return alis, satis, makas
         else:
             logger.error("Gümüş fiyatı regex eşleşmedi - HTML yapısı değişmiş olabilir")
-            return None, None
+            return None, None, None
     except Exception as e:
         logger.error(f"Dünya Katılım scraping hatası: {e}")
-        return _fiyat_cache["alis"], _fiyat_cache["satis"]
+        return _fiyat_cache["alis"], _fiyat_cache["satis"], _fiyat_cache.get("alis", 0) and _fiyat_cache.get("satis", 0) and round(_fiyat_cache["satis"] - _fiyat_cache["alis"], 4)
 
 def get_silver_price_tl():
     try:
-        alis, satis = get_silver_price_dunyakatilim()
+        alis, satis, makas = get_silver_price_dunyakatilim()
         if alis and satis:
             orta = (alis + satis) / 2
             usdtry = _indir("USDTRY=X", "1d", "5m")
@@ -95,6 +97,40 @@ def get_silver_price_tl():
     except Exception as e:
         logger.error(f"TL fiyat hatası: {e}")
         return None, None
+
+def get_gold_price_dunyakatilim():
+    """Dünya Katılım'dan altın alış/satış fiyatını çeker, 60 saniye cache'ler."""
+    global _altin_cache
+    if time.time() - _altin_cache["zaman"] < FIYAT_CACHE_SURE:
+        return _altin_cache["alis"], _altin_cache["satis"], round(_altin_cache["satis"] - _altin_cache["alis"], 4)
+    try:
+        import re
+        r = requests.get(
+            "https://dunyakatilim.com.tr/gunluk-kurlar",
+            timeout=10,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        r.raise_for_status()
+        
+        # XAU satırını bul ve fiyatları çıkar
+        match = re.search(
+            r'XAU[^0-9]*(\d{4,5}[.,]\d{4})[^0-9]*(\d{4,5}[.,]\d{4})',
+            r.text, re.IGNORECASE | re.DOTALL
+        )
+        
+        if match:
+            alis = float(match.group(1).replace(",", "."))
+            satis = float(match.group(2).replace(",", "."))
+            makas = round(satis - alis, 4)
+            _altin_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
+            logger.info(f"Altın fiyatı: alış={alis}, satış={satis}, makas={makas}")
+            return alis, satis, makas
+        else:
+            logger.error("Altın fiyatı regex eşleşmedi - HTML yapısı değişmiş olabilir")
+            return None, None, None
+    except Exception as e:
+        logger.error(f"Dünya Katılım altın scraping hatası: {e}")
+        return _altin_cache["alis"], _altin_cache["satis"], _altin_cache.get("alis", 0) and _altin_cache.get("satis", 0) and round(_altin_cache["satis"] - _altin_cache["alis"], 4)
 
 def get_gold_price_tl():
     try:
