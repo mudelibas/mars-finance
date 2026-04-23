@@ -107,14 +107,14 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 .perf-pct { font-family:'Cantarell', sans-serif; font-size:28px; font-weight:500; color:var(--text); }
 
 .skor { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
-.skor-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
-.skor-item { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
-.skor-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
-.skor-isim { font-size:9px; text-transform:uppercase; color:var(--muted); }
+.skor-grid { display:flex; flex-direction:column; gap:0; margin-bottom:12px; }
+.skor-item { display:flex; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); }
+.skor-ust { flex:1; display:flex; justify-content:space-between; align-items:center; }
+.skor-isim { font-size:11px; font-weight:700; }
 .skor-bar-wrap { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-bottom:7px; }
 .skor-bar { height:100%; border-radius:2px; transition:width 0.8s ease; }
 .bar-g { background:var(--green); } .bar-y { background:var(--yellow); } .bar-r { background:var(--red); }
-.skor-puan { font-family:'Cantarell', sans-serif; font-size:17px; font-weight:500; }
+.skor-puan { font-size:11px; font-weight:700; text-align:right; margin-top:4px; width:120px; }
 
 .log-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
 .log-bos { font-size:11px; color:var(--muted); text-align:center; padding:12px 0; }
@@ -292,6 +292,16 @@ const MODUL = {
   teknik:'Teknik Analiz', matematiksel:'Matematiksel', haberler:'Jeopolitik',
   balina:'Balina Faktörü', panikci:'Panikçi Faktör', risk:'Risk', makro:'Makro Rejim'
 };
+
+const MODUL_ACIKLAMALARI = {
+  teknik: { up: '↑ Grafik alım sinyali veriyor', down: '↓ Grafik satış sinyali veriyor' },
+  matematiksel: { up: '↑ İstatistiksel dönüş bekleniyor', down: '↓ Trend devam edebilir' },
+  haberler: { up: '↑ Haberler gümüşü destekliyor', down: '↓ Haberler gümüşe baskı yapıyor' },
+  balina: { up: '↑ Büyük oyuncular alıyor', down: '↓ Büyük oyuncular satıyor' },
+  panikci: { up: '↑ Piyasa korkusu gümüşe yöneltiyor', down: '↓ Risk iştahı gümüşten uzaklaştırıyor' },
+  risk: { up: '↑ Manipülasyon yok, giriş güvenli', down: '↓ Manipülasyon riski var' },
+  makro: { up: '↑ Ekonomik ortam gümüşe uygun', down: '↓ Ekonomik ortam olumsuz' }
+};
 let sinyalLog = [], haberLog = [];
 let _lastGauge = null;
 
@@ -333,9 +343,19 @@ function skorGridRender(m) {
   g.innerHTML = Object.entries(MODUL).map(([k,isim]) => {
     const p = m[k]?.puan ?? 50;
     const [bc,renk,icon] = skorRenk(p);
+    const aciklama = MODUL_ACIKLAMALARI[k];
+    const trend = p >= 50 ? 'up' : 'down';
+    const aciklamaText = aciklama[trend];
+    
     return `<div class="skor-item">
-      <div class="skor-ust"><span class="skor-isim">${isim}</span><span>${icon}</span></div>
-      <div class="skor-bar-wrap"><div class="skor-bar ${bc}" style="width:${p}%"></div></div>
+      <div class="skor-ust">
+        <span class="skor-isim">${isim}</span>
+        <span>${icon}</span>
+      </div>
+      <div class="skor-bar-wrap">
+        <div class="skor-bar ${bc}" style="width:${p}%"></div>
+      </div>
+      <div style="font-size:9px;color:var(--muted);margin-top:2px">${aciklamaText}</div>
       <div class="skor-puan" style="color:${renk}">${p.toFixed(0)}</div>
     </div>`;
   }).join('');
