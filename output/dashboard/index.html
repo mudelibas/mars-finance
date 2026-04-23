@@ -156,8 +156,11 @@ footer { text-align:center; padding:12px 0; font-size:9px; color:var(--muted); l
   <div class="price-row">
     <div class="price-card silver">
       <div class="pc-label">Gümüş</div>
-      <div class="pc-try"><span>₺</span><span id="gumus-tl">--</span></div>
-      <div class="pc-usd" id="gumus-usd">$-- / ons</div>
+      <div class="pc-try"><span>₺</span><span id="gumus-alis">--</span></div>
+      <div class="pc-usd" id="gumus-satis">Satış: ₺--</div>
+      <div class="pc-divider"></div>
+      <div class="pc-usd" style="font-size:10px">Makas: ₺0.75</div>
+      <div class="pc-usd" style="font-size:10px">Vergi: %0.2</div>
       <div class="pc-divider"></div>
       <div class="pc-change">
         <span id="gumus-change" style="color:var(--muted2)">--%</span>
@@ -356,11 +359,11 @@ async function veriYukle() {
     if(!r.ok) throw new Error();
     const d = await r.json();
 
-    const gt=d.gumus_tl, at=d.altin_tl, gu=d.gumus_usd, au=d.altin_usd;
+    const ga=d.gumus_alis, gs=d.gumus_satis, at=d.altin_tl, gu=d.gumus_usd, au=d.altin_usd;
     const gd=d.gumus_degisim??0, ad=d.altin_degisim??0;
 
-    document.getElementById('gumus-tl').textContent = gt?gt.toFixed(2):'--';
-    document.getElementById('gumus-usd').textContent = gu?`$${gu.toFixed(2)} / ons`:'$-- / ons';
+    document.getElementById('gumus-alis').textContent = ga?ga.toFixed(4):'--';
+    document.getElementById('gumus-satis').textContent = gs?`Satış: ₺${gs.toFixed(4)}`:'Satış: ₺--';
     const gcEl=document.getElementById('gumus-change');
 gcEl.textContent= 'GÜNLÜK  ' + cs(gd);
 gcEl.className='pc-change ' + (gd>0?'up':gd<0?'down':'flat');

@@ -14,7 +14,7 @@ _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from core.data_engine import get_silver_price_tl, get_gold_price_tl
+from core.data_engine import get_silver_price_dunyakatilim, get_gold_price_tl
 from core.signal_engine import tam_analiz_calistir
 import config as cfg
 
@@ -70,7 +70,7 @@ def durum():
         moduller_raw = sonuc.get("modul_sonuclari", {})
         ctx = sonuc.get("ctx", {})
 
-        gumus_tl, usd_try = get_silver_price_tl()
+        gumus_alis, gumus_satis = get_silver_price_dunyakatilim()
         altin_tl, _ = get_gold_price_tl()
 
         moduller = {
@@ -84,7 +84,9 @@ def durum():
             _haber_log_kaydet(yeni_haberler)
 
         veri = {
-            "gumus_tl":       gumus_tl,
+            "gumus_alis":     gumus_alis,
+            "gumus_satis":    gumus_satis,
+            "gumus_tl":       gumus_alis,  # Backward compatibility
             "gumus_usd":      moduller_raw.get("teknik", {}).get("fiyat_usd"),
             "gumus_degisim":  ctx.get("gumus_degisim_yuzde", 0),
             "altin_tl":       altin_tl,
