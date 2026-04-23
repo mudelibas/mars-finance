@@ -1,3 +1,4 @@
+import time
 import logging
 import requests
 import yfinance as yf
@@ -7,6 +8,8 @@ from datetime import datetime, timezone, timedelta
 from config import FRED_API_KEY, STALE_DATA_DAKIKA
 
 logger = logging.getLogger(__name__)
+_fiyat_cache = {"alis": None, "satis": None, "zaman": 0}
+FIYAT_CACHE_SURE = 60
 
 # ─── YARDIMCI ───────────────────────────────────────────────
 
@@ -44,16 +47,40 @@ def get_gold_data(interval="1h", period="60d"):
         raise ValueError(f"Altın verisi alınamadı ({interval})")
     return df
 
+def get_silver_price_dunyakatilim():
+    global _fiyat_cache
+    if time.time() - _fiyat_cache["zaman"] < FIYAT_CACHE_SURE:
+        return _fiyat_cache["alis"], _fiyat_cache["satis"]
+    try:
+        import re
+        r = requests.get(
+            "https://dunyakatilim.com.tr/gunluk-kurlar",
+            timeout=10,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        match = re.search(
+            r'Gümüş[^G]*?(\d{2,3}[.,]\d{4})[^0-9]*(\d{2,3}[.,]\d{4})',
+            r.text, re.DOTALL
+        )
+        if match:
+            alis  = float(match.group(1).replace(",", "."))
+            satis = float(match.group(2).replace(",", "."))
+            _fiyat_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
+            return alis, satis
+        return None, None
+    except Exception as e:
+        logger.error(f"Dünya Katılım scraping hatası: {e}")
+        return _fiyat_cache["alis"], _fiyat_cache["satis"]
+
 def get_silver_price_tl():
     try:
-        xag = _indir("SI=F", "1d", "5m")
-        usdtry = _indir("USDTRY=X", "1d", "5m")
-        if xag is None or usdtry is None:
-            return None, None
-        xag_usd = float(xag["Close"].values[-1])
-        usd_try = float(usdtry["Close"].values[-1])
-        xag_tl_gram = (xag_usd / 31.1035) * usd_try
-        return xag_tl_gram, usd_try
+        alis, satis = get_silver_price_dunyakatilim()
+        if alis and satis:
+            orta = (alis + satis) / 2
+            usdtry = _indir("USDTRY=X", "1d", "5m")
+            usd_try = float(usdtry["Close"].values[-1]) if usdtry is not None else None
+            return orta, usd_try
+        return None, None
     except Exception as e:
         logger.error(f"TL fiyat hatası: {e}")
         return None, None

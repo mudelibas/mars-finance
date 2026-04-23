@@ -8,7 +8,7 @@ from flask_cors import CORS
 from datetime import datetime, timezone, timedelta
 
 _cache = {"veri": None, "zaman": 0}
-CACHE_SURE = 30
+CACHE_SURE = 60
 
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _ROOT not in sys.path:
