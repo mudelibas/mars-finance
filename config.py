@@ -44,7 +44,7 @@ MODUL_AGIRLIKLARI = {
         "balina":       0.15,
         "panikci":      0.15,
         "risk":         0.10,
-        "makro":        0.05,
+        "hacim":        0.05,
     },
     "kriz": {
         "teknik":       0.15,
@@ -53,7 +53,7 @@ MODUL_AGIRLIKLARI = {
         "balina":       0.10,
         "panikci":      0.15,
         "risk":         0.10,
-        "makro":        0.00,
+        "hacim":        0.00,
     },
     "trend": {
         "teknik":       0.25,
@@ -62,7 +62,7 @@ MODUL_AGIRLIKLARI = {
         "balina":       0.20,
         "panikci":      0.10,
         "risk":         0.10,
-        "makro":        0.05,
+        "hacim":        0.05,
     },
 }
 

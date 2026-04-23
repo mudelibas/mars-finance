@@ -8,7 +8,7 @@ from modules.cot import calistir as cot_calistir
 from modules.behavioral import calistir as behavioral_calistir
 from modules.risk import calistir as risk_calistir, hesapla_stop_tp
 from modules.news import calistir as haber_calistir
-from filters.macro_regime import belirle as makro_belirle
+from modules.hacim import calistir as hacim_calistir
 from filters.calendar import kilit_kontrol
 
 logger = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ def tam_analiz_calistir(config):
         ("panikci",      lambda: behavioral_calistir(config)),
         ("risk",         lambda: risk_calistir(config)),
         ("haberler",     lambda: haber_calistir(config)),
-        ("makro",        lambda: makro_belirle(config)),
+        ("hacim",        lambda: hacim_calistir(config)),
     ]:
         try:
             modul_sonuclari[isim] = fonk()
@@ -216,7 +216,7 @@ def _sinyal_mesaji_formatla(oylama, modüller, fiyat_tl, altin_tl,
         "balina":       "Balina Faktörü   ",
         "panikci":      "Panikçi Faktör   ",
         "risk":         "Risk             ",
-        "makro":        "Makro Rejim      ",
+        "hacim":        "Hacim Anomalisi ",
     }
 
     modul_satirlari = []
