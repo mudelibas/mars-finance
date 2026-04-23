@@ -179,6 +179,7 @@ footer { text-align:center; padding:12px 0; font-size:9px; color:var(--muted); l
     <div class="price-card gold">
       <div class="pc-label">Altın</div>
       <div class="pc-try"><span>₺</span><span id="altin-tl">--</span></div>
+      <div class="pc-usd" id="altin-usd">$-- / ons</div>
       <div class="pc-divider"></div>
       <div class="pc-change">
         <span id="altin-change" style="color:var(--muted2)">--%</span>
@@ -379,6 +380,7 @@ gcEl.className='pc-change ' + (gd>0?'up':gd<0?'down':'flat');
 gcEl.style.color='';
 
     document.getElementById('altin-tl').textContent = at?at.toFixed(2):'--';
+    document.getElementById('altin-usd').textContent = au ? `$${au.toFixed(2)} / ons` : '$-- / ons';
     const acEl=document.getElementById('altin-change');
 acEl.textContent='GÜNLÜK  ' + cs(ad);
 acEl.className='pc-change ' + (ad>0?'up':ad<0?'down':'flat');
