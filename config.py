@@ -38,28 +38,25 @@ GORUS_SESSIZ = 0       # <%60 → Sessizlik
 # Normal / Kriz / Trend
 MODUL_AGIRLIKLARI = {
     "normal": {
-        "teknik":       0.20,
-        "matematiksel": 0.20,
+        "teknik":       0.275,  # 0.20 + 0.075 (balina/2)
+        "matematiksel": 0.275,  # 0.20 + 0.075 (balina/2)
         "haberler":     0.15,
-        "balina":       0.15,
         "panikci":      0.15,
         "risk":         0.10,
         "hacim":        0.05,
     },
     "kriz": {
-        "teknik":       0.15,
-        "matematiksel": 0.15,
+        "teknik":       0.20,   # 0.15 + 0.05 (balina/2)
+        "matematiksel": 0.20,   # 0.15 + 0.05 (balina/2)
         "haberler":     0.35,
-        "balina":       0.10,
         "panikci":      0.15,
         "risk":         0.10,
         "hacim":        0.00,
     },
     "trend": {
-        "teknik":       0.25,
-        "matematiksel": 0.20,
+        "teknik":       0.35,   # 0.25 + 0.10 (balina/2)
+        "matematiksel": 0.25,   # 0.20 + 0.05 (balina/2)
         "haberler":     0.10,
-        "balina":       0.20,
         "panikci":      0.10,
         "risk":         0.10,
         "hacim":        0.05,

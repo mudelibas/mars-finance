@@ -4,7 +4,6 @@ from core.data_engine import get_silver_price_tl, get_gold_price_tl, get_market_
 from core.voting_engine import hesapla
 from modules.technical import calistir as teknik_calistir
 from modules.quant import calistir as quant_calistir
-from modules.cot import calistir as cot_calistir
 from modules.behavioral import calistir as behavioral_calistir
 from modules.risk import calistir as risk_calistir, hesapla_stop_tp
 from modules.news import calistir as haber_calistir
@@ -126,7 +125,6 @@ def tam_analiz_calistir(config):
     for isim, fonk in [
         ("teknik",       lambda: teknik_calistir(config)),
         ("matematiksel", lambda: quant_calistir(config)),
-        ("balina",       lambda: cot_calistir(config)),
         ("panikci",      lambda: behavioral_calistir(config)),
         ("risk",         lambda: risk_calistir(config)),
         ("haberler",     lambda: haber_calistir(config)),
