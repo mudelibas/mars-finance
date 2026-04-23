@@ -58,15 +58,18 @@ def get_silver_price_dunyakatilim():
             timeout=10,
             headers={"User-Agent": "Mozilla/5.0"}
         )
+        # XAG ile ara, Türkçe karakter sorunu olmaz
         match = re.search(
-            r'Gümüş[^G]*?(\d{2,3}[.,]\d{4})[^0-9]*(\d{2,3}[.,]\d{4})',
+            r'XAG[^0-9]*(\d{2,3}[.,]\d{4})[^0-9]*(\d{2,3}[.,]\d{4})',
             r.text, re.DOTALL
         )
         if match:
             alis  = float(match.group(1).replace(",", "."))
             satis = float(match.group(2).replace(",", "."))
             _fiyat_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
+            logger.info(f"Gümüş fiyatı: alış={alis}, satış={satis}")
             return alis, satis
+        logger.error("Gümüş fiyatı regex eşleşmedi")
         return None, None
     except Exception as e:
         logger.error(f"Dünya Katılım scraping hatası: {e}")
