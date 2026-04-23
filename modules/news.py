@@ -70,7 +70,7 @@ def yeni_haberler_cek():
                         gorulmus.add(hid)
                         continue
                     toplam.append({
-                         "id": hid,
+                        "id": hid,
                         "tier": tier,
                         "agirlik": agirlik,
                         "title": baslik,
