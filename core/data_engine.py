@@ -66,16 +66,9 @@ def get_silver_price_dunyakatilim():
         
         # Gümüş (XAG) satırını bul ve fiyatları çıkar
         match = re.search(
-            r'Gümş\s*\(XAG\)[^<]*</td>\s*<td[^>]*>(\d+[.,]\d+)</td>\s*<td[^>]*>(\d+[.,]\d+)</td>',
-            html_content, re.IGNORECASE | re.DOTALL
+            r'G&#xFC;m&#xFC;&#x15F;\s*\(XAG\).*?</td>.*?<td[^>]*>(\d+[.,]\d+)</td>.*?<td[^>]*>(\d+[.,]\d+)</td>',
+            r.text, re.IGNORECASE | re.DOTALL
         )
-        
-        if not match:
-            # Alternatif regex - HTML entity'ler olmadan
-            match = re.search(
-                r'G&#xFC;m&#xFC;&#x15F;\s*\(XAG\)[^<]*</td>\s*<td[^>]*>(\d+[.,]\d+)</td>\s*<td[^>]*>(\d+[.,]\d+)</td>',
-                r.text, re.IGNORECASE | re.DOTALL
-            )
         
         if match:
             alis = float(match.group(1).replace(",", "."))
