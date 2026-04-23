@@ -156,21 +156,29 @@ footer { text-align:center; padding:12px 0; font-size:9px; color:var(--muted); l
   <div class="price-row">
     <div class="price-card silver">
       <div class="pc-label">Gümüş</div>
-      <div class="pc-try"><span>₺</span><span id="gumus-alis">--</span></div>
-      <div style="color:var(--muted); font-size:8px; margin-bottom:6px">* 60 sn gecikmeli · Dünya Katılım</div>
-      <div class="pc-usd" id="gumus-satis">Satış: ₺--</div>
-      <div class="pc-divider"></div>
-      <div class="pc-usd" style="font-size:10px">Makas: ₺0.75</div>
-      <div class="pc-usd" style="font-size:10px">Vergi: %0.2</div>
+      <div style="display:flex;gap:12px;margin-bottom:8px">
+        <div>
+          <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted)">SATIŞ</div>
+          <div style="font-size:22px;font-weight:700;color:var(--silver)">₺<span id="gumus-satis">--</span></div>
+        </div>
+        <div>
+          <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted)">ALIŞ</div>
+          <div style="font-size:22px;font-weight:700;color:var(--silver)">₺<span id="gumus-alis">--</span></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Makas ₺0.75</div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Vergi %0.2</div>
+      </div>
       <div class="pc-divider"></div>
       <div class="pc-change">
         <span id="gumus-change" style="color:var(--muted2)">--%</span>
       </div>
+      <div style="color:var(--muted); font-size:8px; margin-top:6px">* 60 sn gecikmeli · Dünya Katılım</div>
     </div>
     <div class="price-card gold">
       <div class="pc-label">Altın</div>
       <div class="pc-try"><span>₺</span><span id="altin-tl">--</span></div>
-      <div class="pc-usd" id="altin-usd">$-- / ons</div>
       <div class="pc-divider"></div>
       <div class="pc-change">
         <span id="altin-change" style="color:var(--muted2)">--%</span>
@@ -363,15 +371,14 @@ async function veriYukle() {
     const ga=d.gumus_alis, gs=d.gumus_satis, at=d.altin_tl, gu=d.gumus_usd, au=d.altin_usd;
     const gd=d.gumus_degisim??0, ad=d.altin_degisim??0;
 
-    document.getElementById('gumus-alis').textContent = ga?ga.toFixed(4):'--';
-    document.getElementById('gumus-satis').textContent = gs?`Satış: ₺${gs.toFixed(4)}`:'Satış: ₺--';
+    document.getElementById('gumus-alis').textContent = ga?ga.toFixed(2):'--';
+    document.getElementById('gumus-satis').textContent = gs?gs.toFixed(2):'--';
     const gcEl=document.getElementById('gumus-change');
 gcEl.textContent= 'GÜNLÜK  ' + cs(gd);
 gcEl.className='pc-change ' + (gd>0?'up':gd<0?'down':'flat');
 gcEl.style.color='';
 
     document.getElementById('altin-tl').textContent = at?at.toFixed(2):'--';
-    document.getElementById('altin-usd').textContent = au?`$${au.toFixed(2)} / ons`:'$-- / ons';
     const acEl=document.getElementById('altin-change');
 acEl.textContent='GÜNLÜK  ' + cs(ad);
 acEl.className='pc-change ' + (ad>0?'up':ad<0?'down':'flat');
