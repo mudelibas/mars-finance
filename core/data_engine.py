@@ -72,6 +72,31 @@ def get_silver_price_dunyakatilim():
         logger.error(f"Dünya Katılım scraping hatası: {e}")
         return _fiyat_cache["alis"], _fiyat_cache["satis"]
 
+def get_silver_price_dunyakatilim():
+    global _fiyat_cache
+    if time.time() - _fiyat_cache["zaman"] < FIYAT_CACHE_SURE:
+        return _fiyat_cache["alis"], _fiyat_cache["satis"]
+    try:
+        import re
+        r = requests.get(
+            "https://dunyakatilim.com.tr/gunluk-kurlar",
+            timeout=10,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        match = re.search(
+            r'Gümüş[^G]*?(\d{2,3}[.,]\d{4})[^0-9]*(\d{2,3}[.,]\d{4})',
+            r.text, re.DOTALL
+        )
+        if match:
+            alis  = float(match.group(1).replace(",", "."))
+            satis = float(match.group(2).replace(",", "."))
+            _fiyat_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
+            return alis, satis
+        return None, None
+    except Exception as e:
+        logger.error(f"Dünya Katılım scraping hatası: {e}")
+        return _fiyat_cache["alis"], _fiyat_cache["satis"]
+
 def get_silver_price_tl():
     try:
         alis, satis = get_silver_price_dunyakatilim()
