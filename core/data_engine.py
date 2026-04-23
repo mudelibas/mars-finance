@@ -114,13 +114,16 @@ def get_gold_price_dunyakatilim():
         
         # XAU satırını bul ve fiyatları çıkar
         match = re.search(
-            r'XAU[^0-9]*(\d{4,5}[.,]\d{4})[^0-9]*(\d{4,5}[.,]\d{4})',
+            r'Alt&#x131;n\s*\(XAU\).*?</td>.*?<td[^>]*>(\d[.,]\d{3}[.,]\d{4})</td>.*?<td[^>]*>(\d[.,]\d{3}[.,]\d{4})</td>',
             r.text, re.IGNORECASE | re.DOTALL
         )
         
         if match:
-            alis = float(match.group(1).replace(",", "."))
-            satis = float(match.group(2).replace(",", "."))
+            # Handle Turkish number format: 6,756.1019 -> 6756.1019 (remove thousands comma, keep decimal point)
+            alis_str = match.group(1).replace(",", "")
+            satis_str = match.group(2).replace(",", "")
+            alis = float(alis_str)
+            satis = float(satis_str)
             makas = round(satis - alis, 4)
             _altin_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
             logger.info(f"Altın fiyatı: alış={alis}, satış={satis}, makas={makas}")
