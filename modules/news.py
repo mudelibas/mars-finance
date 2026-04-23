@@ -9,6 +9,18 @@ from config import GROQ_API_KEY, RSS_KAYNAKLAR, TIER_AGIRLIKLARI, KRITIK_KELIMEL
 
 logger = logging.getLogger(__name__)
 
+def _entry_zaman(entry):
+    try:
+        import time as _time
+        t = entry.get("published_parsed") or entry.get("updated_parsed")
+        if t:
+            utc = datetime(*t[:6], tzinfo=timezone.utc)
+            tr = utc.astimezone(timezone(timedelta(hours=3)))
+            return tr.strftime("%H:%M")
+    except:
+        pass
+    return datetime.now(timezone(timedelta(hours=3))).strftime("%H:%M")
+
 GORULMUS_DOSYA = "gorulmus_haberler.json"
 
 try:
@@ -58,12 +70,13 @@ def yeni_haberler_cek():
                         gorulmus.add(hid)
                         continue
                     toplam.append({
-                        "id": hid,
+                         "id": hid,
                         "tier": tier,
                         "agirlik": agirlik,
                         "title": baslik,
                         "summary": entry.get("summary", "")[:300],
                         "link": entry.get("link", ""),
+                        "zaman": _entry_zaman(entry),
                     })
                     gorulmus.add(hid)
             except Exception as e:
@@ -107,7 +120,7 @@ SADECE şu JSON formatını döndür, başka hiçbir şey yazma:
 
 Kural: +100 = güçlü yükseliş baskısı, -100 = güçlü düşüş baskısı, 0 = nötr
 Kritik: Fed/merkez bankası, savaş, büyük ekonomik şok = true
-haberler_turkce: sadece kritik haberleri çevir, maksimum 5 haber"""
+haberler_turkce: TÜM haberleri Türkçeye çevir, hiçbirini atlama"""
 
     try:
         r = _groq.chat.completions.create(

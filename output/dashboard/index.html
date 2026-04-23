@@ -130,9 +130,12 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 .haber-item { padding:10px 0; border-bottom:1px solid var(--border); }
 .haber-item:last-child { border-bottom:none; padding-bottom:0; }
 .haber-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px; }
-.haber-tier { font-size:8px; padding:2px 6px; border-radius:3px; background:rgba(74,158,221,0.1); color:var(--blue); border:1px solid rgba(74,158,221,0.2); letter-spacing:1px; white-space:nowrap; flex-shrink:0; }
+.haber-tier { font-size:8px; padding:2px 6px; border-radius:3px; letter-spacing:1px; white-space:nowrap; flex-shrink:0; border:1px solid; }
+.haber-tier.t-kritik { background:rgba(224,92,106,0.15); color:#e05c6a; border-color:rgba(224,92,106,0.3); }
+.haber-tier.t-onemli { background:rgba(212,168,67,0.15); color:#d4a843; border-color:rgba(212,168,67,0.3); }
+.haber-tier.t-genel  { background:rgba(74,158,221,0.1);  color:#4a9edd; border-color:rgba(74,158,221,0.2); }
 .haber-zaman { font-family:'Cantarell', sans-serif; font-size:9px; color:var(--muted); white-space:nowrap; }
-.haber-baslik { font-size:10px; color:var(--text); line-height:1.5; }
+.haber-baslik { font-size:10px; color:var(--text); line-height:1.5; white-space:normal; word-break:break-word; }
 .haber-ozet { font-size:10px; color:var(--muted2); margin-top:3px; line-height:1.4; }
 
 .refresh-btn { width:100%; padding:11px; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Cantarell', sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-bottom:20px; }
@@ -232,13 +235,13 @@ footer { text-align:center; padding:12px 0; font-size:9px; color:var(--muted); l
   </div>
 
   <div class="log-card">
-    <div class="section-title">Son Sinyaller</div>
+    <div class="section-title">Son 10 Sinyal</div>
     <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
   </div>
 
   <div class="log-card">
-    <div class="section-title">Kritik Haberler</div>
-    <div id="haber-log"><div class="log-bos">Kritik haber bekleniyor...</div></div>
+    <div class="section-title">Son 10 Haber</div>
+    <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
   </div>
 
   <button class="refresh-btn" onclick="veriYukle()">↻ &nbsp; Yenile</button>
@@ -332,9 +335,16 @@ function haberLogRender() {
   if(!haberLog.length) { el.innerHTML='<div class="log-bos">Kritik haber bekleniyor...</div>'; return; }
   el.innerHTML = haberLog.slice(0,10).map(h =>
     `<div class="haber-item">
-      <div class="haber-ust"><span class="haber-tier">${h.tier?.toUpperCase()||'T1'}</span><span class="haber-zaman">${h.zaman||'--'}</span></div>
-      <div class="haber-baslik">${h.title}</div>
-      ${h.ozet?`<div class="haber-ozet">${h.ozet}</div>`:''}
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <span class="haber-tier t-${h.tier||'genel'}">${h.tier?.toUpperCase()||'GENEL'}</span>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+            <span class="haber-zaman">${h.zaman||'--'}</span>
+          </div>
+          <div class="haber-baslik">${h.title}</div>
+          ${h.ozet?`<div class="haber-ozet">${h.ozet}</div>`:''}
+        </div>
+      </div>
     </div>`
   ).join('');
 }
