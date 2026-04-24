@@ -45,31 +45,35 @@ def manipulasyon_kontrol(config):
 
     return len(tetiklenen) > 0, tetiklenen
 
+def hesapla_profit_target_usd(entry_oz: float, config) -> float:
+    """
+    Yalnız kâr hedefi (USD/oz). Stop yok.
+    Net hedef: NET_TP aralığının ortası; spread + sabit gider toplamı fiyata yansıtılır.
+    """
+    a = (float(config.get("NET_TP_MIN_PCT", 0.75)) + float(config.get("NET_TP_MAX_PCT", 1.0))) / 2.0
+    nfrac = a / 100.0
+    sfrac = float(config.get("XAG_SPREAD_PCT", 0.02)) / 100.0
+    cfrac = float(config.get("XAG_ORTA_MALIYET_PCT", 0.2)) / 100.0
+    toplam = nfrac + sfrac + cfrac
+    return round(float(entry_oz) * (1.0 + toplam), 4)
+
+
+def fiyat_erkun_esigi(entry_oz: float, tp_oz: float, config) -> float:
+    """%80 ilerlemede (net hedefe göre) erken uyarı seviyesi fiyat (USD/oz)."""
+    f = float(config.get("ERKEN_UYARI_FRAC", 0.8))
+    return float(entry_oz) + f * (float(tp_oz) - float(entry_oz))
+
+
 def hesapla_stop_tp(fiyat_tl, atr_usd, usd_try, config):
-    """ATR bazlı stop-loss ve take-profit hesabı."""
-    if not atr_usd or not usd_try:
+    """
+    Geriye dönük: SL yok, ikinci değer None.
+    Aynı net brüt oranı TL fiyata uygular (1 USD/oz rasyosu ile).
+    """
+    if fiyat_tl is None:
         return None, None
-
-    atr_tl = (atr_usd / 31.1035) * usd_try
-    makas = config.get("MAKAS_TL", 0.75)
-    bsmv = config.get("BSMV_KMV_YUZDE", 0.2) / 100
-    net_kar = config.get("NET_KAR_HEDEFI_YUZDE", 1.5) / 100
-    tp_carp = config.get("ATR_CARPAN_TP", 2.5)
-    sl_carp = config.get("ATR_CARPAN_SL", 1.0)
-
-    # Gerçek giriş maliyeti
-    giris_maliyeti = fiyat_tl + makas + (fiyat_tl * bsmv / 2)
-
-    # Brüt hedef: net %1.5 + çıkış vergisi
-    tp_tl = giris_maliyeti * (1 + net_kar) * (1 + bsmv / 2)
-
-    # ATR bazlı minimum kontrol
-    tp_atr = fiyat_tl + (atr_tl * tp_carp)
-    tp_tl = max(tp_tl, tp_atr)
-
-    sl_tl = fiyat_tl - (atr_tl * sl_carp)
-
-    return round(tp_tl, 2), round(sl_tl, 2)
+    unit = 1.0
+    katsayi = hesapla_profit_target_usd(unit, config) / unit
+    return round(float(fiyat_tl) * katsayi, 2), None
 
 def calistir(config):
     try:

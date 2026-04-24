@@ -3,7 +3,10 @@ import logging
 import requests
 import yfinance as yf
 from datetime import datetime, timezone
+
 from config import STALE_DATA_DAKIKA
+
+from core.data_stream import log_data_source
 
 logger = logging.getLogger(__name__)
 _fiyat_cache = {"alis": None, "satis": None, "zaman": 0}
@@ -38,16 +41,55 @@ def _indir(ticker, period, interval):
         logger.error(f"{ticker} indirme hatası: {e}")
         return None
 
+# --- XAGUSD (SI=F) çoklu zaman dilimi: REST; WS yoksa yfinance (düşük gecikme hedefi) ---
+# 1m: yfinance 7g sınırı; tetikleyici kısa vade. ---
+
+TICKER_XAG = "SI=F"
+TICKER_XAU = "GC=F"
+
+
+def get_silver_mtf(period_1m="5d", period_5m="1mo", period_15m="2mo"):
+    """
+    1m / 5m / 15m kapanış setleri. WebSocket yok: REST indir; log.
+    dönen: {"1m":df,"5m":df,"15m":df} veya None'lar
+    """
+    log_data_source(TICKER_XAG)
+    o1m = _indir(TICKER_XAG, period_1m, "1m")
+    o5m = _indir(TICKER_XAG, period_5m, "5m")
+    o15 = _indir(TICKER_XAG, period_15m, "15m")
+    if o1m is None and o5m is None and o15 is None:
+        logger.error("XAG USD MTF veri alınamadı (REST).")
+    return {"1m": o1m, "5m": o5m, "15m": o15}
+
+
+def get_xau_5m(period="1mo"):
+    """XAU USD onay: 5m dizi."""
+    log_data_source(TICKER_XAU)
+    return _indir(TICKER_XAU, period, "5m")
+
+
+def get_xagusd_spot_last():
+    """Son bilinen kapanış (USD/oz) — 1m veya 5m."""
+    d = get_silver_mtf()
+    for k in ("1m", "5m"):
+        df = d.get(k) if d else None
+        if df is not None and len(df) > 0:
+            return float(df["Close"].astype(float).values[-1])
+    df = _indir(TICKER_XAG, "1d", "1m")
+    if df is not None and len(df) > 0:
+        return float(df["Close"].astype(float).values[-1])
+    return None
+
 # ─── FİYAT VERİLERİ ─────────────────────────────────────────
 
 def get_silver_data(interval="1h", period="60d"):
-    df = _indir("SI=F", period, interval)
+    df = _indir(TICKER_XAG, period, interval)
     if df is None:
         raise ValueError(f"Gümüş verisi alınamadı ({interval})")
     return df
 
 def get_gold_data(interval="1h", period="60d"):
-    df = _indir("GC=F", period, interval)
+    df = _indir(TICKER_XAU, period, interval)
     if df is None:
         raise ValueError(f"Altın verisi alınamadı ({interval})")
     return df

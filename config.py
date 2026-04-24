@@ -28,39 +28,65 @@ VOLATILITE_BASLANGIC_MINUTE = 20
 VOLATILITE_BITIS_HOUR = 15
 VOLATILITE_BITIS_MINUTE = 20
 
-# ─── KURUL GÖRÜŞÜ EŞİKLERİ ──────────────────────────────────
-GOrus_GUCLU = 80       # %80+ → Güçlü Sinyal 🟢
-GORUS_ORTA = 65        # %65-79 → Normal Sinyal 🟡
-GORUS_RISKLI = 50      # %50-64 → Riskli Sinyal 🔴
-GORUS_SESSIZ = 0       # <%60 → Sessizlik
+# ─── SCALP XAGUSD: oylama ve risk ──────────────────────────
+# Öncelik: doğruluk > frekans (düşük hacim / makro anomalisi = veto)
+SINYAL_MIN_PUAN = 75.0
+SINYAL_MAKS_AKTIF = 2
+SINYAL_MAKS_OLCEKLE = 3
+NET_TP_MIN_PCT = 0.75
+NET_TP_MAX_PCT = 1.0
+# spread + gider (net hedef öncesi)
+XAG_SPREAD_PCT = 0.02
+XAG_ORTA_MALIYET_PCT = 0.2
+ERKEN_UYARI_FRAC = 0.8
+# Makro: tek mumda aşırı fiyat/spike
+MAKRO_DXY_ANI_ESIK = 0.5
+MAKRO_TNX_ANI_ESIK = 0.3
 
-# ─── MODÜL AĞIRLIKLARI ───────────────────────────────────────
-# Normal / Kriz / Trend
+# ─── KURUL (geriye dönük uyum) ─────────────────────────────
+GOrus_GUCLU = 80
+GORUS_ORTA = 65
+GORUS_RISKLI = 50
+GORUS_SESSIZ = 0
+
+# ─── MODÜL AĞIRLIKLARI (scalp rejim — trend sürdürme) ───────
 MODUL_AGIRLIKLARI = {
     "normal": {
-        "teknik":       0.375,  # 0.275 + 0.10 (risk)
-        "matematiksel": 0.275,  # 0.20 + 0.075 (balina/2)
-        "haberler":     0.15,
-        "panikci":      0.15,
-        "hacim":        0.05,
+        "teknik":        0.40,
+        "matematiksel": 0.20,
+        "hacim":         0.20,
+        "makro":         0.10,
+        "gold":          0.10,
     },
     "kriz": {
-        "teknik":       0.30,   # 0.20 + 0.10 (risk)
-        "matematiksel": 0.20,   # 0.15 + 0.05 (balina/2)
-        "haberler":     0.35,
-        "panikci":      0.15,
-        "hacim":        0.00,
+        "teknik":        0.20,
+        "matematiksel": 0.20,
+        "hacim":         0.0,
+        "makro":         0.40,
+        "gold":         0.20,
     },
     "trend": {
-        "teknik":       0.45,   # 0.35 + 0.10 (risk)
-        "matematiksel": 0.25,   # 0.20 + 0.05 (balina/2)
-        "haberler":     0.10,
-        "panikci":      0.10,
-        "hacim":        0.05,
+        "teknik":        0.45,
+        "matematiksel": 0.20,
+        "hacim":         0.15,
+        "makro":         0.10,
+        "gold":         0.10,
+    },
+    "scalp": {
+        "teknik":        0.40,
+        "matematiksel": 0.20,
+        "hacim":         0.20,
+        "makro":         0.10,
+        "gold":         0.10,
     },
 }
 
-# ─── TEKNİK PARAMETRELERİ ────────────────────────────────────
+# ─── TEKNİK / HACİM (zımbırtı) ─────────────────────────────
+HACIM_SPIKE_MIN_CARPAN = 1.15   # hacim > 20-EMA(hacim) * bu; zorunlu
+EMA_TREND_HIZLI = 20
+EMA_TREND_YAVAS = 50
+
+# ─── TEKNİK PARAMETRELERİ (geriye dönük) ─────────────────
 RSI_OVERSOLD = 35
 RSI_OVERBOUGHT = 68
 COT_MAX_SHORT_RATIO = 65.0

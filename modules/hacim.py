@@ -1,47 +1,54 @@
+# --- 5m hacim: sinyal için S spike ZORUNLU: son hacim > 20-EMA(hacim) * eşik ---
+
 import logging
-from core.data_engine import get_silver_data
-from config import HACIM_ANOMALI_CARPAN
+import numpy as np
+import pandas as pd
+from core.data_engine import get_silver_mtf
+from config import HACIM_SPIKE_MIN_CARPAN
 
 logger = logging.getLogger(__name__)
 
+
 def calistir(config):
     try:
-        df = get_silver_data(interval="1h", period="30d")
-        if len(df) < 21:
-            return {"modul": "hacim", "puan": 50, "detay": {}}
-        
-        hacimler = df["Volume"].values
-        son_hacim = float(hacimler[-1])
-        ort_hacim = float(hacimler[-21:-1].mean())
-        
-        if ort_hacim == 0:
-            return {"modul": "hacim", "puan": 50, "detay": {}}
-        
-        oran = son_hacim / ort_hacim
-        anomali_var = oran >= HACIM_ANOMALI_CARPAN
-        
-        # Yüksek hacim + fiyat yükseliyorsa iyi sinyal
-        fiyatlar = df["Close"].values
-        fiyat_yonu = fiyatlar[-1] > fiyatlar[-2]
-        
-        if anomali_var and fiyat_yonu:
-            puan = 80
-        elif anomali_var and not fiyat_yonu:
-            puan = 20
-        elif oran > 1.5 and fiyat_yonu:
-            puan = 65
-        elif oran < 0.5:
-            puan = 45
-        else:
-            puan = 50
-        
+        mtf = get_silver_mtf()
+        o5 = mtf.get("5m") if mtf else None
+        if o5 is None or len(o5) < 30 or "Volume" not in o5.columns:
+            return {
+                "modul": "hacim",
+                "puan": 0.0,
+                "hacim_spike_ok": False,
+                "detay": {"hata": "5m hacim yok"},
+            }
+
+        v = o5["Volume"].astype(float)
+        v_ma = v.rolling(20, min_periods=10).mean()
+        vson, vort = float(v.values[-1]), float(v_ma.values[-1])
+        if vort <= 0 or np.isnan(vort):
+            return {
+                "modul": "hacim",
+                "puan": 0.0,
+                "hacim_spike_ok": False,
+                "detay": {"hacim_orta": 0.0},
+            }
+        carpan = float(config.get("HACIM_SPIKE_MIN_CARPAN", HACIM_SPIKE_MIN_CARPAN))
+        oran = vson / vort
+        spike = oran >= carpan
+        puan = 85.0 if spike else 5.0
+        if not spike:
+            logger.info(f"[HACİM] zorunlu SPIKE yok: oran={oran:.2f} < {carpan}")
         return {
             "modul": "hacim",
-            "puan": puan,
-            "anomali": anomali_var,
+            "puan": round(puan, 1),
+            "hacim_spike_ok": bool(spike),
             "oran": round(oran, 2),
-            "detay": {"hacim_orani": oran, "anomali": anomali_var}
+            "detay": {"carpan_min": carpan, "hacim_oran": oran, "ZORUNLU": True},
         }
     except Exception as e:
-        logger.error(f"Hacim modülü hatası: {e}")
-        return {"modul": "hacim", "puan": 50, "detay": {}}
+        logger.error(f"Hacim: {e}")
+        return {
+            "modul": "hacim",
+            "puan": 0.0,
+            "hacim_spike_ok": False,
+            "detay": {},
+        }

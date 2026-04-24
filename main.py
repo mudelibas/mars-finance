@@ -8,11 +8,12 @@ import threading
 from datetime import datetime, timezone, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Bot
-from core.data_engine import get_silver_price_tl
-from core.signal_engine import sinyal_uret, build_hedef_mesaji, tam_analiz_calistir
+from core.data_engine import get_silver_price_tl, get_xagusd_spot_last
+from core.signal_engine import sinyal_uret, build_kapanis_mesaji_usd, tam_analiz_calistir
+from core import position_store as pstore
 from filters.calendar import kilit_koy
 from output.api import flask_baslat
-from modules.risk import hesapla_stop_tp
+from modules.risk import fiyat_erkun_esigi
 import config as cfg
 
 logging.basicConfig(
@@ -86,14 +87,15 @@ def pozisyon_oku():
 
 def sinyal_logla(tip, giris_tl, cikis_tl=None, kar_yuzde=None,
                  giris_tarihi=None,
-                 hedef_tl=None, stop_tl=None, kurul_gorusu=None):
+                 hedef_tl=None, stop_tl=None, kurul_gorusu=None,
+                 entry_usd=None, tp_usd=None, sinyal_id=None):
     log = []
     if os.path.exists(LOG_DOSYA):
         with open(LOG_DOSYA) as f:
             log = json.load(f)
     if giris_tarihi is None and tip == "ALIM":
         giris_tarihi = datetime.now(TR).strftime("%Y-%m-%d %H:%M")
-    log.append({
+    rec = {
         "tip": tip,
         "tarih": datetime.now(TR).strftime("%Y-%m-%d %H:%M"),
         "giris_tarihi": giris_tarihi,
@@ -103,7 +105,11 @@ def sinyal_logla(tip, giris_tl, cikis_tl=None, kar_yuzde=None,
         "stop_tl": stop_tl,
         "kar_yuzde": kar_yuzde,
         "kurul_gorusu": kurul_gorusu,
-    })
+        "entry_usd": entry_usd,
+        "tp_usd": tp_usd,
+        "signal_id": sinyal_id,
+    }
+    log.append(rec)
     with open(LOG_DOSYA, "w") as f:
         json.dump(log, f, ensure_ascii=False, indent=2)
 
@@ -139,69 +145,81 @@ async def piyasa_analizi_job():
     try:
         logger.info("Periyodik analiz başlıyor...")
         conf = config_dict()
-        sinyal_var, mesaj, fiyat_tl, tp_tl, sinyal_tipi = sinyal_uret(conf)
+        sinyal_var, mesaj, e_usd, t_usd, sinyal_tipi, extra = sinyal_uret(conf)
         bot = Bot(token=cfg.TELEGRAM_TOKEN)
+        fiyat_tl, _ = get_silver_price_tl()
 
-        if sinyal_var and mesaj and not pozisyon_oku():
-            # Stop hesabı
-            _, usd_try = get_silver_price_tl()
-            analiz = tam_analiz_calistir(conf)
-            atr = (analiz.get("modul_sonuclari", {})
-                   .get("teknik", {}).get("atr_1h"))
-            tp_tl2, sl_tl = hesapla_stop_tp(fiyat_tl, atr, usd_try, conf)
-            kurul_g = analiz.get("oylama", {}).get("kurul_gorusu", 0)
-
+        if sinyal_var and mesaj and pstore.acik_sinyal_sayisi() < cfg.SINYAL_MAKS_AKTIF:
+            kurul_g = (extra or {}).get("confidence", 0) if extra else 0
             gonderilen = await bot.send_message(
                 chat_id=cfg.TELEGRAM_GROUP_ID,
                 text=mesaj,
                 parse_mode="Markdown"
             )
-            pozisyon_kaydet(fiyat_tl, tp_tl or tp_tl2, sl_tl,
-                            gonderilen.message_id, kurul_g)
-            sinyal_logla("ALIM", giris_tl=fiyat_tl,
-                         hedef_tl=tp_tl, stop_tl=sl_tl,
-                         kurul_gorusu=kurul_g)
-            logger.info(f"Sinyal gönderildi: {sinyal_tipi}")
+            rsn = ((extra or {}).get("reason") or "")[:400]
+            rec = pstore.yeni_alim_ekle(
+                e_usd, t_usd, kurul_g, rsn,
+                telemesaj_id=gonderilen.message_id,
+            )
+            sid = rec.get("id") if rec else None
+            sinyal_logla(
+                "ALIM", giris_tl=fiyat_tl or 0, hedef_tl=0, stop_tl=None,
+                kurul_gorusu=kurul_g,
+                entry_usd=e_usd, tp_usd=t_usd, sinyal_id=sid,
+            )
+            logger.info(f"Scalp sinyal: {sinyal_tipi} id={sid}")
 
     except Exception as e:
         logger.error(f"Piyasa analizi: {e}")
 
 async def fiyat_takip_job():
+    """Açık USD sinyalleri: sadece TP (kâr) ve %80 ilerlemede erken uyarı. Stop yok."""
     try:
-        pozisyon = pozisyon_oku()
-        if not pozisyon:
+        acik = pstore.tüm_acikler()
+        if not acik:
             return
-        price_tl, _ = get_silver_price_tl()
-        if not price_tl:
+        spot = get_xagusd_spot_last()
+        if spot is None:
+            logger.error("[takip] XAG spot yok")
             return
-
-        giris_tl = pozisyon["giris_tl"]
-        hedef_tl = pozisyon["hedef_tl"]
-        mesaj_id = pozisyon["mesaj_id"]
-        giris_tarihi = pozisyon.get("tarih")
-        kar_yuzde = ((price_tl - giris_tl) / giris_tl) * 100
-
-        logger.info(f"Pozisyon: ₺{giris_tl:.2f} → ₺{price_tl:.2f} (%{kar_yuzde:.2f})")
-
+        conf = config_dict()
         bot = Bot(token=cfg.TELEGRAM_TOKEN)
+        fiyat_tl, _ = get_silver_price_tl()
 
-        # Hedef vuruldu
-        if price_tl >= hedef_tl:
-            conf = config_dict()
-            mesaj, net_kar = build_hedef_mesaji(
-                giris_tarihi, giris_tl, hedef_tl, price_tl, conf
-            )
-            await bot.send_message(
-                chat_id=cfg.TELEGRAM_GROUP_ID,
-                text=mesaj,
-                reply_to_message_id=mesaj_id,
-                parse_mode="Markdown"
-            )
-            sinyal_logla("SATIS", giris_tl=giris_tl,
-                         cikis_tl=price_tl, kar_yuzde=net_kar,
-                         giris_tarihi=giris_tarihi)
-            performans_guncelle(net_kar)
-            pozisyon_sil()
+        for s in list(acik):
+            entry = s.get("entry_target_usd")
+            tpv = s.get("tp_usd")
+            if not entry or not tpv or entry <= 0 or tpv <= 0:
+                continue
+            erken = fiyat_erkun_esigi(entry, tpv, conf)
+            mid = s.get("id")
+            mes_id = s.get("telegram_message_id")
+            if spot < entry:
+                continue
+            if spot >= float(tpv):
+                m, net_br = build_kapanis_mesaji_usd(entry, tpv, spot, conf)
+                await bot.send_message(
+                    chat_id=cfg.TELEGRAM_GROUP_ID,
+                    text=m,
+                    reply_to_message_id=mes_id,
+                    parse_mode="Markdown"
+                )
+                sinyal_logla(
+                    "SATIS", giris_tl=fiyat_tl or 0, cikis_tl=None,
+                    kar_yuzde=net_br, giris_tarihi=s.get("created"),
+                    hedef_tl=0, entry_usd=entry, tp_usd=tpv, sinyal_id=mid,
+                )
+                performans_guncelle(net_br)
+                pstore.sinyal_kapat(mid, spot, "TP")
+            elif (spot >= float(erken)) and not s.get("early_80_alerts_sent"):
+                await bot.send_message(
+                    chat_id=cfg.TELEGRAM_GROUP_ID,
+                    text=(f"📍 Erken uyar: XAG ~%80 hedefe yakın (spot {spot:.4f}, "
+                          f"hedef {float(tpv):.4f})."),
+                    reply_to_message_id=mes_id,
+                )
+                pstore.early_alert_isaretle(mid)
+            logger.info(f"[takip] id={mid} entry={entry} spot={spot} erken={erken:.4f} tp={tpv}")
 
     except Exception as e:
         logger.error(f"Fiyat takip: {e}")

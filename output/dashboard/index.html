@@ -248,7 +248,19 @@ footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); 
   </div>
 
   <div class="log-card">
-    <div class="section-title">Son 10 Sinyal</div>
+    <div class="section-title">Açık sinyaller (XAG scalping)</div>
+    <div id="open-signals"><div class="log-bos">Yükleniyor…</div></div>
+  </div>
+  <div class="log-card">
+    <div class="section-title">İstatistik</div>
+    <div id="stats-panel" style="font-size:12px;color:var(--muted2);line-height:1.7"></div>
+  </div>
+  <div class="log-card">
+    <div class="section-title">Sinyal defteri (açık + kapanan)</div>
+    <div id="signal-ledger"><div class="log-bos">—</div></div>
+  </div>
+  <div class="log-card">
+    <div class="section-title">Son 10 Sinyal (log)</div>
     <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
   </div>
 
@@ -264,14 +276,15 @@ footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); 
 <script>
 const API = '';
 const MODUL = {
-  teknik:       { soru: "Grafiğe göre alım yeri mi?",         ters: false },
-  matematiksel: { soru: "Fiyat aşırı geriledi mi?",           ters: false },
-  haberler:     { soru: "Haberler gümüş için olumlu mu?",     ters: false },
-  panikci:      { soru: "Panik satışları gümüşü düşürüyor mu?", ters: true },
-  hacim:        { soru: "Fiyatta yapay hareket riski var mı?", ters: true }
+  teknik:       { soru: "15m+5m trend, 1m VEMA/EMA20 pull",     ters: false },
+  matematiksel: { soru: "ADX-benzeri kuvvet (5m)",            ters: false },
+  hacim:        { soru: "5m hacim spike (zorunlu)",           ters: false },
+  makro:        { soru: "DXY+10Y makro, ani hareket veto",    ters: true },
+  gold:         { soru: "XAU 5m aynı yönde hizalama",         ters: false }
 };
 let sinyalLog = [], haberLog = [];
 let _lastGauge = null;
+function _esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function cc(v) { return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted2)'; }
 function cs(v) { if(v==null) return '--%'; return (v>0?'+':'') + v.toFixed(2) + '%'; }
@@ -307,19 +320,19 @@ function badgeSec(g) {
 
 function skorGridRender(m) {
   const g = document.getElementById('skor-grid');
-  if (!g || !m) return;
-  const modules = Object.entries(MODUL);
-  g.innerHTML = modules.map(([k, modul], index) => {
+  if (!g) return;
+  const keys = Object.keys(m && typeof m === 'object' ? m : {}).filter(k => m[k] && typeof m[k] === 'object');
+  if (!keys.length) {
+    g.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted)">Modül puanı yok (kilit veya analiz bekleniyor).</div>';
+    return;
+  }
+  g.innerHTML = keys.map((k, index) => {
     const p = m[k]?.puan ?? 50;
+    const modul = MODUL[k] || { soru: k, ters: false };
     const { soru, ters } = modul;
-    
-    // Calculate bar width based on ters flag
     const barWidth = ters ? (100 - p) : p;
     const displayPuan = ters ? (100 - p) : p;
-    
-    // Add border-bottom to all except last element
-    const borderStyle = index < modules.length - 1 ? 'border-bottom:1px solid var(--border)' : '';
-    
+    const borderStyle = index < keys.length - 1 ? 'border-bottom:1px solid var(--border)' : '';
     return `<div class="skor-item" style="${borderStyle}">
       <div class="skor-ust" style="flex:1">
         <div style="font-size:11px;font-weight:700">${k.charAt(0).toUpperCase() + k.slice(1)}</div>
@@ -332,6 +345,58 @@ function skorGridRender(m) {
         <div style="font-size:11px;font-weight:700;text-align:right">%${displayPuan.toFixed(0)}</div>
       </div>
     </div>`;
+  }).join('');
+}
+
+function openSignalsRender(openList) {
+  const el = document.getElementById('open-signals');
+  if (!el) return;
+  const L = openList && openList.length ? openList : [];
+  if (!L.length) { el.innerHTML = '<div class="log-bos">Açık sinyal yok.</div>'; return; }
+  el.innerHTML = L.map(s => {
+    const e = s.entry_target_usd != null ? s.entry_target_usd.toFixed(2) : '—';
+    const t = s.tp_usd != null ? s.tp_usd.toFixed(2) : '—';
+    const c = s.confidence != null ? s.confidence.toFixed(0) : '—';
+    const id = s.id || '—';
+    const st = s.created || '';
+    const rs = s.reason ? `<div style="font-size:10px;color:var(--muted);margin-top:4px">${_esc(s.reason).slice(0,200)}</div>` : '';
+    return `<div class="sinyal-item">
+      <div class="sinyal-ust"><span class="sinyal-tip tip-al">OPEN</span><span class="sinyal-zaman">${st}</span></div>
+      <div class="sinyal-detay">$${e} → $${t} (TP) &nbsp;·&nbsp; güven %${c} &nbsp;·&nbsp; <code style="font-size:10px">${_esc(id)}</code></div>
+      ${rs}
+    </div>`;
+  }).join('');
+}
+
+function statsPanelRender(st, sinyalEsik) {
+  const el = document.getElementById('stats-panel');
+  if (!el) return;
+  if (!st || typeof st !== 'object') { el.textContent = '—'; return; }
+  const a = st.active_count ?? 0, c = st.closed_count ?? 0, o = st.open_older_24h ?? 0;
+  const th = sinyalEsik != null ? ` &nbsp;·&nbsp; Kurul eşiği: <b>≥${Number(sinyalEsik).toFixed(0)}</b>` : '';
+  el.innerHTML = `Açık: <b>${a}</b> &nbsp;·&nbsp; Kapanan: <b>${c}</b> &nbsp;·&nbsp; 24h+ açık/parse sorunu: <b>${o}</b>${th}`;
+}
+
+function signalLedgerRender(ledger) {
+  const el = document.getElementById('signal-ledger');
+  if (!el) return;
+  const L = ledger && ledger.length ? ledger : [];
+  if (!L.length) { el.innerHTML = '<div class="log-bos">Kayıt yok.</div>'; return; }
+  const rev = L.slice().reverse();
+  el.innerHTML = rev.map(s => {
+    const st = s.status || '—';
+    const e = s.entry_target_usd != null ? s.entry_target_usd.toFixed(2) : '—';
+    const t = s.tp_usd != null ? s.tp_usd.toFixed(2) : '—';
+    const ex = s.exit_usd != null ? s.exit_usd.toFixed(2) : '—';
+    const pnl = s.pnl_gross_pct != null ? (s.pnl_gross_pct >= 0 ? '+' : '') + s.pnl_gross_pct.toFixed(2) + '%' : '—';
+    const cr = s.created || '', cl = s.closed || '';
+    const id = s.id || '';
+    if (st === 'OPEN') {
+      return `<div class="sinyal-item"><div class="sinyal-ust"><span class="sinyal-tip tip-al">AÇIK</span><span class="sinyal-zaman">${cr}</span></div>
+        <div class="sinyal-detay">$${e} → $${t} <code style="font-size:10px">${id}</code></div></div>`;
+    }
+    return `<div class="sinyal-item"><div class="sinyal-ust"><span class="sinyal-tip tip-sat">KAPANDI</span><span class="sinyal-zaman">${cl || cr}</span></div>
+      <div class="sinyal-detay">Giriş $${e} · Çıkış $${ex} · PnL ${pnl} · ${_esc(s.close_reason)}</div></div>`;
   }).join('');
 }
 
@@ -349,9 +414,13 @@ function sinyalLogRender() {
     const kar = s.kar_yuzde!=null ? `${Number(s.kar_yuzde)>=0?'+':''}${Number(s.kar_yuzde).toFixed(1)}%` : '--';
 
     if(s.tip === 'ALIM') {
+      const u = s.entry_usd != null && s.tp_usd != null
+        ? ` &nbsp;·&nbsp; $${Number(s.entry_usd).toFixed(2)} → $${Number(s.tp_usd).toFixed(2)} USD`
+        : '';
+      const sig = s.signal_id ? ` <code style="font-size:10px">${s.signal_id}</code>` : '';
       return `<div class="sinyal-item">
         <div class="sinyal-ust"><span class="sinyal-tip tip-al">⬆ ALIM</span><span class="sinyal-zaman">${tarih}</span></div>
-        <div class="sinyal-detay">Giriş ${giris} · Hedef ${hedef} · Hedef: net +%1.5</div>
+        <div class="sinyal-detay">Giriş ${giris} · Hedef ${hedef}${u}${sig}</div>
       </div>`;
     }
 
@@ -476,6 +545,9 @@ async function veriYukle() {
     if (badge) { badge.className = 'status-badge ' + bcls; badge.textContent = bet; }
 
     skorGridRender(d.moduller);
+    openSignalsRender(d.open_signals);
+    statsPanelRender(d.stats, d.sinyal_esik);
+    signalLedgerRender(d.signal_ledger);
 
     if(d.sinyal_log?.length) sinyalLog=d.sinyal_log;
     sinyalLogRender();

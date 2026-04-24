@@ -16,6 +16,7 @@ if _ROOT not in sys.path:
 
 from core.data_engine import get_silver_price_dunyakatilim, get_gold_price_dunyakatilim, get_gold_price_tl
 from core.signal_engine import tam_analiz_calistir
+from core import position_store as pstore
 import config as cfg
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,10 @@ def durum():
         if yeni_haberler:
             _haber_log_kaydet(yeni_haberler)
 
+        st = pstore.istatistik_ozet()
+        open_sig = pstore.tüm_acikler()
+        all_sig = pstore.tüm_kayitlar()[-50:]
+
         veri = {
             "gumus_alis":     gumus_alis,
             "gumus_satis":    gumus_satis,
@@ -97,8 +102,8 @@ def durum():
             "altin_tl":       altin_tl,
             "altin_usd":      ctx.get("altin"),
             "altin_degisim":  ctx.get("altin_degisim_yuzde", 0),
-            "kurul_gorusu":   oylama.get("kurul_gorusu", 0),
-            "rejim":          moduller_raw.get("makro", {}).get("rejim_str", "--"),
+            "kurul_gorusu":   oylama.get("kurul_gorusu", 0) if oylama else 0,
+            "rejim":          (moduller_raw.get("makro") or {}).get("rejim_str", "--") if oylama else "--",
             "moduller":       moduller,
             "vix":            ctx.get("vix"),
             "dxy":            ctx.get("dxy"),
@@ -106,10 +111,14 @@ def durum():
             "petrol":         ctx.get("petrol"),
             "petrol_degisim": ctx.get("petrol_degisim_yuzde", 0),
             "faiz":           ctx.get("faiz"),
-            "sinyal_log":     list(reversed(_sinyal_log_oku()))[:10],
+            "sinyal_log":     list(reversed(_sinyal_log_oku()))[:20],
+            "open_signals":   open_sig,
+            "signal_ledger":  all_sig,
+            "stats":          st,
+            "sinyal_esik":    getattr(cfg, "SINYAL_MIN_PUAN", 75.0),
             "haberler":       _haber_log_oku()[:10],
-            "veto":           oylama.get("veto", False),
-            "veto_neden":     oylama.get("veto_neden"),
+            "veto":           oylama.get("veto", False) if oylama else False,
+            "veto_neden":     oylama.get("veto_neden") if oylama else None,
             "guncelleme":     datetime.now(TR).strftime("%H:%M"),
         }
         _cache["veri"] = veri
