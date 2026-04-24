@@ -354,7 +354,7 @@ body::after {
   letter-spacing: 0.04em;
   border: 1px solid transparent;
 }
-.pc-change.up { background: #0f2; color: #00ff6a; }
+.pc-change.up { background: #006931; color: #e8f5ed; }
 .pc-change.down { background: #200; color: #ff3b3b; }
 .pc-change.flat {
   background: rgba(255,255,255,0.04);
@@ -382,6 +382,10 @@ body::after {
   margin-top: 10px;
 }
 .mini-gauge .perf-pct { font-size: 26px; }
+.mini-gauge .gauge-labels {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
 .mini-gauge .gauge-track {
   position: relative;
   height: 4px;
@@ -689,6 +693,11 @@ footer {
           <div class="gauge-track">
             <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
             <div class="gauge-pointer" id="gauge-pointer" style="left:0%"></div>
+          </div>
+          <div class="gauge-labels" aria-hidden="true">
+            <span class="g-label-sell">Satım</span>
+            <span class="g-label-mid">Nötr</span>
+            <span class="g-label-buy">Alım</span>
           </div>
           <div class="perf-inline">
             <div id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</div>
