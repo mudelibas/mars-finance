@@ -240,6 +240,59 @@ footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); 
     </div>
   </div>
 
+  <div class="performance">
+    <div class="perf-header">
+      <div class="section-title" style="margin-bottom:0">Piyasa Performansı</div>
+    </div>
+    <div style="margin-top:14px"></div>
+    <div class="gauge-wrap">
+      <div class="gauge-track">
+        <div class="gauge-segments">
+          <div class="seg-sat"></div>
+          <div class="seg-notr"></div>
+          <div class="seg-al"></div>
+        </div>
+        <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
+        <div class="gauge-pointer" id="gauge-pointer" style="left:0%"></div>
+      </div>
+      <div class="gauge-labels">
+        <span style="color:var(--red)">Satım</span>
+        <span>Nötr</span>
+        <span style="color:var(--green)">Alım</span>
+      </div>
+    </div>
+    <div class="perf-status">
+      <span id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</span>
+      <span class="perf-pct" id="perf-pct">--%</span>
+    </div>
+  </div>
+
+  <div class="indicators">
+    <div class="section-title">Piyasa Göstergeleri</div>
+    <div class="ind-grid">
+      <div class="ind-item">
+        <div class="ind-key">Altın Endeksi</div>
+        <div class="ind-val" id="m-altin-endeks">--</div>
+        <div class="ind-sub" id="m-altin-endeks-change">--</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-key">Dolar Endeksi</div>
+        <div class="ind-val" id="m-dxy">--</div>
+        <div class="ind-sub" id="m-dxy-change">--</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-key">Brent Petrol</div>
+        <div class="ind-val" id="m-petrol">--</div>
+        <div class="ind-sub" id="m-petrol-change">--</div>
+      </div>
+      <div class="ind-item">
+        <div class="ind-key">Korku Endeksi</div>
+        <div class="ind-val" id="m-vix">--</div>
+        <div class="ind-sub" id="m-vix-yorum">--</div>
+      </div>
+    </div>
+  </div>
+
   <div class="skor">
     <div class="section-title">PERFORMANS ETKENLERİ</div>
     <div class="skor-grid" id="skor-grid">
@@ -254,7 +307,7 @@ footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); 
 
   <div class="log-card">
     <div class="section-title">Son 10 Haber</div>
-    <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
+    <div id="haber-log"><div class="log-bos">Henüz haber Kaydı yok.</div></div>
   </div>
 
   <button class="refresh-btn" onclick="veriYukle()">↻ &nbsp; Yenile</button>
