@@ -5,7 +5,6 @@ from core.voting_engine import hesapla
 from modules.technical import calistir as teknik_calistir
 from modules.quant import calistir as quant_calistir
 from modules.behavioral import calistir as behavioral_calistir
-from modules.risk import calistir as risk_calistir, hesapla_stop_tp
 from modules.news import calistir as haber_calistir
 from modules.hacim import calistir as hacim_calistir
 from filters.calendar import kilit_kontrol
@@ -126,7 +125,6 @@ def tam_analiz_calistir(config):
         ("teknik",       lambda: teknik_calistir(config)),
         ("matematiksel", lambda: quant_calistir(config)),
         ("panikci",      lambda: behavioral_calistir(config)),
-        ("risk",         lambda: risk_calistir(config)),
         ("haberler",     lambda: haber_calistir(config)),
         ("hacim",        lambda: hacim_calistir(config)),
     ]:
