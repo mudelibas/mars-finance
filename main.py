@@ -357,11 +357,10 @@ async def handle_updates():
 async def main():
     logger.info("Mars Finance v2.0 başlatılıyor...")
 
-    port = int(os.environ.get("PORT", "5000"))
     # Flask API ayrı thread'de
     flask_thread = threading.Thread(target=flask_baslat, daemon=True)
     flask_thread.start()
-    logger.info("Dashboard: 0.0.0.0:%s (PORT ortam değişkeni)", port)
+    logger.info("Dashboard: 0.0.0.0:5000")
 
     scheduler = AsyncIOScheduler(timezone=timezone.utc)
 
