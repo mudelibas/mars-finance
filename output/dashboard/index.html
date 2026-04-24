@@ -4,273 +4,710 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mars Finance</title>
-<link href="https://fonts.googleapis.com/css2?family=Cantarell:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 <style>
+/* ─── Design system: calm fintech, soft dark, Apple + Material hybrid ─── */
 :root {
-  --bg:        #0d1117;
-  --bg2:       #111827;
-  --surface:   #161f2e;
-  --surface2:  #1c2a3a;
-  --border:    #1e3048;
-  --border2:   #243550;
-  --text:      #f0f6fc;
-  --muted:     #7a9ab5;
-  --muted2:    #a0bcd4;
-  --silver:    #dceeff;
-  --gold:      #f0c050;
-  --green:     #3fb68b;
-  --red:       #e05c6a;
-  --yellow:    #d4a843;
-  --blue:      #4a9edd;
+  --bg-deep:   #0a0e14;
+  --bg-mid:    #121a24;
+  --bg-elev:   #161d28;
+  --surface:   rgba(22, 32, 44, 0.55);
+  --surface-solid: #1a222e;
+  --border:    rgba(255, 255, 255, 0.06);
+  --border2:   rgba(255, 255, 255, 0.08);
+  --border-soft: rgba(255, 255, 255, 0.04);
+  --text:      rgba(245, 248, 252, 0.95);
+  --text-dim:  rgba(200, 210, 220, 0.72);
+  --muted:     rgba(148, 160, 176, 0.65);
+  --muted2:    rgba(180, 192, 204, 0.78);
+  /* Metallic-soft precious */
+  --silver:    #b8c8d8;
+  --gold:      #c4a86a;
+  /* Muted directional */
+  --green:     #5a9a7a;
+  --red:       #b8706e;
+  --yellow:    #a8946a;
+  --blue:      #6a8eae;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.18);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.28);
+  --shadow-lift: 0 4px 20px rgba(0,0,0,0.22);
+  --radius:    16px;
+  --radius-sm: 12px;
+  --space-section: 28px;
+  --space-inner: 22px;
+  --font: system-ui, -apple-system, "Inter", "Roboto", "Segoe UI", sans-serif;
+  --text-track-wide: 0.14em;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+
 body {
-  background:var(--bg); color:var(--text);
-  font-family:'Cantarell', sans-serif; font-size:14px;
-  min-height:100vh; -webkit-font-smoothing:antialiased;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+  letter-spacing: 0.01em;
 }
+
+/* Layered soft navy depth */
 body::before {
-  content:''; position:fixed; inset:0;
+  content: "";
+  position: fixed;
+  inset: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 90% 0%, rgba(74,158,221,0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 70% at 5% 90%, rgba(63,182,139,0.03) 0%, transparent 60%);
-  pointer-events:none; z-index:0;
+    radial-gradient(ellipse 100% 80% at 50% -20%, rgba(60, 90, 120, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 60% at 100% 30%, rgba(50, 75, 95, 0.1) 0%, transparent 45%),
+    radial-gradient(ellipse 60% 50% at 0% 100%, rgba(40, 55, 70, 0.14) 0%, transparent 50%),
+    linear-gradient(180deg, #0c1218 0%, #0a1016 50%, #080c12 100%);
+  pointer-events: none;
+  z-index: 0;
 }
-.wrap { position:relative; z-index:1; max-width:520px; margin:0 auto; padding:16px 14px 32px; }
 
-header { display:flex; align-items:center; justify-content:space-between; padding:18px 0 14px; border-bottom:1px solid var(--border); margin-bottom:18px; }
-.logo { font-family:'Cantarell', sans-serif; font-size:18px; font-weight:500; color:var(--silver); }
-.logo em { color:var(--gold); font-style:normal; }
-.live { display:flex; align-items:center; gap:7px; font-family:'Cantarell', sans-serif; font-size:11px; color:var(--muted2); }
-.dot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 2.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+}
 
-.price-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
-.price-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; position:relative; overflow:hidden; }
-.price-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius:2px 2px 0 0; }
-.price-card.silver::before { background:linear-gradient(90deg, var(--silver), transparent); }
-.price-card.gold::before   { background:linear-gradient(90deg, var(--gold), transparent); }
-.price-card.silver { border-top-color:rgba(220,238,255,0.3); }
-.price-card.gold   { border-top-color:rgba(240,192,80,0.3); }
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 20px 40px;
+}
 
-.pc-label { font-size:10px; text-transform:uppercase; margin-bottom:10px; font-weight:600; }
-.price-card.silver .pc-label { color:var(--silver); }
-.price-card.gold   .pc-label { color:var(--gold); }
+/* ── Premium floating card (unified) ── */
+.m-card,
+.price-hero,
+.performance,
+.indicators,
+.skor,
+.log-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-inner);
+  margin-bottom: var(--space-section);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: box-shadow 0.35s ease, transform 0.35s ease, border-color 0.3s ease;
+}
+.price-hero:hover,
+.performance:hover,
+.indicators:hover,
+.skor:hover,
+.log-card:hover,
+.m-card:hover {
+  box-shadow: var(--shadow-lift);
+  border-color: rgba(255,255,255,0.09);
+  transform: translateY(-1px);
+}
+.log-card:hover { transform: translateY(-0.5px); }
 
-.pc-try { font-family:'Cantarell', sans-serif; font-size:37px; font-weight:800; line-height:1; margin-bottom:6px; }
-.pc-try span { font-size:16px; font-weight:400; margin-right:3px; opacity:0.6; }
-.price-card.silver .pc-try { color:var(--silver); }
-.price-card.gold   .pc-try { color:var(--gold); }
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 24px;
+  margin-bottom: 4px;
+  border-bottom: none;
+}
 
-.pc-usd { font-family:'Cantarell', sans-serif; font-size:13px; color:var(--muted2); margin-bottom:10px; }
-.pc-divider { height:1px; background:var(--border); margin-bottom:10px; }
+.logo {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-feature-settings: "tnum" 1;
+}
+.logo em {
+  color: var(--gold);
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
 
-.pc-change { display:inline-flex; align-items:center; gap:5px; font-family:'Cantarell', sans-serif; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; }
-.pc-change.up   { background:#1e8449; color:#fff; }
-.pc-change.down { background:#c0392b; color:#fff; }
-.pc-change.flat { background:rgba(77,100,120,0.3); color:var(--muted2); }
+.live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
-.indicators { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px; }
-.section-title { font-size:14px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; font-weight:700; text-align:center; }
-.ind-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.ind-item { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
-.ind-key { font-size:9px; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
-.ind-desc { font-size:8px; color:var(--muted); opacity:0.6; margin-bottom:6px; font-style:italic; }
-.ind-val { font-family:'Cantarell', sans-serif; font-size:15px; font-weight:500; color:var(--text); }
-.ind-sub { font-family:'Cantarell', sans-serif; font-size:11px; margin-top:3px; }
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(90, 154, 122, 0.25);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
-.performance { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
-.perf-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+/* Section label — Material + Apple hierarchy */
+.section-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--text-track-wide);
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  margin-bottom: 16px;
+}
+.section-title--center { text-align: center; }
+.perf-header { margin-bottom: 4px; }
+.perf-header .section-title { margin-bottom: 0; }
 
-.gauge-wrap { position:relative; margin-bottom:10px; }
-.gauge-track { height:6px; background:var(--border2); border-radius:3px; position:relative; overflow:visible; }
-.gauge-segments { position:absolute; inset:0; display:flex; border-radius:3px; overflow:hidden; }
-.seg-sat  { background:rgba(224,92,106,0.35); flex:0 0 30%; }
-.seg-notr { background:rgba(77,100,120,0.25); flex:0 0 40%; }
-.seg-al   { background:rgba(63,182,139,0.35); flex:1; }
-.gauge-fill { position:absolute; top:0; left:0; height:100%; border-radius:3px; transition:width 0.3s ease; background:linear-gradient(90deg, var(--red) 0%, var(--yellow) 50%, var(--green) 100%); z-index:1; }
-.gauge-pointer { position:absolute; top:-5px; width:2px; height:16px; background:var(--text); border-radius:1px; transform:translateX(-50%); z-index:2; transition:left 0.3s ease; box-shadow:0 0 6px rgba(255,255,255,0.4); }
-.gauge-pointer::after { content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); border:4px solid transparent; border-top:5px solid var(--text); }
-.gauge-pointer.pulse { animation:gaugePulse 0.5s ease-in-out; }
+/* ═══ HERO: Gümüş fiyat ═══ */
+.price-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 24px 24px;
+}
+.price-hero::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 70%;
+  height: 120%;
+  background: radial-gradient(ellipse, rgba(140, 170, 200, 0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+.price-hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 20%, rgba(255,255,255,0.06) 80%, transparent);
+}
+.price-hero__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.price-metric {
+  text-align: left;
+  padding: 18px 18px 16px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  position: relative;
+  z-index: 1;
+}
+
+.price-metric__k {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.price-metric__v {
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.1;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  color: var(--silver);
+  letter-spacing: -0.02em;
+}
+
+#gumus-usd-display {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.02em;
+}
+.price-hero__meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  position: relative;
+  z-index: 1;
+}
+.price-hero__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
+.pill {
+  flex: 1;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted2);
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.16);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+}
+#change-wrap { margin-top: 18px; width: 100%; }
+#change-wrap #gumus-change { width: 100%; justify-content: center; }
+.pc-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+.pc-change.up {
+  background: rgba(90, 154, 122, 0.12);
+  color: rgba(200, 230, 210, 0.95);
+  border-color: rgba(90, 154, 122, 0.22);
+}
+.pc-change.down {
+  background: rgba(184, 112, 110, 0.1);
+  color: rgba(240, 200, 198, 0.9);
+  border-color: rgba(184, 112, 110, 0.2);
+}
+.pc-change.flat {
+  background: rgba(255,255,255,0.04);
+  color: var(--muted2);
+  border-color: var(--border);
+}
+.caption-legal {
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 20px;
+  max-width: 32em;
+  margin-left: auto;
+  margin-right: auto;
+  letter-spacing: 0.02em;
+}
+
+/* ═══ Performance gauge (thin, muted spectrum) ═══ */
+.performance { padding: 24px; }
+.gauge-spacer { height: 6px; }
+.gauge-wrap { position: relative; margin: 0 0 4px; }
+.gauge-track {
+  height: 4px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+  position: relative;
+  overflow: visible;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+.gauge-segments { position: absolute; inset: 0; display: flex; border-radius: 999px; overflow: hidden; opacity: 0.5; }
+.seg-sat  { background: linear-gradient(90deg, rgba(150, 100, 100, 0.35), rgba(150, 120, 100, 0.15)); flex: 0 0 30%; }
+.seg-notr { background: rgba(100, 110, 120, 0.15); flex: 0 0 40%; }
+.seg-al   { background: linear-gradient(90deg, rgba(100, 130, 120, 0.15), rgba(90, 150, 130, 0.3)); flex: 1; }
+
+.gauge-fill {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    #8a6d6a 0%,
+    #9a8a6a 35%,
+    #8a9a88 100%
+  );
+  box-shadow: 0 0 12px rgba(200, 190, 180, 0.08);
+}
+.gauge-pointer {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 1.5px;
+  transform: translateX(-50%);
+  z-index: 2;
+  transition: left 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.35);
+}
+.gauge-pointer::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border: 3px solid transparent;
+  border-top: 3px solid rgba(255,255,255,0.85);
+  opacity: 0.8;
+}
+.gauge-pointer.pulse { animation: gaugePulse 0.5s ease-in-out; }
 @keyframes gaugePulse {
-  0%, 100% { background:var(--text); box-shadow:0 0 6px rgba(255,255,255,0.4); }
-  50%      { background:#c9a84c;     box-shadow:0 0 12px rgba(201,168,76,0.75); }
+  0%, 100% { background: rgba(255,255,255,0.92); box-shadow: 0 1px 6px rgba(0,0,0,0.3); }
+  50%      { background: rgba(200, 180, 140, 0.95); box-shadow: 0 0 10px rgba(200, 180, 150, 0.35); }
 }
-.gauge-labels { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:10px; text-transform:uppercase; }
-.perf-status { display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
-.status-badge { font-size:10px; font-weight:600; padding:4px 10px; border-radius:5px; text-transform:uppercase; }
-.badge-guclu-al  { background:rgba(63,182,139,0.15); color:var(--green); border:1px solid rgba(63,182,139,0.3); }
-.badge-orta-al   { background:rgba(212,168,67,0.15); color:var(--yellow); border:1px solid rgba(212,168,67,0.3); }
-.badge-riskli-al { background:rgba(224,92,106,0.15); color:var(--red); border:1px solid rgba(224,92,106,0.3); }
-.badge-sessiz    { background:rgba(77,100,120,0.15); color:var(--muted2); border:1px solid rgba(77,100,120,0.3); }
-.badge-satis     { background:rgba(224,92,106,0.2); color:var(--red); border:1px solid rgba(224,92,106,0.4); }
-.perf-pct { font-family:'Cantarell', sans-serif; font-size:28px; font-weight:500; color:var(--text); }
+.gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.gauge-labels span.g-label-sell { color: #9a7a78; }
+.gauge-labels .g-label-mid { color: var(--muted); }
+.gauge-labels span.g-label-buy { color: #7a9a8a; }
 
-.skor { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
-.skor-grid { display:flex; flex-direction:column; gap:0; margin-bottom:12px; }
-.skor-item { display:flex; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); }
-.skor-ust { flex:1; display:flex; justify-content:space-between; align-items:center; }
-.skor-isim { font-size:11px; font-weight:700; }
-.skor-bar-wrap { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-bottom:7px; }
-.skor-bar { height:100%; border-radius:2px; transition:width 0.8s ease; }
-.bar-g { background:var(--green); } .bar-y { background:var(--yellow); } .bar-r { background:var(--red); }
-.skor-puan { font-size:11px; font-weight:700; text-align:right; margin-top:4px; width:120px; }
+.perf-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+  padding-top: 4px;
+}
+.status-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid;
+}
+.badge-guclu-al  { background: rgba(90, 154, 122, 0.1); color: #8ab8a0; border-color: rgba(90, 154, 122, 0.22); }
+.badge-orta-al   { background: rgba(168, 148, 106, 0.1); color: #b5a88a; border-color: rgba(168, 148, 106, 0.22); }
+.badge-riskli-al { background: rgba(180, 120, 120, 0.1); color: #c4a0a0; border-color: rgba(180, 120, 120, 0.2); }
+.badge-sessiz    { background: rgba(100, 110, 120, 0.08); color: var(--muted2); border-color: var(--border); }
+.badge-satis     { background: rgba(180, 110, 110, 0.1); color: #c0a0a0; border-color: rgba(180, 110, 110, 0.2); }
+.perf-pct {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  font-feature-settings: "tnum" 1;
+  line-height: 1.1;
+}
 
-.log-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
-.log-bos { font-size:11px; color:var(--muted); text-align:center; padding:12px 0; }
-.sinyal-item { padding:10px 0; border-bottom:1px solid var(--border); font-size:11px; line-height:1.6; }
-.sinyal-item:last-child { border-bottom:none; padding-bottom:0; }
-.sinyal-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-.sinyal-tip { font-weight:600; font-size:11px; }
-.tip-al { color:var(--green); } .tip-sat { color:var(--red); }
-.sinyal-zaman { font-family:'Cantarell', sans-serif; font-size:10px; color:var(--muted); }
-.sinyal-detay { color:var(--muted2); font-size:11px; }
-.sinyal-kar { font-family:'Cantarell', sans-serif; font-size:12px; }
-.kar-pos { color:var(--green); } .kar-neg { color:var(--red); }
-.haber-item { padding:10px 0; border-bottom:1px solid var(--border); }
-.haber-item:last-child { border-bottom:none; padding-bottom:0; }
-.haber-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:8px; }
-.haber-tier { font-size:9px; padding:2px 6px; border-radius:3px; white-space:nowrap; flex-shrink:0; border:1px solid; }
-.haber-tier.t-kritik { background:rgba(224,92,106,0.15); color:#e05c6a; border-color:rgba(224,92,106,0.3); }
-.haber-tier.t-onemli { background:rgba(212,168,67,0.15); color:#d4a843; border-color:rgba(212,168,67,0.3); }
-.haber-tier.t-genel  { background:rgba(74,158,221,0.1);  color:#4a9edd; border-color:rgba(74,158,221,0.2); }
-.haber-zaman { font-family:'Cantarell', sans-serif; font-size:10px; color:var(--muted); white-space:nowrap; }
-.haber-baslik { font-size:11px; color:var(--text); line-height:1.5; white-space:normal; word-break:break-word; }
-.haber-ozet { font-size:11px; color:var(--muted2); margin-top:3px; line-height:1.4; }
+/* ═══ Indicators: 2×2 tiles ═══ */
+.indicators { padding: 24px; }
+.ind-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ind-item {
+  background: rgba(0,0,0,0.18);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 16px 16px 14px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  transition: background 0.3s, border-color 0.3s;
+}
+.ind-key {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.ind-val {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+.ind-sub {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  font-weight: 400;
+  margin-top: auto;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-soft);
+}
 
-.refresh-btn { width:100%; padding:11px; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:'Cantarell', sans-serif; font-size:11px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-bottom:20px; }
-.refresh-btn:hover { border-color:var(--silver); color:var(--silver); }
-footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); border-top:1px solid var(--border); }
-.spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--silver); border-radius:50%; animation:spin 0.8s linear infinite; }
-@keyframes spin { to{transform:rotate(360deg)} }
+/* ═══ Skor: timeline-style rows (inner cards) ═══ */
+.skor { padding: 24px; }
+.skor-grid { display: flex; flex-direction: column; gap: 0; }
+.m-empty { text-align: center; padding: 28px 20px; color: var(--muted); min-height: 100px; display: flex; align-items: center; justify-content: center; }
+.skor-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-soft);
+  gap: 12px;
+}
+.skor-item:last-of-type { border-bottom: none; }
+.skor-ust {
+  flex: 1;
+  display: block;
+  min-width: 0;
+}
+.log-card .sinyal-item,
+.log-card .haber-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-soft);
+  line-height: 1.7;
+  font-size: 13px;
+  margin: 0 -4px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border-left: 2px solid transparent;
+  border-radius: 0 12px 12px 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent 60%);
+}
+.log-card .sinyal-item:last-child,
+.log-card .haber-item:last-child { border-bottom: none; }
+.sinyal-ust { margin-bottom: 6px; }
+.sinyal-tip { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.tip-al { color: #7a9a88; }
+.tip-sat { color: #b88888; }
+.sinyal-zaman { font-size: 10px; color: var(--muted); font-weight: 500; letter-spacing: 0.04em; }
+.sinyal-detay { color: var(--text-dim); font-size: 13px; }
+.sinyal-kar { font-size: 13px; }
+.kar-pos { color: #7a9a88; } .kar-neg { color: #b88888; }
+
+#stats-panel { font-size: 13px !important; line-height: 1.8 !important; color: var(--text-dim) !important; letter-spacing: 0.02em; }
+#stats-panel b { color: var(--text); font-weight: 600; }
+
+h2.section-title { margin: 0 0 16px; }
+.perf-header h2.section-title { margin-bottom: 0; }
+
+.haber-tier {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid;
+}
+.haber-tier.t-kritik { background: rgba(150, 100, 100, 0.12); color: #a88888; border-color: rgba(150, 100, 100, 0.25); }
+.haber-tier.t-onemli { background: rgba(150, 130, 100, 0.12); color: #b0a080; border-color: rgba(150, 130, 100, 0.2); }
+.haber-tier.t-genel  { background: rgba(100, 120, 140, 0.1);  color: #8a9aad; border-color: rgba(100, 120, 140, 0.2); }
+.haber-zaman { font-size: 10px; color: var(--muted); }
+.haber-baslik { font-size: 13px; color: var(--text); line-height: 1.55; word-break: break-word; }
+.haber-ozet { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.55; }
+
+/* ═══ Tertiary stack: signals & logs (grouping via rhythm only) ═══ */
+.m-stack-tertiary { margin-top: 8px; }
+
+.log-bos { font-size: 12px; color: var(--muted); text-align: center; padding: 20px 16px; }
+.log-card code,
+#open-signals code,
+#signal-ledger code,
+#sinyal-log code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  color: var(--muted2);
+  background: rgba(0,0,0,0.22);
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-weight: 500;
+  border: 1px solid var(--border-soft);
+}
+
+.refresh-btn {
+  width: 100%;
+  padding: 14px 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s, box-shadow 0.3s, color 0.3s;
+  margin: 8px 0 28px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+.refresh-btn:hover {
+  border-color: rgba(200, 210, 220, 0.15);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+footer {
+  text-align: center;
+  padding: 8px 0 16px;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: none;
+}
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text-dim);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Legacy price-row / skor-puan (if referenced) */
+.skor-puan { font-size: 11px; }
+.bar-g, .bar-y, .bar-r { border-radius: 1px; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <div class="logo">MARS<em>.</em>FINANCE</div>
-    <div class="live"><div class="dot"></div><span id="son-guncelleme">--:--</span></div>
+  <header class="dash-header" role="banner">
+    <div class="logo" aria-label="Mars Finance">MARS<em>.</em>FINANCE</div>
+    <div class="live" title="Veri tazeliği"><div class="dot" aria-hidden="true"></div><time id="son-guncelleme" datetime="--:--">--:--</time></div>
   </header>
 
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:10px;position:relative">
-    <div style="content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;background:linear-gradient(90deg, var(--silver), transparent)"></div>
-    
-    <!-- 1. GÜMÜŞ Başlığı -->
-    <div style="font-size:11px;font-weight:700;color:var(--silver);margin-bottom:16px">GÜMÜŞ</div>
-    
-    <!-- 2. Alış/Satış Yan Yana -->
-    <div style="display:flex;gap:20px;margin-bottom:16px">
-      <div style="flex:1">
-        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">ALIŞ</div>
-        <div style="font-size:22px;font-weight:800;color:var(--silver)">₺<span id="gumus-alis">--</span></div>
-      </div>
-      <div style="flex:1">
-        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">SATIŞ</div>
-        <div style="font-size:22px;font-weight:800;color:var(--silver)">₺<span id="gumus-satis">--</span></div>
-      </div>
-    </div>
-    
-    <!-- 3. Ons Fiyatı -->
-    <div id="gumus-usd-display" style="font-size:11px;color:var(--muted2);margin-top:10px">$-- / ons</div>
-    
-    <!-- 4. Makas/Vergi Kutucuklar -->
-    <div style="display:flex;gap:12px;margin-top:16px">
-      <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:9px;color:var(--muted2);text-align:center">Makas ₺<span id="gumus-makas">--</span></div>
-      <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:9px;color:var(--muted2);text-align:center">Vergi %0.2</div>
-    </div>
-    
-    <!-- 5. Günlük Değişim Badge -->
-    <div id="gumus-change" style="width:100%;margin-top:10px;display:inline-flex;align-items:center;gap:5px;font-family:'Cantarell', sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px">--%</div>
-    
-    <!-- 6. Kaynak Metni -->
-    <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:10px">Kaynak: Dünya Katılım (veriler 60 sn. gecikmeli olabilir)</div>
-  </div>
-
-  <div class="performance">
-    <div class="perf-header">
-      <div class="section-title" style="margin-bottom:0">Piyasa Performansı</div>
-    </div>
-    <div style="margin-top:14px"></div>
-    <div class="gauge-wrap">
-      <div class="gauge-track">
-        <div class="gauge-segments">
-          <div class="seg-sat"></div>
-          <div class="seg-notr"></div>
-          <div class="seg-al"></div>
+  <main>
+    <section class="region-prices" aria-label="Fiyat">
+      <div class="price-hero">
+        <div class="price-hero__label">Gümüş</div>
+        <div class="price-hero__row" role="group" aria-label="Alış ve satış fiyatı">
+          <div class="price-metric" aria-label="Alış fiyatı">
+            <div class="price-metric__k">Alış</div>
+            <div class="price-metric__v">₺<span id="gumus-alis">--</span></div>
+          </div>
+          <div class="price-metric" aria-label="Satış fiyatı">
+            <div class="price-metric__k">Satış</div>
+            <div class="price-metric__v">₺<span id="gumus-satis">--</span></div>
+          </div>
         </div>
-        <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
-        <div class="gauge-pointer" id="gauge-pointer" style="left:0%"></div>
+        <div id="gumus-usd-display">$-- / ons</div>
+        <div class="price-hero__meta" role="group" aria-label="Makro bilgi">
+          <div class="pill">Makas <span>₺</span><span id="gumus-makas">--</span></div>
+          <div class="pill">Tahminî vergi %0.2</div>
+        </div>
+        <div id="change-wrap">
+          <div id="gumus-change" class="pc-change">--%</div>
+        </div>
+        <p class="caption-legal">Kaynak: Dünya Katılım · veriler yaklaşık 60 sn. gecikmeli olabilir</p>
       </div>
-      <div class="gauge-labels">
-        <span style="color:var(--red)">Satım</span>
-        <span>Nötr</span>
-        <span style="color:var(--green)">Alım</span>
-      </div>
-    </div>
-    <div class="perf-status">
-      <span id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</span>
-      <span class="perf-pct" id="perf-pct">--%</span>
-    </div>
-  </div>
+    </section>
 
-  <div class="indicators">
-    <div class="section-title">Piyasa Göstergeleri</div>
-    <div class="ind-grid">
-      <div class="ind-item">
-        <div class="ind-key">Altın Endeksi</div>
-        <div class="ind-val" id="m-altin-endeks">--</div>
-        <div class="ind-sub" id="m-altin-endeks-change">--</div>
+    <section class="region-performance" aria-label="Kurul performansı">
+      <div class="performance">
+        <div class="perf-header">
+          <h2 class="section-title" style="margin-bottom:0">Kurul görüşü</h2>
+        </div>
+        <div class="gauge-spacer" aria-hidden="true"></div>
+        <div class="gauge-wrap" role="img" aria-label="Alım eğilim göstergesi">
+          <div class="gauge-track">
+            <div class="gauge-segments" aria-hidden="true">
+              <div class="seg-sat"></div>
+              <div class="seg-notr"></div>
+              <div class="seg-al"></div>
+            </div>
+            <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
+            <div class="gauge-pointer" id="gauge-pointer" style="left:0%"></div>
+          </div>
+          <div class="gauge-labels" aria-hidden="true">
+            <span class="g-label-sell">Satım</span>
+            <span class="g-label-mid">Nötr</span>
+            <span class="g-label-buy">Alım</span>
+          </div>
+        </div>
+        <div class="perf-status">
+          <span id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</span>
+          <span class="perf-pct" id="perf-pct">--%</span>
+        </div>
       </div>
-      <div class="ind-item">
-        <div class="ind-key">Dolar Endeksi</div>
-        <div class="ind-val" id="m-dxy">--</div>
-        <div class="ind-sub" id="m-dxy-change">--</div>
+    </section>
+
+    <section class="region-indicators" aria-label="Piyasa göstergeleri">
+      <div class="indicators">
+        <h2 class="section-title">Piyasa göstergeleri</h2>
+        <div class="ind-grid" role="list">
+          <div class="ind-item" role="listitem">
+            <div class="ind-key">Altın (USD/oz)</div>
+            <div class="ind-val" id="m-altin-endeks">--</div>
+            <div class="ind-sub" id="m-altin-endeks-change">--</div>
+          </div>
+          <div class="ind-item" role="listitem">
+            <div class="ind-key">Dolar endeksi (DXY)</div>
+            <div class="ind-val" id="m-dxy">--</div>
+            <div class="ind-sub" id="m-dxy-change">--</div>
+          </div>
+          <div class="ind-item" role="listitem">
+            <div class="ind-key">Brent</div>
+            <div class="ind-val" id="m-petrol">--</div>
+            <div class="ind-sub" id="m-petrol-change">--</div>
+          </div>
+          <div class="ind-item" role="listitem">
+            <div class="ind-key">Korku (VIX)</div>
+            <div class="ind-val" id="m-vix">--</div>
+            <div class="ind-sub" id="m-vix-yorum">--</div>
+          </div>
+        </div>
       </div>
-      <div class="ind-item">
-        <div class="ind-key">Brent Petrol</div>
-        <div class="ind-val" id="m-petrol">--</div>
-        <div class="ind-sub" id="m-petrol-change">--</div>
+    </section>
+
+    <section class="region-signals" aria-label="Performans modülleri ve sinyaller">
+      <div class="skor">
+        <h2 class="section-title">Performans etkenleri</h2>
+        <div class="skor-grid" id="skor-grid">
+          <div class="m-empty"><div class="spinner" aria-label="Yükleniyor"></div></div>
+        </div>
       </div>
-      <div class="ind-item">
-        <div class="ind-key">Korku Endeksi</div>
-        <div class="ind-val" id="m-vix">--</div>
-        <div class="ind-sub" id="m-vix-yorum">--</div>
+
+      <div class="m-stack-tertiary">
+        <div class="log-card">
+          <h2 class="section-title">Açık sinyaller · XAG scalping</h2>
+          <div id="open-signals"><div class="log-bos">Yükleniyor…</div></div>
+        </div>
+        <div class="log-card">
+          <h2 class="section-title">İstatistik</h2>
+          <div id="stats-panel"></div>
+        </div>
+        <div class="log-card">
+          <h2 class="section-title">Sinyal defteri (açık + kapanan)</h2>
+          <div id="signal-ledger"><div class="log-bos">—</div></div>
+        </div>
+        <div class="log-card">
+          <h2 class="section-title">Son 10 sinyal · log</h2>
+          <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
+        </div>
+        <div class="log-card">
+          <h2 class="section-title">Son 10 haber</h2>
+          <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
+        </div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <div class="skor">
-    <div class="section-title">PERFORMANS ETKENLERİ</div>
-    <div class="skor-grid" id="skor-grid">
-      <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted)"><div class="spinner"></div></div>
-    </div>
-  </div>
-
-  <div class="log-card">
-    <div class="section-title">Açık sinyaller (XAG scalping)</div>
-    <div id="open-signals"><div class="log-bos">Yükleniyor…</div></div>
-  </div>
-  <div class="log-card">
-    <div class="section-title">İstatistik</div>
-    <div id="stats-panel" style="font-size:12px;color:var(--muted2);line-height:1.7"></div>
-  </div>
-  <div class="log-card">
-    <div class="section-title">Sinyal defteri (açık + kapanan)</div>
-    <div id="signal-ledger"><div class="log-bos">—</div></div>
-  </div>
-  <div class="log-card">
-    <div class="section-title">Son 10 Sinyal (log)</div>
-    <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
-  </div>
-
-  <div class="log-card">
-    <div class="section-title">Son 10 Haber</div>
-    <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
-  </div>
-
-  <button class="refresh-btn" onclick="veriYukle()">↻ &nbsp; Yenile</button>
-  <footer>MARS FINANCE v2.0 &nbsp;·&nbsp; 20 UZMAN &nbsp;·&nbsp; KURUL KARARI</footer>
+  <button type="button" class="refresh-btn" onclick="veriYukle()">Yenile</button>
+  <footer><span>Mars Finance v2.0</span> · 20 UZMAN · KURUL KARARI</footer>
 </div>
 
 <script>
