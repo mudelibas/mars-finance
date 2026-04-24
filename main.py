@@ -9,6 +9,7 @@ from telegram import Bot
 from core.signal_engine import sinyal_uret, durum_analizi_calistir, build_hedef_mesaji
 from filters.calendar import kilit_koy
 from output.api import flask_baslat
+from modules.risk import hesapla_stop_tp
 import config as cfg
 
 logging.basicConfig(
@@ -177,7 +178,6 @@ async def piyasa_analizi_job():
 
         if sinyal_var and mesaj and not pozisyon_oku():
             # Stop hesabı
-            from modules.risk import hesapla_stop_tp
             from core.data_engine import get_silver_price_tl
             _, usd_try = get_silver_price_tl()
             from core.signal_engine import tam_analiz_calistir
