@@ -52,7 +52,7 @@ def get_silver_price_dunyakatilim():
     """Dünya Katılım'dan gümüş alış/satış fiyatını çeker, 60 saniye cache'ler."""
     global _fiyat_cache
     if time.time() - _fiyat_cache["zaman"] < FIYAT_CACHE_SURE:
-        return _fiyat_cache["alis"], _fiyat_cache["satis"]
+        return _fiyat_cache["alis"], _fiyat_cache["satis"], round(_fiyat_cache["satis"] - _fiyat_cache["alis"], 4)
     try:
         import re
         r = requests.get(
