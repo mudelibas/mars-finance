@@ -388,8 +388,8 @@ async function veriYukle() {
     if(!r.ok) throw new Error();
     const d = await r.json();
 
-    const ga=d.gumus_alis, gs=d.gumus_satis, gm=d.gumus_makas, aa=d.altin_alis, as=d.altin_satis, am=d.altin_makas, at=d.altin_tl, gu=d.gumus_usd, au=d.altin_usd;
-    const gd=d.gumus_degisim??0, ad=d.altin_degisim??0;
+    const ga=d.gumus_alis, gs=d.gumus_satis, gm=d.gumus_makas, gu=d.gumus_usd;
+    const gd=d.gumus_degisim??0;
 
     document.getElementById('gumus-alis').textContent = ga?ga.toFixed(2):'--';
     document.getElementById('gumus-satis').textContent = gs?gs.toFixed(2):'--';
@@ -400,15 +400,7 @@ gcEl.textContent= 'GÜNLÜK  ' + cs(gd);
 gcEl.className='pc-change ' + (gd>0?'up':gd<0?'down':'flat');
 gcEl.style.color='';
 
-    document.getElementById('altin-alis').textContent = aa?aa.toFixed(2):'--';
-    document.getElementById('altin-satis').textContent = as?as.toFixed(2):'--';
-    document.getElementById('altin-makas').textContent = am?am.toFixed(2):'--';
-    document.getElementById('altin-usd').textContent = au ? au.toFixed(2) : '--';
-    const acEl=document.getElementById('altin-change');
-acEl.textContent='GÜNLÜK  ' + cs(ad);
-acEl.className='pc-change ' + (ad>0?'up':ad<0?'down':'flat');
-acEl.style.color='';
-
+    
     const vix=d.vix??0, dxy=d.dxy??0, dxyD=d.dxy_degisim??0;
     const altinEndeks=d.altin_usd??0, altinEndeksD=d.altin_degisim??0;
     const pet=d.petrol??0, petD=d.petrol_degisim??0;
