@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 from core.data_engine import get_silver_data, get_market_context
 
 logger = logging.getLogger(__name__)

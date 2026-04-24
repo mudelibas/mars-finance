@@ -2,15 +2,19 @@ import time
 import logging
 import requests
 import yfinance as yf
-import pandas as pd
-import numpy as np
-from datetime import datetime, timezone, timedelta
-from config import FRED_API_KEY, STALE_DATA_DAKIKA
+from datetime import datetime, timezone
+from config import STALE_DATA_DAKIKA
 
 logger = logging.getLogger(__name__)
 _fiyat_cache = {"alis": None, "satis": None, "zaman": 0}
 _altin_cache = {"alis": None, "satis": None, "zaman": 0}
 FIYAT_CACHE_SURE = 60
+
+def _dunya_makas(alis, satis):
+    """(alis, satis, makas) tuple — makas her zaman float veya None."""
+    if alis is not None and satis is not None:
+        return round(float(satis) - float(alis), 4)
+    return None
 
 # ─── YARDIMCI ───────────────────────────────────────────────
 
@@ -51,8 +55,10 @@ def get_gold_data(interval="1h", period="60d"):
 def get_silver_price_dunyakatilim():
     """Dünya Katılım'dan gümüş alış/satış fiyatını çeker, 60 saniye cache'ler."""
     global _fiyat_cache
-    if time.time() - _fiyat_cache["zaman"] < FIYAT_CACHE_SURE:
-        return _fiyat_cache["alis"], _fiyat_cache["satis"], round(_fiyat_cache["satis"] - _fiyat_cache["alis"], 4)
+    a0, s0 = _fiyat_cache.get("alis"), _fiyat_cache.get("satis")
+    if (time.time() - _fiyat_cache["zaman"] < FIYAT_CACHE_SURE
+            and a0 is not None and s0 is not None):
+        return a0, s0, _dunya_makas(a0, s0)
     try:
         import re
         r = requests.get(
@@ -61,9 +67,6 @@ def get_silver_price_dunyakatilim():
             headers={"User-Agent": "Mozilla/5.0"}
         )
         r.raise_for_status()
-        
-        # HTML entity decode için
-        html_content = r.text.replace("&#xFC;", "ü").replace("&#x15F;", "ş")
         
         # Gümüş (XAG) satırını bul ve fiyatları çıkar
         match = re.search(
@@ -74,7 +77,7 @@ def get_silver_price_dunyakatilim():
         if match:
             alis = float(match.group(1).replace(",", "."))
             satis = float(match.group(2).replace(",", "."))
-            makas = round(satis - alis, 4)
+            makas = _dunya_makas(alis, satis)
             _fiyat_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
             logger.info(f"Gümüş fiyatı: alış={alis}, satış={satis}, makas={makas}")
             return alis, satis, makas
@@ -83,7 +86,10 @@ def get_silver_price_dunyakatilim():
             return None, None, None
     except Exception as e:
         logger.error(f"Dünya Katılım scraping hatası: {e}")
-        return _fiyat_cache["alis"], _fiyat_cache["satis"], _fiyat_cache.get("alis", 0) and _fiyat_cache.get("satis", 0) and round(_fiyat_cache["satis"] - _fiyat_cache["alis"], 4)
+        a, s = _fiyat_cache.get("alis"), _fiyat_cache.get("satis")
+        if a is not None and s is not None:
+            return a, s, _dunya_makas(a, s)
+        return None, None, None
 
 def get_silver_price_tl():
     try:
@@ -101,8 +107,10 @@ def get_silver_price_tl():
 def get_gold_price_dunyakatilim():
     """Dünya Katılım'dan altın alış/satış fiyatını çeker, 60 saniye cache'ler."""
     global _altin_cache
-    if time.time() - _altin_cache["zaman"] < FIYAT_CACHE_SURE:
-        return _altin_cache["alis"], _altin_cache["satis"], round(_altin_cache["satis"] - _altin_cache["alis"], 4)
+    a0, s0 = _altin_cache.get("alis"), _altin_cache.get("satis")
+    if (time.time() - _altin_cache["zaman"] < FIYAT_CACHE_SURE
+            and a0 is not None and s0 is not None):
+        return a0, s0, _dunya_makas(a0, s0)
     try:
         import re
         r = requests.get(
@@ -124,7 +132,7 @@ def get_gold_price_dunyakatilim():
             satis_str = match.group(2).replace(",", "")
             alis = float(alis_str)
             satis = float(satis_str)
-            makas = round(satis - alis, 4)
+            makas = _dunya_makas(alis, satis)
             _altin_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
             logger.info(f"Altın fiyatı: alış={alis}, satış={satis}, makas={makas}")
             return alis, satis, makas
@@ -133,7 +141,10 @@ def get_gold_price_dunyakatilim():
             return None, None, None
     except Exception as e:
         logger.error(f"Dünya Katılım altın scraping hatası: {e}")
-        return _altin_cache["alis"], _altin_cache["satis"], _altin_cache.get("alis", 0) and _altin_cache.get("satis", 0) and round(_altin_cache["satis"] - _altin_cache["alis"], 4)
+        a, s = _altin_cache.get("alis"), _altin_cache.get("satis")
+        if a is not None and s is not None:
+            return a, s, _dunya_makas(a, s)
+        return None, None, None
 
 def get_gold_price_tl():
     try:
@@ -207,8 +218,8 @@ def get_cot_data():
                         "open_interest": open_interest,
                         "tarih": report_date,
                     }
-                except:
-                    pass
+                except Exception as e:
+                    logger.error(f"COT satır ayrıştırma: {e}")
         return {"short_ratio": 50, "net_spekulatif": 0,
                 "open_interest": 0, "tarih": "bilinmiyor"}
     except Exception as e:
@@ -225,7 +236,8 @@ def get_fred_series(series_id):
         lines = r.text.strip().split("\n")
         last = lines[-1].split(",")
         return float(last[1])
-    except:
+    except Exception as e:
+        logger.error(f"FRED serisi okunamadı ({series_id}): {e}")
         return None
 
 def get_macro_data():
@@ -252,21 +264,3 @@ def get_gsr():
     except Exception as e:
         logger.error(f"GSR hatası: {e}")
         return None, None, None
-
-# ─── EKONOMİK TAKVİM ────────────────────────────────────────
-
-def get_ekonomik_takvim():
-    """
-    Sabit yüksek etkili olay listesi.
-    Gerçek zamanlı takvim için investing.com veya
-    forexfactory scraping eklenebilir.
-    """
-    bugun = datetime.now(timezone.utc)
-    # Bilinen olay kuralları: Fed toplantıları genellikle
-    # ayın ilk Çarşamba/Perşembesidir.
-    # Bu basit versiyon saatlik kontrol yapar.
-    return {
-        "kritik_yakin": False,
-        "olay_adi": None,
-        "kalan_dakika": None,
-    }

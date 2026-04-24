@@ -11,21 +11,21 @@ logger = logging.getLogger(__name__)
 
 def _entry_zaman(entry):
     try:
-        import time as _time
         t = entry.get("published_parsed") or entry.get("updated_parsed")
         if t:
             utc = datetime(*t[:6], tzinfo=timezone.utc)
             tr = utc.astimezone(timezone(timedelta(hours=3)))
             return tr.strftime("%H:%M")
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"Haber zamanı ayrıştırma: {e}")
     return datetime.now(timezone(timedelta(hours=3))).strftime("%H:%M")
 
 GORULMUS_DOSYA = "gorulmus_haberler.json"
 
 try:
     _groq = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-except:
+except Exception as e:
+    logger.error(f"Groq istemcisi (haberler) başlatılamadı: {e}")
     _groq = None
 
 # ─── YARDIMCI ───────────────────────────────────────────────
@@ -138,8 +138,8 @@ haberler_turkce: TÜM haberleri Türkçeye çevir, hiçbirini atlama"""
             baslangic = temiz.index("{")
             bitis = temiz.rindex("}") + 1
             temiz = temiz[baslangic:bitis]
-        except ValueError:
-            pass
+        except ValueError as e:
+            logger.error(f"LLM JSON çerçeve bulunamadı: {e}")
         sonuc = json.loads(temiz.strip())
         skor = max(-100, min(100, int(sonuc.get("skor", 0))))
 

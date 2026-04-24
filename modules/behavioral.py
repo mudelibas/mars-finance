@@ -21,6 +21,7 @@ def calistir(config):
         vix_iyimser = config.get("VIX_IYIMSER", 15)
         puan = 0
         detay = {}
+        gsr = None
 
         if vix is not None:
             if vix > vix_panik:
@@ -48,6 +49,7 @@ def calistir(config):
             else:
                 puan += 10; detay["suru"] = "Sürü davranışı normal"
         except Exception as e:
+            logger.error(f"Panikçi sürü (RSI) analizi: {e}")
             detay["suru"] = f"Sürü analizi hatası: {e}"
 
         try:
@@ -63,6 +65,7 @@ def calistir(config):
             else:
                 detay["gsr"] = "GSR alınamadı"
         except Exception as e:
+            logger.error(f"Panikçi GSR: {e}")
             detay["gsr"] = f"GSR hatası: {e}"
             gsr = None
 
@@ -71,7 +74,7 @@ def calistir(config):
             "modul": "panikci",
             "puan": puan,
             "vix": vix,
-            "gsr": gsr if 'gsr' in dir() else None,
+            "gsr": gsr,
             "detay": detay,
         }
     except Exception as e:

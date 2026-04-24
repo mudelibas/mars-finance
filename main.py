@@ -1,12 +1,21 @@
+import fcntl
 import logging
 import asyncio
 import json
 import os
+import sys
 import threading
 from datetime import datetime, timezone, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Bot
-from core.signal_engine import sinyal_uret, durum_analizi_calistir, build_hedef_mesaji
+from telegram.error import Conflict
+from core.data_engine import get_silver_price_tl
+from core.signal_engine import (
+    sinyal_uret,
+    durum_analizi_calistir,
+    build_hedef_mesaji,
+    tam_analiz_calistir,
+)
 from filters.calendar import kilit_koy
 from output.api import flask_baslat
 from modules.risk import hesapla_stop_tp
@@ -17,6 +26,30 @@ logging.basicConfig(
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+_TELEGRAM_LOCK_FP = None
+
+def _acquire_telegram_process_lock():
+    """Aynı makinede ikinci bir bot sürecini engeller (getUpdates 409)."""
+    global _TELEGRAM_LOCK_FP
+    if os.environ.get("MARS_DISABLE_TELEGRAM_LOCK", "").lower() in ("1", "true", "yes"):
+        return
+    path = os.environ.get("MARS_TELEGRAM_LOCK_FILE", "/tmp/mars-finance-telegram.lock")
+    f = open(path, "a+", encoding="utf-8")
+    try:
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        logger.error(
+            "Telegram: başka bir süreç bu kilidi tutuyor (409). "
+            "Yalnızca bir çalışan bırakın, Railway’de replika sayısını 1 yapın veya "
+            "MARS_DISABLE_TELEGRAM_LOCK=1 ile bu kilidi (geliştirme) kapatın."
+        )
+        sys.exit(1)
+    f.seek(0)
+    f.truncate(0)
+    f.write(str(os.getpid()))
+    f.flush()
+    _TELEGRAM_LOCK_FP = f
 
 TR             = timezone(timedelta(hours=3))
 POZISYON_DOSYA = "aktif_pozisyon.json"
@@ -178,9 +211,7 @@ async def piyasa_analizi_job():
 
         if sinyal_var and mesaj and not pozisyon_oku():
             # Stop hesabı
-            from core.data_engine import get_silver_price_tl
             _, usd_try = get_silver_price_tl()
-            from core.signal_engine import tam_analiz_calistir
             analiz = tam_analiz_calistir(conf)
             atr = (analiz.get("modul_sonuclari", {})
                    .get("teknik", {}).get("atr_1h"))
@@ -215,7 +246,6 @@ async def fiyat_takip_job():
         pozisyon = pozisyon_oku()
         if not pozisyon:
             return
-        from core.data_engine import get_silver_price_tl
         price_tl, _ = get_silver_price_tl()
         if not price_tl:
             return
@@ -264,6 +294,10 @@ async def fiyat_takip_job():
 async def handle_updates():
     offset = None
     bot = Bot(token=cfg.TELEGRAM_TOKEN)
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+    except Exception as e:
+        logger.error(f"Telegram delete_webhook: {e}")
     while True:
         try:
             updates = await bot.get_updates(offset=offset, timeout=10)
@@ -296,7 +330,6 @@ async def handle_updates():
                 elif cmd == "/pozisyon":
                     pos = pozisyon_oku()
                     if pos:
-                        from core.data_engine import get_silver_price_tl
                         fiyat, _ = get_silver_price_tl()
                         kar = ((fiyat - pos["giris_tl"]) / pos["giris_tl"] * 100
                                if fiyat else 0)
@@ -313,6 +346,8 @@ async def handle_updates():
                         metin = "Açık pozisyon yok."
                     await bot.send_message(chat_id=chat, text=metin)
 
+        except Conflict as e:
+            logger.error(f"Telegram 409 Conflict — başka getUpdates veya webhook aktif olabilir: {e}")
         except Exception as e:
             logger.error(f"Update handler: {e}")
         await asyncio.sleep(10)
@@ -322,10 +357,11 @@ async def handle_updates():
 async def main():
     logger.info("Mars Finance v2.0 başlatılıyor...")
 
+    port = int(os.environ.get("PORT", "5000"))
     # Flask API ayrı thread'de
     flask_thread = threading.Thread(target=flask_baslat, daemon=True)
     flask_thread.start()
-    logger.info("Dashboard: http://0.0.0.0:5000")
+    logger.info("Dashboard: 0.0.0.0:%s (PORT ortam değişkeni)", port)
 
     scheduler = AsyncIOScheduler(timezone=timezone.utc)
 
@@ -369,4 +405,5 @@ async def main():
         await asyncio.sleep(60)
 
 if __name__ == "__main__":
+    _acquire_telegram_process_lock()
     asyncio.run(main())

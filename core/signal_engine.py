@@ -1,7 +1,8 @@
 import logging
-from config import GROQ_API_KEY, MAKAS_TL, ATR_CARPAN_TP, ATR_CARPAN_SL
+from config import GROQ_API_KEY
 from core.data_engine import get_silver_price_tl, get_gold_price_tl, get_market_context
 from core.voting_engine import hesapla
+from modules.risk import hesapla_stop_tp
 from modules.technical import calistir as teknik_calistir
 from modules.quant import calistir as quant_calistir
 from modules.behavioral import calistir as behavioral_calistir
@@ -14,7 +15,8 @@ logger = logging.getLogger(__name__)
 try:
     from groq import Groq
     _groq = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-except:
+except Exception as e:
+    logger.error(f"Groq istemcisi başlatılamadı: {e}")
     _groq = None
 
 # ─── LLM — SADECE AÇIKLAMA YAZICI ───────────────────────────
@@ -97,7 +99,8 @@ Sadece paragrafı yaz, başlık ekleme."""
             max_tokens=300,
         )
         return r.choices[0].message.content.strip()
-    except:
+    except Exception as e:
+        logger.error(f"LLM durum özeti hatası: {e}")
         return "Piyasa koşulları sinyal üretimi için yeterli değil."
 
 # ─── ANA FONKSİYONLAR ───────────────────────────────────────

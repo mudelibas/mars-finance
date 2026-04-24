@@ -26,7 +26,8 @@ def _garch_proxy(close):
         res = model.fit(disp='off', show_warning=False)
         forecast = res.forecast(horizon=1)
         return float(np.sqrt(forecast.variance.values[-1][0]) / 100)
-    except:
+    except Exception as e:
+        logger.error(f"GARCH proxy, rolling std'a düşüldü: {e}")
         return float(returns.tail(20).std())
 
 def _zscore(seri, pencere=20):

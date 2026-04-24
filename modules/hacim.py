@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 def calistir(config):
     try:
         df = get_silver_data(interval="1h", period="30d")
-        if df is None or len(df) < 21:
+        if len(df) < 21:
             return {"modul": "hacim", "puan": 50, "detay": {}}
         
         hacimler = df["Volume"].values

@@ -71,7 +71,8 @@ def calistir(config):
             else:
                 detay["open_interest"] = "Hacim normal"
             puan += oi_degisim_puan
-        except:
+        except Exception as e:
+            logger.error(f"Open interest / hacim bölümü: {e}")
             detay["open_interest"] = "Hacim verisi alınamadı"
 
         puan = max(0, min(100, puan))

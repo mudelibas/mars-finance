@@ -24,7 +24,3 @@ def kilit_koy(dakika, neden):
     with open(KILIT_DOSYA, "w") as f:
         json.dump({"bitis": bitis.isoformat(), "neden": neden}, f)
     logger.warning(f"Sinyal kilidi: {neden} ({dakika} dk)")
-
-def kilit_kaldir():
-    if os.path.exists(KILIT_DOSYA):
-        os.remove(KILIT_DOSYA)
