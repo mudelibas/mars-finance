@@ -113,8 +113,21 @@ def istatistik_ozet():
             continue
         if (now - dt) > timedelta(hours=24):
             eski_24h += 1
+    kazançlı = 0
+    for s in kapalı:
+        p = s.get("pnl_gross_pct")
+        try:
+            if p is not None and float(p) > 0:
+                kazançlı += 1
+        except (TypeError, ValueError):
+            pass
+    n_kap = len(kapalı)
+    success_rate_pct = round(100.0 * kazançlı / n_kap, 1) if n_kap else None
+
     return {
         "active_count": len(açık),
-        "closed_count": len(kapalı),
+        "closed_count": n_kap,
         "open_older_24h": eski_24h,
+        "wins": kazançlı,
+        "success_rate_pct": success_rate_pct,
     }
