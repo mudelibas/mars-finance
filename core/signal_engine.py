@@ -19,54 +19,6 @@ except Exception as e:
     logger.error(f"Groq istemcisi başlatılamadı: {e}")
     _groq = None
 
-# ─── LLM — SADECE AÇIKLAMA YAZICI ───────────────────────────
-
-def _llm_sinyal_acikla(oylama, modul_sonuclari, fiyat_tl, tp_tl, sl_tl):
-    """
-    LLM sinyali Türkçe anlatır. Karar vermez, özetler.
-    """
-    if not _groq:
-        return None
-
-    modul_ozet = "\n".join([
-        f"- {m}: {d['puan']}/100"
-        for m, d in oylama["modul_detay"].items()
-    ])
-
-    haber_ozet = modul_sonuclari.get("haberler", {}).get("ozet", "")
-
-    prompt = f"""Bir finansal karar destek sistemi tarafından üretilen sinyal verisi:
-
-Kurul Görüşü: %{oylama['kurul_gorusu']}
-Sinyal: {oylama['etiket']}
-Makro Rejim: {oylama['rejim']}
-
-Modül Puanları:
-{modul_ozet}
-
-Haber özeti: {haber_ozet or 'Kritik haber yok'}
-
-Giriş: ₺{fiyat_tl:.2f}/gram
-Hedef: ₺{tp_tl:.2f}/gram
-Stop: ₺{sl_tl:.2f}/gram
-
-Bu sinyali yatırımcıya 3-4 cümleyle sade Türkçe açıkla.
-Neden bu sinyal oluştu? Hangi faktörler öne çıktı?
-Kesinlikle tavsiye verme, sadece açıkla.
-Başlık veya ek açıklama ekleme, sadece paragrafı yaz."""
-
-    try:
-        r = _groq.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.5,
-            max_tokens=200,
-        )
-        return r.choices[0].message.content.strip()
-    except Exception as e:
-        logger.error(f"LLM açıklama hatası: {e}")
-        return None
-
 # ─── DURUM ANALİZİ (sinyal yokken) ──────────────────────────
 
 def _llm_durum_ozeti(modul_sonuclari, fiyat_tl, ctx):
@@ -174,7 +126,6 @@ def sinyal_uret(config):
 
     # Sinyal var — fiyat ve hedef hesapla
     fiyat_tl, usd_try = get_silver_price_tl()
-    altin_tl, _ = get_gold_price_tl()
 
     atr = (modul_sonuclari.get("teknik", {})
            .get("atr_1h") or
@@ -185,75 +136,22 @@ def sinyal_uret(config):
     if not fiyat_tl or not tp_tl:
         return False, "Fiyat verisi alınamadı.", None, None, None
 
-    tp_yuzde = ((tp_tl - fiyat_tl) / fiyat_tl) * 100
-    sl_yuzde = ((fiyat_tl - sl_tl) / fiyat_tl) * 100 if sl_tl else 0
-
-    # LLM açıklama (sadece metin üretir)
-    aciklama = _llm_sinyal_acikla(
-        oylama, modul_sonuclari, fiyat_tl, tp_tl, sl_tl
-    )
-
-    # Mesaj formatla
-    mesaj = _sinyal_mesaji_formatla(
-        oylama, modul_sonuclari, fiyat_tl, altin_tl,
-        tp_tl, sl_tl, tp_yuzde, sl_yuzde, aciklama
-    )
+    mesaj = _sinyal_mesaji_formatla(fiyat_tl, tp_tl)
 
     return True, mesaj, fiyat_tl, tp_tl, oylama["sinyal"]
 
-def _sinyal_mesaji_formatla(oylama, modüller, fiyat_tl, altin_tl,
-                            tp_tl, sl_tl, tp_yuzde, sl_yuzde, aciklama):
-    ikon   = oylama["ikon"]
-    etiket = oylama["etiket"]
-    kgorus = oylama["kurul_gorusu"]
-
-    # Modül satırları
-    modul_isimleri = {
-        "teknik":       "Teknik Analiz   ",
-        "matematiksel": "Matematiksel     ",
-        "haberler":     "Jeopolitik       ",
-        "balina":       "Balina Faktörü   ",
-        "panikci":      "Panikçi Faktör   ",
-        "risk":         "Risk             ",
-        "hacim":        "Hacim Anomalisi ",
-    }
-
-    modul_satirlari = []
-    for k, isim in modul_isimleri.items():
-        puan = modüller.get(k, {}).get("puan", 50)
-        if puan >= 70:
-            m_ikon = "✅"
-        elif puan >= 50:
-            m_ikon = "⚠️"
-        else:
-            m_ikon = "❌"
-        modul_satirlari.append(f"  {m_ikon} {isim}: {puan:.0f}/100")
-
-    altin_str = f"₺{altin_tl:.2f}/gram" if altin_tl else "N/A"
-
+def _sinyal_mesaji_formatla(fiyat_tl, tp_tl):
     return (
-        f"{ikon} {etiket}\n"
-        f"Kurul Görüşü: %{kgorus:.0f}\n\n"
-        f"💰 Gümüş: ₺{fiyat_tl:.2f}/gram\n"
-        f"🥇 Altın:  {altin_str}\n\n"
-        f"📍 Giriş : ₺{fiyat_tl:.2f}\n"
-        f"🎯 Hedef : ₺{tp_tl:.2f} (+%{tp_yuzde:.1f})\n"
-        f"🛑 Stop  : ₺{sl_tl:.2f} (-%{sl_yuzde:.1f})\n\n"
-        f"📊 Modül Oyları:\n"
-        + "\n".join(modul_satirlari) +
-        f"\n\n💬 {aciklama or 'Analiz tamamlandı.'}\n\n"
-        f"_Yatırım tavsiyesi değildir. En doğrusunu Allah bilir._"
+        f"Gümüş\n"
+        f"AL\n"
+        f"Giriş: ₺{fiyat_tl:.2f}\n"
+        f"Hedef: ₺{tp_tl:.2f}\n"
     )
 
-def build_hedef_mesaji(giris_tarihi, giris_tl, mevcut_tl, config):
+def build_hedef_mesaji(_giris_tarihi, giris_tl, hedef_tl, mevcut_tl, config):
     """
-    Hedefe ulaşıldığında Telegram mesajı ve net kâr yüzdesi üretir.
-
-    Parametreler:
-    - giris_tarihi: string (ör. "2026-04-22 12:34")
-    - giris_tl: giriş fiyatı (TL/gram)
-    - mevcut_tl: anlık fiyat (TL/gram)
-    - config: config dict
+    Hedefe ulaşındığında kısa SAT metni ve net kâr yüzdesi.
+    mevcut_tl: çıkış fiyatı (kâr hesabı); hedef_tl: plandaki hedef.
     """
     makas = config.get("MAKAS_TL", 0.75)
     bsmv = config.get("BSMV_KMV_YUZDE", 0.2) / 100  # toplam (giriş+çıkış)
@@ -263,11 +161,10 @@ def build_hedef_mesaji(giris_tarihi, giris_tl, mevcut_tl, config):
     net_kar_yuzde = ((net_cikis - giris_maliyeti) / giris_maliyeti) * 100 if giris_maliyeti else 0
 
     mesaj = (
-        f"🎯 Hedef Görüldü\n\n"
-        f"Giriş ({giris_tarihi or '--'}): ₺{giris_tl:.2f} → Şu an: ₺{mevcut_tl:.2f}\n"
-        f"Net kâr: +%{net_kar_yuzde:.1f}\n\n"
-        f"_Nefsinin tamahkarlığından korunabilmiş kimseler, "
-        f"işte onlar saadete erenlerdir. — Haşr 9_"
+        f"Gümüş\n"
+        f"SAT\n"
+        f"Giriş: ₺{giris_tl:.2f}\n"
+        f"Hedef: ₺{hedef_tl:.2f}\n"
     )
     return mesaj, net_kar_yuzde
 

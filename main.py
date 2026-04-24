@@ -188,7 +188,9 @@ async def fiyat_takip_job():
         # Hedef vuruldu
         if price_tl >= hedef_tl:
             conf = config_dict()
-            mesaj, net_kar = build_hedef_mesaji(giris_tarihi, giris_tl, price_tl, conf)
+            mesaj, net_kar = build_hedef_mesaji(
+                giris_tarihi, giris_tl, hedef_tl, price_tl, conf
+            )
             await bot.send_message(
                 chat_id=cfg.TELEGRAM_GROUP_ID,
                 text=mesaj,
