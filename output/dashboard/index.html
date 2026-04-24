@@ -91,7 +91,6 @@ body::after {
 /* ── Premium floating card (unified) ── */
 .m-card,
 .price-hero,
-.performance,
 .indicators,
 .skor,
 .log-card {
@@ -106,7 +105,6 @@ body::after {
   transition: box-shadow 0.35s ease, transform 0.35s ease, border-color 0.3s ease;
 }
 .price-hero:hover,
-.performance:hover,
 .indicators:hover,
 .skor:hover,
 .log-card:hover,
@@ -121,10 +119,68 @@ body::after {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   padding: 8px 0 24px;
   margin-bottom: 4px;
   border-bottom: none;
 }
+.dash-header__brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* Tabs (header) */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: 10px;
+  align-items: center;
+}
+.tab {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  padding: 6px 10px;
+  font-size: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.2;
+  transition: border-color 0.2s, background 0.2s;
+}
+.tab:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.tab.active {
+  border-color: #7a9a88;
+}
+.tab.has-open {
+  border-color: #7a9a88;
+}
+.tabs .badge {
+  background: red;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 6px;
+  margin-left: 4px;
+  vertical-align: middle;
+  line-height: 1.2;
+}
+/* Tab content */
+.tab-panels { margin-top: 0; }
+.tab-panel { display: none; }
+.tab-panel.is-active { display: block; }
+.tab-panel .log-card:last-child { margin-bottom: 0; }
+.tab-panel { margin-bottom: var(--space-section); }
 
 .logo {
   font-size: 17px;
@@ -202,11 +258,16 @@ body::after {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 20%, rgba(255,255,255,0.06) 80%, transparent);
 }
 .price-hero__label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
+  font-size: 22px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--muted);
+  background: linear-gradient(90deg, #e6edf5, #b8c8d8, #ffffff, #aebfd0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   margin-bottom: 20px;
   position: relative;
   z-index: 1;
@@ -215,7 +276,7 @@ body::after {
   text-align: left;
   padding: 18px 18px 16px;
   background: rgba(0,0,0,0.2);
-  border: 1px solid var(--border-soft);
+  border: 1px solid rgba(184, 200, 216, 0.55);
   border-radius: var(--radius-sm);
   position: relative;
   z-index: 1;
@@ -238,22 +299,34 @@ body::after {
   letter-spacing: -0.02em;
 }
 
-#gumus-usd-display {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
+#price-hero .price-hero__meta #gumus-usd-display,
+#price-hero .price-hero__meta #gumus-makas {
+  display: inline;
+  font: inherit;
   color: var(--text-dim);
-  margin-top: 8px;
-  position: relative;
-  z-index: 1;
+  font-size: 11px;
+  font-weight: 500;
+  margin: 0;
   letter-spacing: 0.02em;
+  -webkit-text-fill-color: unset;
+  color: var(--text-dim);
+  background: none;
 }
+#price-hero .pill { word-break: break-word; }
 .price-hero__meta {
   display: flex;
   gap: 10px;
   margin-top: 20px;
   position: relative;
   z-index: 1;
+  flex-wrap: wrap;
+}
+.price-hero__meta .pill {
+  flex: 1 1 calc(33.333% - 8px);
+  min-width: 0;
+}
+@media (max-width: 400px) {
+  .price-hero__meta .pill { flex: 1 1 100%; }
 }
 .price-hero__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
 .pill {
@@ -281,16 +354,8 @@ body::after {
   letter-spacing: 0.04em;
   border: 1px solid transparent;
 }
-.pc-change.up {
-  background: rgba(90, 154, 122, 0.12);
-  color: rgba(200, 230, 210, 0.95);
-  border-color: rgba(90, 154, 122, 0.22);
-}
-.pc-change.down {
-  background: rgba(184, 112, 110, 0.1);
-  color: rgba(240, 200, 198, 0.9);
-  border-color: rgba(184, 112, 110, 0.2);
-}
+.pc-change.up { background: #0f2; color: #00ff6a; }
+.pc-change.down { background: #200; color: #ff3b3b; }
 .pc-change.flat {
   background: rgba(255,255,255,0.04);
   color: var(--muted2);
@@ -308,9 +373,23 @@ body::after {
   letter-spacing: 0.02em;
 }
 
-/* ═══ Performance gauge (thin, muted spectrum) ═══ */
-.performance { padding: 24px; }
-.gauge-spacer { height: 6px; }
+/* ═══ Mini gauge (inside price-hero) ═══ */
+.mini-gauge { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-soft); position: relative; z-index: 1; }
+.mini-gauge .perf-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.mini-gauge .perf-pct { font-size: 26px; }
+.mini-gauge .gauge-track {
+  position: relative;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: visible;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
 .gauge-wrap { position: relative; margin: 0 0 4px; }
 .gauge-track {
   height: 4px;
@@ -414,10 +493,20 @@ body::after {
 
 /* ═══ Indicators: 2×2 tiles ═══ */
 .indicators { padding: 24px; }
-.ind-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.indicators * { letter-spacing: 0 !important; }
+.indicators .section-title,
+.indicators h2.section-title {
+  text-align: center;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-dim);
+}
+.ind-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 .ind-item {
-  background: rgba(0,0,0,0.18);
-  border: 1px solid var(--border-soft);
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px;
   padding: 16px 16px 14px;
   min-height: 100px;
@@ -429,7 +518,6 @@ body::after {
 .ind-key {
   font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 8px;
@@ -516,8 +604,8 @@ h2.section-title { margin: 0 0 16px; }
 .haber-baslik { font-size: 13px; color: var(--text); line-height: 1.55; word-break: break-word; }
 .haber-ozet { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.55; }
 
-/* ═══ Tertiary stack: signals & logs (grouping via rhythm only) ═══ */
-.m-stack-tertiary { margin-top: 8px; }
+.tab-panels h2.section-title { text-transform: none; }
+.skor h2.section-title { text-transform: none; }
 
 .log-bos { font-size: 12px; color: var(--muted); text-align: center; padding: 20px 16px; }
 .log-card code,
@@ -534,29 +622,6 @@ h2.section-title { margin: 0 0 16px; }
   border: 1px solid var(--border-soft);
 }
 
-.refresh-btn {
-  width: 100%;
-  padding: 14px 20px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  color: var(--text-dim);
-  font-family: var(--font);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: border-color 0.3s, background 0.3s, box-shadow 0.3s, color 0.3s;
-  margin: 8px 0 28px;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
-}
-.refresh-btn:hover {
-  border-color: rgba(200, 210, 220, 0.15);
-  background: rgba(255,255,255,0.06);
-  color: var(--text);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
 footer {
   text-align: center;
   padding: 8px 0 16px;
@@ -586,62 +651,51 @@ footer {
 <div class="wrap">
 
   <header class="dash-header" role="banner">
-    <div class="logo" aria-label="Mars Finance">MARS<em>.</em>FINANCE</div>
+    <div class="dash-header__brand">
+      <div class="logo" aria-label="Mars Finance">MARS<em>.</em>FINANCE</div>
+      <div class="tabs" role="tablist" aria-label="Sinyal ve haber görünümleri">
+        <button type="button" class="tab active" id="tab-btn-acik" data-tab="acik" role="tab" aria-selected="true">Açık</button>
+        <button type="button" class="tab" data-tab="defter" role="tab" aria-selected="false">Defter</button>
+        <button type="button" class="tab" data-tab="sinyal" role="tab" aria-selected="false">Sinyal</button>
+        <button type="button" class="tab" data-tab="haber" role="tab" aria-selected="false">Haber <span class="badge" id="haber-badge" style="display:none" aria-hidden="true">0</span></button>
+      </div>
+    </div>
     <div class="live" title="Veri tazeliği"><div class="dot" aria-hidden="true"></div><time id="son-guncelleme" datetime="--:--">--:--</time></div>
   </header>
 
   <main>
     <section class="region-prices" aria-label="Fiyat">
-      <div class="price-hero">
-        <div class="price-hero__label">Gümüş</div>
-        <div class="price-hero__row" role="group" aria-label="Alış ve satış fiyatı">
-          <div class="price-metric" aria-label="Alış fiyatı">
-            <div class="price-metric__k">Alış</div>
-            <div class="price-metric__v">₺<span id="gumus-alis">--</span></div>
-          </div>
+      <div class="price-hero" id="price-hero">
+        <div class="price-hero__label">GÜMÜŞ</div>
+        <div class="price-hero__row" role="group" aria-label="Satış ve alış fiyatı">
           <div class="price-metric" aria-label="Satış fiyatı">
             <div class="price-metric__k">Satış</div>
             <div class="price-metric__v">₺<span id="gumus-satis">--</span></div>
           </div>
+          <div class="price-metric" aria-label="Alış fiyatı">
+            <div class="price-metric__k">Alış</div>
+            <div class="price-metric__v">₺<span id="gumus-alis">--</span></div>
+          </div>
         </div>
-        <div id="gumus-usd-display">$-- / ons</div>
-        <div class="price-hero__meta" role="group" aria-label="Makro bilgi">
-          <div class="pill">Makas <span>₺</span><span id="gumus-makas">--</span></div>
-          <div class="pill">Tahminî vergi %0.2</div>
+        <div class="price-hero__meta" role="group" aria-label="Ons, makas ve vergi">
+          <div class="pill">Ons <span id="gumus-usd-display">$-- / ons</span></div>
+          <div class="pill">Makas <span id="gumus-makas">--</span></div>
+          <div class="pill">Vergi %0.2</div>
         </div>
         <div id="change-wrap">
           <div id="gumus-change" class="pc-change">--%</div>
         </div>
-        <p class="caption-legal">Kaynak: Dünya Katılım · veriler yaklaşık 60 sn. gecikmeli olabilir</p>
-      </div>
-    </section>
-
-    <section class="region-performance" aria-label="Kurul performansı">
-      <div class="performance">
-        <div class="perf-header">
-          <h2 class="section-title" style="margin-bottom:0">Kurul görüşü</h2>
-        </div>
-        <div class="gauge-spacer" aria-hidden="true"></div>
-        <div class="gauge-wrap" role="img" aria-label="Alım eğilim göstergesi">
+        <div class="mini-gauge" aria-label="Kurul görüşü">
           <div class="gauge-track">
-            <div class="gauge-segments" aria-hidden="true">
-              <div class="seg-sat"></div>
-              <div class="seg-notr"></div>
-              <div class="seg-al"></div>
-            </div>
             <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
             <div class="gauge-pointer" id="gauge-pointer" style="left:0%"></div>
           </div>
-          <div class="gauge-labels" aria-hidden="true">
-            <span class="g-label-sell">Satım</span>
-            <span class="g-label-mid">Nötr</span>
-            <span class="g-label-buy">Alım</span>
+          <div class="perf-inline">
+            <div id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</div>
+            <div id="perf-pct" class="perf-pct">--%</div>
           </div>
         </div>
-        <div class="perf-status">
-          <span id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</span>
-          <span class="perf-pct" id="perf-pct">--%</span>
-        </div>
+        <p class="caption-legal">Veriler Dünya Katılım'dan 60 sn. gecikmeli gelmektedir.</p>
       </div>
     </section>
 
@@ -650,22 +704,22 @@ footer {
         <h2 class="section-title">Piyasa göstergeleri</h2>
         <div class="ind-grid" role="list">
           <div class="ind-item" role="listitem">
-            <div class="ind-key">Altın (USD/oz)</div>
+            <div class="ind-key">Altın / Ons</div>
             <div class="ind-val" id="m-altin-endeks">--</div>
             <div class="ind-sub" id="m-altin-endeks-change">--</div>
           </div>
           <div class="ind-item" role="listitem">
-            <div class="ind-key">Dolar endeksi (DXY)</div>
+            <div class="ind-key">Dolar Endeksi</div>
             <div class="ind-val" id="m-dxy">--</div>
             <div class="ind-sub" id="m-dxy-change">--</div>
           </div>
           <div class="ind-item" role="listitem">
-            <div class="ind-key">Brent</div>
+            <div class="ind-key">Brent Petrol</div>
             <div class="ind-val" id="m-petrol">--</div>
             <div class="ind-sub" id="m-petrol-change">--</div>
           </div>
           <div class="ind-item" role="listitem">
-            <div class="ind-key">Korku (VIX)</div>
+            <div class="ind-key">Korku Endeksi</div>
             <div class="ind-val" id="m-vix">--</div>
             <div class="ind-sub" id="m-vix-yorum">--</div>
           </div>
@@ -681,33 +735,40 @@ footer {
         </div>
       </div>
 
-      <div class="m-stack-tertiary">
-        <div class="log-card">
-          <h2 class="section-title">Açık sinyaller · XAG scalping</h2>
-          <div id="open-signals"><div class="log-bos">Yükleniyor…</div></div>
+      <div class="tab-panels" role="tabpanel">
+        <div id="tab-panel-acik" class="tab-panel is-active" data-panel="acik" role="region" aria-label="Açık sinyaller" aria-hidden="false">
+          <div class="log-card">
+            <h2 class="section-title" style="margin-top:0">Açık sinyaller (XAG scalping)</h2>
+            <div id="open-signals"><div class="log-bos">Yükleniyor…</div></div>
+          </div>
+          <div class="log-card">
+            <h2 class="section-title" style="margin-top:0">İstatistik</h2>
+            <div id="stats-panel"></div>
+          </div>
         </div>
-        <div class="log-card">
-          <h2 class="section-title">İstatistik</h2>
-          <div id="stats-panel"></div>
+        <div id="tab-panel-defter" class="tab-panel" data-panel="defter" role="region" aria-label="Sinyal defteri" aria-hidden="true">
+          <div class="log-card">
+            <h2 class="section-title" style="margin-top:0">Sinyal defteri (açık + kapanan)</h2>
+            <div id="signal-ledger"><div class="log-bos">—</div></div>
+          </div>
         </div>
-        <div class="log-card">
-          <h2 class="section-title">Sinyal defteri (açık + kapanan)</h2>
-          <div id="signal-ledger"><div class="log-bos">—</div></div>
+        <div id="tab-panel-sinyal" class="tab-panel" data-panel="sinyal" role="region" aria-label="Sinyal log" aria-hidden="true">
+          <div class="log-card">
+            <h2 class="section-title" style="margin-top:0">Son 10 sinyal (log)</h2>
+            <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
+          </div>
         </div>
-        <div class="log-card">
-          <h2 class="section-title">Son 10 sinyal · log</h2>
-          <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
-        </div>
-        <div class="log-card">
-          <h2 class="section-title">Son 10 haber</h2>
-          <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
+        <div id="tab-panel-haber" class="tab-panel" data-panel="haber" role="region" aria-label="Haber" aria-hidden="true">
+          <div class="log-card">
+            <h2 class="section-title" style="margin-top:0">Son 10 haber</h2>
+            <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
-  <button type="button" class="refresh-btn" onclick="veriYukle()">Yenile</button>
-  <footer><span>Mars Finance v2.0</span> · 20 UZMAN · KURUL KARARI</footer>
+  <footer>GRAY MARS LLC - 2026</footer>
 </div>
 
 <script>
@@ -722,6 +783,27 @@ const MODUL = {
 let sinyalLog = [], haberLog = [];
 let _lastGauge = null;
 function _esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function selectTab(name) {
+  document.querySelectorAll('.tab[data-tab]').forEach(function (t) {
+    var on = t.getAttribute('data-tab') === name;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('.tab-panel').forEach(function (p) {
+    var on = p.getAttribute('data-panel') === name;
+    p.classList.toggle('is-active', on);
+    p.setAttribute('aria-hidden', on ? 'false' : 'true');
+  });
+}
+function initHeaderTabs() {
+  document.querySelectorAll('.tab[data-tab]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      selectTab(btn.getAttribute('data-tab'));
+    });
+  });
+}
+initHeaderTabs();
 
 function cc(v) { return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted2)'; }
 function cs(v) { if(v==null) return '--%'; return (v>0?'+':'') + v.toFixed(2) + '%'; }
@@ -909,16 +991,18 @@ async function veriYukle() {
 
     setIdText('gumus-alis', ga!=null?ga.toFixed(2):'--');
     setIdText('gumus-satis', gs!=null?gs.toFixed(2):'--');
-    setIdText('gumus-makas', gm!=null?gm.toFixed(2):'--');
+    {
+      const mk = document.getElementById('gumus-makas');
+      if (mk) mk.textContent = gm != null && gm !== '' && !isNaN(Number(gm)) ? '₺' + Number(gm).toFixed(2) : '—';
+    }
     {
       const el = document.getElementById('gumus-usd-display');
       if (el) el.textContent = d.gumus_usd != null ? `$${d.gumus_usd.toFixed(2)} / ons` : '$-- / ons';
     }
     const gcEl = document.getElementById('gumus-change');
     if (gcEl) {
-      gcEl.textContent = 'GÜNLÜK  ' + cs(gd);
+      gcEl.textContent = 'GÜNLÜK DEĞİŞİM ' + cs(gd);
       gcEl.className = 'pc-change ' + (gd>0?'up':gd<0?'down':'flat');
-      gcEl.style.color = '';
     }
     
     const vix=d.vix??0, dxy=d.dxy??0, dxyD=d.dxy_degisim??0;
@@ -967,8 +1051,8 @@ async function veriYukle() {
     const newGauge = Number(g);
 
     if (gFill && gPtr && (_lastGauge === null || newGauge !== _lastGauge)) {
-      gFill.style.width = newGauge+'%';
-      gPtr.style.left = newGauge+'%';
+      gFill.style.width = newGauge + '%';
+      gPtr.style.left = newGauge + '%';
       if (_lastGauge !== null && Math.abs(newGauge - _lastGauge) >= 5) {
         gPtr.classList.remove('pulse');
         void gPtr.offsetWidth;
@@ -996,6 +1080,18 @@ async function veriYukle() {
       if(haberLog.length>50) haberLog=haberLog.slice(0,50);
     }
     haberLogRender();
+
+    (function () {
+      var tAcik = document.getElementById('tab-btn-acik');
+      if (tAcik) tAcik.classList.toggle('has-open', (d.open_signals && d.open_signals.length > 0));
+      var hb = document.getElementById('haber-badge');
+      if (hb) {
+        var n = haberLog.length;
+        hb.textContent = String(n);
+        hb.style.display = n > 0 ? 'inline' : 'none';
+        hb.setAttribute('aria-hidden', n > 0 ? 'false' : 'true');
+      }
+    })();
 
     const now=new Date();
     setIdText('son-guncelleme', now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0'));
