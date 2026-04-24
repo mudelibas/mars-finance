@@ -176,7 +176,7 @@ footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); 
     
     <!-- 4. Makas/Vergi Kutucuklar -->
     <div style="display:flex;gap:12px;margin-top:16px">
-      <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:9px;color:var(--muted2);text-align:center">Makas ₺0.75</div>
+      <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:9px;color:var(--muted2);text-align:center">Makas ₺<span id="gumus-makas">--</span></div>
       <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:9px;color:var(--muted2);text-align:center">Vergi %0.2</div>
     </div>
     
@@ -307,8 +307,7 @@ function badgeSec(g) {
 
 function skorGridRender(m) {
   const g = document.getElementById('skor-grid');
-  if(!m) return;
-  
+  if (!g || !m) return;
   const modules = Object.entries(MODUL);
   g.innerHTML = modules.map(([k, modul], index) => {
     const p = m[k]?.puan ?? 50;
@@ -338,6 +337,7 @@ function skorGridRender(m) {
 
 function sinyalLogRender() {
   const el = document.getElementById('sinyal-log');
+  if (!el) return;
   if(!sinyalLog.length) { el.innerHTML='<div class="log-bos">Henüz sinyal kaydı yok.</div>'; return; }
   const items = sinyalLog.filter(s => s.tip !== 'STOP').slice(0,10);
   if(!items.length) { el.innerHTML='<div class="log-bos">Henüz sinyal kaydı yok.</div>'; return; }
@@ -365,6 +365,7 @@ function sinyalLogRender() {
 
 function haberLogRender() {
   const el = document.getElementById('haber-log');
+  if (!el) return;
   if(!haberLog.length) { el.innerHTML='<div class="log-bos">Kritik haber bekleniyor...</div>'; return; }
   el.innerHTML = haberLog.slice(0,10).map(h =>
     `<div class="haber-item">
@@ -382,8 +383,13 @@ function haberLogRender() {
   ).join('');
 }
 
+function setIdText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
 async function veriYukle() {
-  document.getElementById('son-guncelleme').textContent='···';
+  setIdText('son-guncelleme', '···');
   try {
     console.log('🔍 API URL:', API+'/api/durum');
     const r = await fetch(API+'/api/durum');
@@ -392,49 +398,57 @@ async function veriYukle() {
     const d = await r.json();
     console.log('📊 Data received:', d);
 
-    const ga=d.gumus_alis, gs=d.gumus_satis, gm=d.gumus_makas, gu=d.gumus_usd;
+    const ga=d.gumus_alis, gs=d.gumus_satis, gm=d.gumus_makas;
     const gd=d.gumus_degisim??0;
 
-    document.getElementById('gumus-alis').textContent = ga?ga.toFixed(2):'--';
-    document.getElementById('gumus-satis').textContent = gs?gs.toFixed(2):'--';
-    document.getElementById('gumus-makas').textContent = gm?gm.toFixed(2):'--';
-    document.getElementById('gumus-usd-display').textContent = d.gumus_usd ? `$${d.gumus_usd.toFixed(2)} / ons` : '$-- / ons';
-    const gcEl=document.getElementById('gumus-change');
-gcEl.textContent= 'GÜNLÜK  ' + cs(gd);
-gcEl.className='pc-change ' + (gd>0?'up':gd<0?'down':'flat');
-gcEl.style.color='';
-
+    setIdText('gumus-alis', ga!=null?ga.toFixed(2):'--');
+    setIdText('gumus-satis', gs!=null?gs.toFixed(2):'--');
+    setIdText('gumus-makas', gm!=null?gm.toFixed(2):'--');
+    {
+      const el = document.getElementById('gumus-usd-display');
+      if (el) el.textContent = d.gumus_usd != null ? `$${d.gumus_usd.toFixed(2)} / ons` : '$-- / ons';
+    }
+    const gcEl = document.getElementById('gumus-change');
+    if (gcEl) {
+      gcEl.textContent = 'GÜNLÜK  ' + cs(gd);
+      gcEl.className = 'pc-change ' + (gd>0?'up':gd<0?'down':'flat');
+      gcEl.style.color = '';
+    }
     
     const vix=d.vix??0, dxy=d.dxy??0, dxyD=d.dxy_degisim??0;
     const altinEndeks=d.altin_usd??0, altinEndeksD=d.altin_degisim??0;
     const pet=d.petrol??0, petD=d.petrol_degisim??0;
 
-    document.getElementById('m-vix').textContent=vix.toFixed(1);
-    const vyEl=document.getElementById('m-vix-yorum');
-    if(vix>30){vyEl.textContent='Panik düşüşü var, gümüş yükselebilir.';vyEl.style.color='var(--yellow)';}
-    else if(vix>25){vyEl.textContent='Belirsizlik var, gümüş yükselebilir.';vyEl.style.color='var(--green)';}
-    else if(vix<15){vyEl.textContent='Gümüşe ilgi azalıyor, düşüş gelebilir.';vyEl.style.color='var(--red)';}
-    else{vyEl.textContent='Piyasa sakin. Teknik sinyaller güvenilir.';vyEl.style.color='var(--muted2)';}
+    setIdText('m-vix', vix.toFixed(1));
+    const vyEl = document.getElementById('m-vix-yorum');
+    if (vyEl) {
+      if (vix>30) { vyEl.textContent='Panik düşüşü var, gümüş yükselebilir.'; vyEl.style.color='var(--yellow)'; }
+      else if (vix>25) { vyEl.textContent='Belirsizlik var, gümüş yükselebilir.'; vyEl.style.color='var(--green)'; }
+      else if (vix<15) { vyEl.textContent='Gümüşe ilgi azalıyor, düşüş gelebilir.'; vyEl.style.color='var(--red)'; }
+      else { vyEl.textContent='Piyasa sakin. Teknik sinyaller güvenilir.'; vyEl.style.color='var(--muted2)'; }
+    }
 
-    document.getElementById('m-dxy').textContent=dxy.toFixed(2);
-    const dEl=document.getElementById('m-dxy-change');
+    setIdText('m-dxy', dxy.toFixed(2));
+    const dEl = document.getElementById('m-dxy-change');
     setIndChangeText(
       dEl,
       dxyD,
       dxyD>0 ? 'Dolar güçleniyor, gümüş düşebilir.' : dxyD<0 ? 'Dolar zayıflıyor, gümüş yükselebilir.' : 'Nötr'
     );
 
-    const aValEl=document.getElementById('m-altin-endeks');
-    aValEl.textContent = altinEndeks ? `$${altinEndeks.toFixed(2)}` : '$--';
-    const aEl=document.getElementById('m-altin-endeks-change');
+    {
+      const aValEl = document.getElementById('m-altin-endeks');
+      if (aValEl) aValEl.textContent = altinEndeks ? `$${altinEndeks.toFixed(2)}` : '$--';
+    }
+    const aEl = document.getElementById('m-altin-endeks-change');
     setIndChangeText(
       aEl,
       altinEndeksD,
       altinEndeksD>0 ? 'Altın yükseliyor, gümüş de yükselebilir.' : altinEndeksD<0 ? 'Altın zayıflıyor, gümüş de düşebilir.' : 'Nötr'
     );
 
-    document.getElementById('m-petrol').textContent=`$${pet.toFixed(1)}`;
-    const pEl=document.getElementById('m-petrol-change');
+    setIdText('m-petrol', `$${pet.toFixed(1)}`);
+    const pEl = document.getElementById('m-petrol-change');
     setIndChangeText(
       pEl,
       petD,
@@ -446,21 +460,20 @@ gcEl.style.color='';
     const gPtr = document.getElementById('gauge-pointer');
     const newGauge = Number(g);
 
-    if(_lastGauge === null || newGauge !== _lastGauge) {
-      gFill.style.width=newGauge+'%';
-      gPtr.style.left=newGauge+'%';
-
-      if(_lastGauge !== null && Math.abs(newGauge - _lastGauge) >= 5) {
+    if (gFill && gPtr && (_lastGauge === null || newGauge !== _lastGauge)) {
+      gFill.style.width = newGauge+'%';
+      gPtr.style.left = newGauge+'%';
+      if (_lastGauge !== null && Math.abs(newGauge - _lastGauge) >= 5) {
         gPtr.classList.remove('pulse');
         void gPtr.offsetWidth;
         gPtr.classList.add('pulse');
       }
       _lastGauge = newGauge;
     }
-    document.getElementById('perf-pct').textContent=`%${g.toFixed(0)}`;
+    setIdText('perf-pct', `%${g.toFixed(0)}`);
     const [bcls,bet]=badgeSec(g);
-    const badge=document.getElementById('perf-badge');
-    badge.className='status-badge '+bcls; badge.textContent=bet;
+    const badge = document.getElementById('perf-badge');
+    if (badge) { badge.className = 'status-badge ' + bcls; badge.textContent = bet; }
 
     skorGridRender(d.moduller);
 
@@ -476,9 +489,9 @@ gcEl.style.color='';
     haberLogRender();
 
     const now=new Date();
-    document.getElementById('son-guncelleme').textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+    setIdText('son-guncelleme', now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0'));
   } catch(e) {
-    document.getElementById('son-guncelleme').textContent='HATA';
+    setIdText('son-guncelleme', 'HATA');
     console.error(e);
   }
 }
