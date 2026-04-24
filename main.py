@@ -167,8 +167,6 @@ async def volatilite_bitis_job():
     except Exception as e:
         logger.error(f"Volatilite bitiş: {e}")
 
-from modules.risk import hesapla_stop_tp
-
 async def piyasa_analizi_job():
     if hafta_sonu_mu():
         return
