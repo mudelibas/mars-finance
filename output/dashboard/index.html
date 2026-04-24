@@ -153,11 +153,11 @@ footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); 
     <div class="live"><div class="dot"></div><span id="son-guncelleme">--:--</span></div>
   </header>
 
-  <div class="price-card" style="display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;margin-bottom:10px">
-    <div class="price-card::before" style="content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;background:linear-gradient(90deg, var(--silver), var(--gold))"></div>
+  <div class="price-card" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;margin-bottom:10px">
+    <div class="price-card::before" style="content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;background:var(--silver)"></div>
     
-    <!-- Sol Taraf: Gümüş -->
-    <div style="flex:1;padding-right:12px;border-right:1px solid var(--border)">
+    <!-- Gümüş Bölümü -->
+    <div style="width:100%">
       <div style="font-size:11px;font-weight:700;color:var(--silver);margin-bottom:12px">GÜMÜŞ</div>
       
       <div style="display:flex;gap:12px;margin-bottom:8px">
@@ -179,32 +179,6 @@ footer { text-align:center; padding:12px 0; font-size:10px; color:var(--muted); 
       
       <div class="pc-change" style="display:inline-flex;align-items:center;gap:5px;font-family:'Cantarell', sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px">
         <span id="gumus-change" style="color:var(--muted2)">--%</span>
-      </div>
-    </div>
-    
-    <!-- Sağ Taraf: Altın -->
-    <div style="flex:1;padding-left:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:12px">ALTIN</div>
-      
-      <div style="display:flex;gap:12px;margin-bottom:8px">
-        <div>
-          <div style="font-size:8px;color:var(--muted)">SATIŞ</div>
-          <div style="font-size:16px;font-weight:800;color:var(--gold)">₺<span id="altin-satis">--</span></div>
-        </div>
-        <div>
-          <div style="font-size:8px;color:var(--muted)">ALIŞ</div>
-          <div style="font-size:16px;font-weight:800;color:var(--gold)">₺<span id="altin-alis">--</span></div>
-        </div>
-      </div>
-      
-      <div style="font-size:11px;color:var(--muted2);margin-bottom:8px">$<span id="altin-usd">--</span> / ons</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Makas ₺<span id="altin-makas">--</span></div>
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:9px;color:var(--muted2)">Vergi %0.2</div>
-      </div>
-      
-      <div class="pc-change" style="display:inline-flex;align-items:center;gap:5px;font-family:'Cantarell', sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px">
-        <span id="altin-change" style="color:var(--muted2)">--%</span>
       </div>
     </div>
     
