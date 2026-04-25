@@ -399,12 +399,7 @@ def get_market_context() -> Dict[str, Any]:
     ctx: Dict[str, Any] = {}
     semboller = {
         "dxy": ("DX-Y.NYB", "5d", "1d"),
-        "altin": (TICKER_XAU, "5d", "1d"),
-        "petrol": ("BZ=F", "5d", "1d"),
-        "faiz": ("^TNX", "5d", "1d"),
-        "sp500": ("^GSPC", "5d", "1d"),
-        "vix": ("^VIX", "5d", "1d"),
-        "gumus": (TICKER_XAG, "5d", "1d"),
+        "gumus": (TICKER_XAG, "5d", "1d"),  # SI=F
     }
     for anahtar, (ticker, period, interval) in semboller.items():
         try:
