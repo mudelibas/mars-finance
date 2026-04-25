@@ -409,43 +409,7 @@ sinyal_uret = degerlendir
 def tam_analiz_calistir(
     config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    from filters.calendar import kilit_kontrol
-
-    k, kn = kilit_kontrol()
-    if k:
-        return {
-            "kilit": True,
-            "kilit_neden": kn,
-            "sinyal": None,
-            "oylama": {
-                "sinyal": None,
-                "kurul_gorusu": 0.0,
-                "veto": True,
-                "veto_neden": kn,
-                "etiket": "kilit",
-            },
-            "modul_sonuclari": {},
-            "ctx": get_market_context() or {},
-            "sinyal_detay": None,
-        }
-    d = degerlendir(config)
-    ctx = get_market_context() or {}
-    oylama = {
-        "sinyal": d.get("sinyal"),
-        "kurul_gorusu": float(d.get("skor") or 0),
-        "veto": not bool(d.get("sinyal")),
-        "veto_neden": d.get("red_neden") or "—",
-        "etiket": "skor" if d.get("sinyal") else (d.get("red_neden") or "yok"),
-    }
-    return {
-        "kilit": False,
-        "kilit_neden": None,
-        "sinyal": d.get("sinyal"),
-        "oylama": oylama,
-        "modul_sonuclari": {"sinyal_motoru": d},
-        "ctx": ctx,
-        "sinyal_detay": d,
-    }
+    return degerlendir(config)
 
 
 def build_kapanis_mesaji_usd(

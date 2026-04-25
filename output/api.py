@@ -56,7 +56,7 @@ def _son_sinyal_kayit(log: List[Any]) -> Optional[Dict[str, Any]]:
                 "giris_tl": r.get("giris_tl"),
                 "hedef_tl": r.get("hedef_tl"),
                 "net_kar_yuzde": r.get("net_kar_yuzde"),
-                "skor": r.get("kurul_gorusu"),
+                "skor": r.get("skor", r.get("kurul_gorusu")),
                 "tarih": r.get("tarih") or r.get("giris_tarihi"),
                 "signal_id": r.get("signal_id"),
             }

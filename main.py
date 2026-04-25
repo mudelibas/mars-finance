@@ -82,7 +82,7 @@ def sinyal_logla(
     giris_tarihi=None,
     hedef_tl=None,
     stop_tl=None,
-    kurul_gorusu=None,
+    skor=None,
     entry_usd=None,
     tp_usd=None,
     sinyal_id=None,
@@ -103,7 +103,7 @@ def sinyal_logla(
         "hedef_tl": hedef_tl,
         "stop_tl": stop_tl,
         "kar_yuzde": kar_yuzde,
-        "kurul_gorusu": kurul_gorusu,
+        "skor": skor,
         "entry_usd": entry_usd,
         "tp_usd": tp_usd,
         "signal_id": sinyal_id,
@@ -136,12 +136,12 @@ def performans_guncelle(kar_yuzde) -> dict:
 # ─── TELEGRAM METİNLERİ ────────────────────────────────────
 
 
-def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar: float) -> str:
+def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar_yuzde: float) -> str:
     return (
         f"🥈 GÜMÜŞ AL SİNYALİ\n"
-        f"Giriş:   ₺{giris_tl:.2f}\n"
-        f"Hedef:   ₺{hedef_tl:.2f}\n"
-        f"Net Kar: %{net_kar:.2f}\n"
+        f"Giriş: ₺{giris_tl:.2f}\n"
+        f"Hedef: ₺{hedef_tl:.2f}\n"
+        f"Net Kar: %{net_kar_yuzde:.2f}"
     )
 
 
@@ -202,7 +202,7 @@ async def piyasa_analizi_job():
             giris_tl=g_tl,
             hedef_tl=h_tl,
             stop_tl=None,
-            kurul_gorusu=skr,
+            skor=skr,
             sinyal_id=sid,
             net_kar_yuzde=netp,
         )
