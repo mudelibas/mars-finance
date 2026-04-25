@@ -176,17 +176,30 @@ body::after {
   line-height: 1.2;
 }
 /* Tab content — single active view: hidden = source of truth, no overlap */
-#tab-panels-clip,
-.tab-panels { margin-top: 0; width: 100%; }
-#tab-panels-clip { overflow: hidden; position: relative; isolation: isolate; }
-.tab-panel[hidden] {
+/* — Tek sahne (scene): aynı anda sadece bir [data-panel] <main> içinde — */
+#app-scene-root {
+  width: 100%;
+  position: relative;
+  min-height: 50vh;
+  isolation: isolate;
+}
+#app-scene-root > [data-panel][hidden] {
   display: none !important;
   visibility: hidden !important;
+  pointer-events: none !important;
 }
-.tab-panel:not([hidden]) { display: block; visibility: visible; }
-.tab-panel { margin: 0; }
-.tab-panel .log-card:last-child { margin-bottom: 0; }
-.tab-panels-clip { margin-bottom: var(--space-section); }
+#app-scene-root > [data-panel]:not([hidden]) {
+  display: block !important;
+  visibility: visible;
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  pointer-events: auto;
+}
+#app-scene-root .log-card:last-child { margin-bottom: 0; }
+#app-scene-root > [data-panel] .log-card { margin-bottom: var(--space-section); }
+#app-scene-root > [data-panel] .log-card:last-child { margin-bottom: 0; }
+.tab-panels, .app-scene-root { margin-top: 0; width: 100%; }
 
 .logo {
   font-size: 17px;
@@ -676,7 +689,7 @@ h2.section-title { margin: 0 0 16px; }
 .haber-baslik { font-size: 13px; color: var(--text); line-height: 1.55; word-break: break-word; }
 .haber-ozet { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.55; }
 
-.tab-panels h2.section-title { text-transform: none; }
+#app-scene-root h2.section-title { text-transform: none; }
 .skor h2.section-title { text-transform: none; }
 
 .log-bos { font-size: 12px; color: var(--muted); text-align: center; padding: 20px 16px; }
@@ -735,120 +748,119 @@ footer {
     <div class="live" title="Veri tazeliği"><div class="dot" aria-hidden="true"></div><time id="son-guncelleme" datetime="--:--">--:--</time></div>
   </header>
 
-  <main>
-    <section class="region-prices" aria-label="Fiyat">
-      <div class="price-hero" id="price-hero">
-        <div class="price-hero__label">GÜMÜŞ</div>
-        <div class="price-hero__row" role="group" aria-label="Satış ve alış fiyatı">
-          <div class="price-metric" aria-label="Satış fiyatı">
-            <div class="price-metric__k">Satış</div>
-            <div class="price-metric__v">₺<span id="gumus-satis">--</span></div>
+  <main id="main-views" aria-label="Görünümler — tek ekran">
+    <div id="app-scene-root" class="app-scene-root" role="presentation" aria-label="Pano ekranları">
+      <div id="tab-panel-acik" class="tab-scene" data-panel="acik" role="tabpanel" aria-labelledby="tab-btn-acik" aria-label="Cockpit: fiyat, KPI, göstergeler, açık sinyaller" aria-hidden="false">
+        <section class="region-prices" aria-label="Fiyat">
+          <div class="price-hero" id="price-hero">
+            <div class="price-hero__label">GÜMÜŞ</div>
+            <div class="price-hero__row" role="group" aria-label="Satış ve alış fiyatı">
+              <div class="price-metric" aria-label="Satış fiyatı">
+                <div class="price-metric__k">Satış</div>
+                <div class="price-metric__v">₺<span id="gumus-satis">--</span></div>
+              </div>
+              <div class="price-metric" aria-label="Alış fiyatı">
+                <div class="price-metric__k">Alış</div>
+                <div class="price-metric__v">₺<span id="gumus-alis">--</span></div>
+              </div>
+            </div>
+            <div class="price-hero__meta" role="group" aria-label="Ons, makas ve vergi">
+              <div class="pill">Ons <span id="gumus-usd-display">$-- / ons</span></div>
+              <div class="pill">Makas <span id="gumus-makas">--</span></div>
+              <div class="pill">Vergi %0.2</div>
+            </div>
+            <div id="change-wrap">
+              <div id="gumus-change" class="pc-change">--%</div>
+            </div>
+            <div class="mini-gauge" aria-label="Kurul görüşü">
+              <div class="gauge-track">
+                <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
+                <div class="gauge-pointer" id="gauge-pointer" style="left:0%"></div>
+              </div>
+              <div class="gauge-labels" aria-hidden="true">
+                <span class="g-label-sell">Satım</span>
+                <span class="g-label-mid">Nötr</span>
+                <span class="g-label-buy">Alım</span>
+              </div>
+              <div class="perf-inline">
+                <div id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</div>
+                <div id="perf-pct" class="perf-pct">--%</div>
+              </div>
+            </div>
+            <p class="caption-legal">Veriler Dünya Katılım'dan 60 sn. gecikmeli gelmektedir.</p>
           </div>
-          <div class="price-metric" aria-label="Alış fiyatı">
-            <div class="price-metric__k">Alış</div>
-            <div class="price-metric__v">₺<span id="gumus-alis">--</span></div>
-          </div>
-        </div>
-        <div class="price-hero__meta" role="group" aria-label="Ons, makas ve vergi">
-          <div class="pill">Ons <span id="gumus-usd-display">$-- / ons</span></div>
-          <div class="pill">Makas <span id="gumus-makas">--</span></div>
-          <div class="pill">Vergi %0.2</div>
-        </div>
-        <div id="change-wrap">
-          <div id="gumus-change" class="pc-change">--%</div>
-        </div>
-        <div class="mini-gauge" aria-label="Kurul görüşü">
-          <div class="gauge-track">
-            <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
-            <div class="gauge-pointer" id="gauge-pointer" style="left:0%"></div>
-          </div>
-          <div class="gauge-labels" aria-hidden="true">
-            <span class="g-label-sell">Satım</span>
-            <span class="g-label-mid">Nötr</span>
-            <span class="g-label-buy">Alım</span>
-          </div>
-          <div class="perf-inline">
-            <div id="perf-badge" class="status-badge badge-sessiz">Bekleniyor</div>
-            <div id="perf-pct" class="perf-pct">--%</div>
-          </div>
-        </div>
-        <p class="caption-legal">Veriler Dünya Katılım'dan 60 sn. gecikmeli gelmektedir.</p>
-      </div>
-    </section>
+        </section>
 
-    <section class="region-stats" aria-label="Sinyal istatistikleri">
-      <div class="kpi-card">
-        <div class="kpi-card__head">
-          <h2 class="kpi-card__title">Sinyal performansı</h2>
-          <p class="kpi-card__hint">Açık ve kapanan sinyal özeti, başarı oranı (brüt PnL)</p>
-        </div>
-        <div id="stats-panel"></div>
-      </div>
-    </section>
+        <section class="region-stats" aria-label="Sinyal istatistikleri">
+          <div class="kpi-card">
+            <div class="kpi-card__head">
+              <h2 class="kpi-card__title">Sinyal performansı</h2>
+              <p class="kpi-card__hint">Açık ve kapanan sinyal özeti, başarı oranı (brüt PnL)</p>
+            </div>
+            <div id="stats-panel"></div>
+          </div>
+        </section>
 
-    <section class="region-indicators" aria-label="Piyasa göstergeleri">
-      <div class="indicators">
-        <h2 class="section-title">Piyasa göstergeleri</h2>
-        <div class="ind-grid" role="list">
-          <div class="ind-item" role="listitem">
-            <div class="ind-key">Altın / Ons</div>
-            <div class="ind-val" id="m-altin-endeks">--</div>
-            <div class="ind-sub" id="m-altin-endeks-change">--</div>
+        <section class="region-indicators" aria-label="Piyasa göstergeleri">
+          <div class="indicators">
+            <h2 class="section-title">Piyasa göstergeleri</h2>
+            <div class="ind-grid" role="list">
+              <div class="ind-item" role="listitem">
+                <div class="ind-key">Altın / Ons</div>
+                <div class="ind-val" id="m-altin-endeks">--</div>
+                <div class="ind-sub" id="m-altin-endeks-change">--</div>
+              </div>
+              <div class="ind-item" role="listitem">
+                <div class="ind-key">Dolar Endeksi</div>
+                <div class="ind-val" id="m-dxy">--</div>
+                <div class="ind-sub" id="m-dxy-change">--</div>
+              </div>
+              <div class="ind-item" role="listitem">
+                <div class="ind-key">Brent Petrol</div>
+                <div class="ind-val" id="m-petrol">--</div>
+                <div class="ind-sub" id="m-petrol-change">--</div>
+              </div>
+              <div class="ind-item" role="listitem">
+                <div class="ind-key">Korku Endeksi</div>
+                <div class="ind-val" id="m-vix">--</div>
+                <div class="ind-sub" id="m-vix-yorum">--</div>
+              </div>
+            </div>
           </div>
-          <div class="ind-item" role="listitem">
-            <div class="ind-key">Dolar Endeksi</div>
-            <div class="ind-val" id="m-dxy">--</div>
-            <div class="ind-sub" id="m-dxy-change">--</div>
-          </div>
-          <div class="ind-item" role="listitem">
-            <div class="ind-key">Brent Petrol</div>
-            <div class="ind-val" id="m-petrol">--</div>
-            <div class="ind-sub" id="m-petrol-change">--</div>
-          </div>
-          <div class="ind-item" role="listitem">
-            <div class="ind-key">Korku Endeksi</div>
-            <div class="ind-val" id="m-vix">--</div>
-            <div class="ind-sub" id="m-vix-yorum">--</div>
-          </div>
-        </div>
-      </div>
-    </section>
+        </section>
 
-    <section class="region-signals" aria-label="Performans modülleri ve sinyaller">
-      <div class="skor">
-        <h2 class="section-title">Performans etkenleri</h2>
-        <div class="skor-grid" id="skor-grid">
-          <div class="m-empty"><div class="spinner" aria-label="Yükleniyor"></div></div>
+        <div class="skor" aria-label="Performans etkenleri">
+          <h2 class="section-title">Performans etkenleri</h2>
+          <div class="skor-grid" id="skor-grid">
+            <div class="m-empty"><div class="spinner" aria-label="Yükleniyor"></div></div>
+          </div>
+        </div>
+
+        <div class="log-card">
+          <h2 class="section-title" style="margin-top:0">Açık sinyaller (XAG scalping)</h2>
+          <div id="open-signals"><div class="log-bos">Yükleniyor…</div></div>
         </div>
       </div>
 
-      <div id="tab-panels-clip" class="tab-panels" role="presentation" aria-label="Sinyal sekmeleri — tek içerik">
-        <div id="tab-panel-acik" class="tab-panel" data-panel="acik" role="tabpanel" aria-labelledby="tab-btn-acik" aria-label="Açık sinyaller" aria-hidden="false">
-          <div class="log-card">
-            <h2 class="section-title" style="margin-top:0">Açık sinyaller (XAG scalping)</h2>
-            <div id="open-signals"><div class="log-bos">Yükleniyor…</div></div>
-          </div>
-        </div>
-        <div id="tab-panel-defter" class="tab-panel" data-panel="defter" role="tabpanel" hidden aria-hidden="true" aria-label="Sinyal defteri">
-          <div class="log-card">
-            <h2 class="section-title" style="margin-top:0">Sinyal defteri (açık + kapanan)</h2>
-            <div id="signal-ledger"><div class="log-bos">—</div></div>
-          </div>
-        </div>
-        <div id="tab-panel-sinyal" class="tab-panel" data-panel="sinyal" role="tabpanel" hidden aria-hidden="true" aria-label="Sinyal log">
-          <div class="log-card">
-            <h2 class="section-title" style="margin-top:0">Son 10 sinyal (log)</h2>
-            <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
-          </div>
-        </div>
-        <div id="tab-panel-haber" class="tab-panel" data-panel="haber" role="tabpanel" hidden aria-hidden="true" aria-label="Haber">
-          <div class="log-card">
-            <h2 class="section-title" style="margin-top:0">Son 10 haber</h2>
-            <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
-          </div>
+      <div id="tab-panel-defter" class="tab-scene" data-panel="defter" role="tabpanel" hidden aria-hidden="true" aria-label="Sinyal defteri">
+        <div class="log-card">
+          <h2 class="section-title" style="margin-top:0">Sinyal defteri (açık + kapanan)</h2>
+          <div id="signal-ledger"><div class="log-bos">—</div></div>
         </div>
       </div>
-    </section>
+      <div id="tab-panel-sinyal" class="tab-scene" data-panel="sinyal" role="tabpanel" hidden aria-hidden="true" aria-label="Sinyal log">
+        <div class="log-card">
+          <h2 class="section-title" style="margin-top:0">Son 10 sinyal (log)</h2>
+          <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
+        </div>
+      </div>
+      <div id="tab-panel-haber" class="tab-scene" data-panel="haber" role="tabpanel" hidden aria-hidden="true" aria-label="Haber">
+        <div class="log-card">
+          <h2 class="section-title" style="margin-top:0">Son 10 haber</h2>
+          <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <footer>GRAY MARS LLC - 2026</footer>
@@ -873,10 +885,11 @@ function selectTab(name) {
     t.classList.toggle('active', on);
     t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
-  document.querySelectorAll('#tab-panels-clip .tab-panel').forEach(function (p) {
+  document.querySelectorAll('#app-scene-root > [data-panel]').forEach(function (p) {
     var on = p.getAttribute('data-panel') === name;
     p.hidden = !on;
     p.setAttribute('aria-hidden', on ? 'false' : 'true');
+    try { p.inert = !on; } catch (e) {}
   });
 }
 function initHeaderTabs() {
