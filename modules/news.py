@@ -1,217 +1,161 @@
-import logging
-import json
-import os
+"""
+RSS haber akışı — sadece dashboard tüketimi.
+Groq, LLM, puan, skor ve sinyal sistemi yok: yalnızca kaynaklardan çek, en yeni N haberi döndür.
+"""
+from __future__ import annotations
+
 import hashlib
-import feedparser
-from groq import Groq
+import html
+import logging
+import re
 from datetime import datetime, timezone, timedelta
-from config import GROQ_API_KEY, RSS_KAYNAKLAR, TIER_AGIRLIKLARI, KRITIK_KELIMELER
+from typing import Any, Optional, Tuple
+
+import feedparser
+
+from config import RSS_KAYNAKLAR
 
 logger = logging.getLogger(__name__)
 
-def _entry_zaman(entry):
-    try:
-        t = entry.get("published_parsed") or entry.get("updated_parsed")
+TR = timezone(timedelta(hours=3))
+_TAG_RE = re.compile(r"<[^>]+>")
+
+# Varsayılan dönen haber adedi
+SON_HABER_SAYISI = 10
+
+
+def _kisa_ozet(summary: str, max_len: int = 400) -> str:
+    if not summary:
+        return ""
+    t = _TAG_RE.sub(" ", str(summary))
+    t = html.unescape(t)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t[:max_len] + ("…" if len(t) > max_len else "")
+
+
+def _alan(entry: Any, *isimler: str, default: str = "") -> str:
+    for n in isimler:
+        if isinstance(entry, dict) and n in entry:
+            v = entry.get(n)
+            if v is not None and str(v).strip():
+                return str(v).strip()
+        if hasattr(entry, n):
+            v = getattr(entry, n, None)
+            if v is not None and str(v).strip():
+                return str(v).strip()
+    return default
+
+
+def _zaman_tuple(entry: Any) -> Optional[Tuple[Any, ...]]:
+    for k in ("published_parsed", "updated_parsed"):
+        if isinstance(entry, dict) and k in entry:
+            t = entry.get(k)
+            if t:
+                return t
+        t = getattr(entry, k, None)
         if t:
-            utc = datetime(*t[:6], tzinfo=timezone.utc)
-            tr = utc.astimezone(timezone(timedelta(hours=3)))
-            return tr.strftime("%H:%M")
-    except Exception as e:
-        logger.error(f"Haber zamanı ayrıştırma: {e}")
-    return datetime.now(timezone(timedelta(hours=3))).strftime("%H:%M")
+            return t
+    return None
 
-GORULMUS_DOSYA = "gorulmus_haberler.json"
 
-try:
-    _groq = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-except Exception as e:
-    logger.error(f"Groq istemcisi (haberler) başlatılamadı: {e}")
-    _groq = None
+def _girdi_id(entry: Any) -> str:
+    s = f"{_alan(entry, 'title', default='')}{_alan(entry, 'link', default='')}"
+    return hashlib.md5(s.encode("utf-8", errors="ignore")).hexdigest()[:16]
 
-# ─── YARDIMCI ───────────────────────────────────────────────
 
-def _haber_id(entry):
-    return hashlib.md5(
-        (entry.get("title", "") + entry.get("link", "")).encode()
-    ).hexdigest()
+def _girdi_zaman(entry: Any) -> str:
+    t = _zaman_tuple(entry)
+    return _parse_tuple_to_tr_time(t)
 
-def _gorulmus_oku():
-    if os.path.exists(GORULMUS_DOSYA):
-        with open(GORULMUS_DOSYA) as f:
-            return set(json.load(f))
-    return set()
 
-def _gorulmus_kaydet(s):
-    with open(GORULMUS_DOSYA, "w") as f:
-        json.dump(list(s)[-500:], f)
-
-def _on_filtre(baslik):
-    """Kritik kelime içermiyor mu? Filtrelenir."""
-    b = baslik.lower()
-    return any(k in b for k in KRITIK_KELIMELER)
-
-# ─── HABER ÇEKME ────────────────────────────────────────────
-
-def yeni_haberler_cek():
-    gorulmus = _gorulmus_oku()
-    toplam = []
-
-    for tier, kaynaklar in RSS_KAYNAKLAR.items():
-        agirlik = TIER_AGIRLIKLARI.get(tier, 0.1)
-        for kaynak in kaynaklar:
-            try:
-                feed = feedparser.parse(kaynak)
-                for entry in feed.entries[:10]:
-                    hid = _haber_id(entry)
-                    if hid in gorulmus:
-                        continue
-                    baslik = entry.get("title", "")
-                    if not _on_filtre(baslik):
-                        gorulmus.add(hid)
-                        continue
-                    toplam.append({
-                        "id": hid,
-                        "tier": tier,
-                        "agirlik": agirlik,
-                        "title": baslik,
-                        "summary": entry.get("summary", "")[:300],
-                        "link": entry.get("link", ""),
-                        "zaman": _entry_zaman(entry),
-                    })
-                    gorulmus.add(hid)
-            except Exception as e:
-                logger.error(f"RSS hatası ({kaynak}): {e}")
-
-    _gorulmus_kaydet(gorulmus)
-    logger.info(f"Filtrelenmiş yeni haber: {len(toplam)}")
-    return toplam
-
-# ─── LLM — SADECE ÇEVIRI ────────────────────────────────────
-
-def _llm_haber_skoru(haberler):
-    if not _groq or not haberler:
-        return 0, []
-
-    kritik = [h for h in haberler if h["tier"] == "kritik"][:3]
-    diger = [h for h in haberler if h["tier"] != "kritik"][:3]
-    secilen = (kritik + diger)[:6]
-
-    haber_metni = "\n".join([
-        f"[{h['tier'].upper()}] {h['title']}"
-        for h in secilen
-    ])
-
-    prompt = f"""Aşağıdaki finansal/jeopolitik haberleri analiz et.
-Her haberin gümüş (XAG) fiyatına olası etkisini değerlendir.
-
-Haberler:
-{haber_metni}
-
-SADECE şu JSON formatını döndür, başka hiçbir şey yazma:
-{{
-  "skor": <-100 ile +100 arası tam sayı>,
-  "kritik": <true/false>,
-  "ozet": "<maksimum 2 cümle Türkçe özet, boş olabilir>",
-  "haberler_turkce": [
-    {{"orijinal": "<orijinal başlık>", "turkce": "<kim, nerede, ne oldu — tek cümle Türkçe>"}},
-    ...
-  ]
-}}
-
-Kural: +100 = güçlü yükseliş baskısı, -100 = güçlü düşüş baskısı, 0 = nötr
-Kritik: Fed/merkez bankası, savaş, büyük ekonomik şok = true
-haberler_turkce: TÜM haberleri Türkçeye çevir, hiçbirini atlama"""
-
-    try:
-        r = _groq.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.2,
-            max_tokens=400,
-        )
-        temiz = r.choices[0].message.content.strip()
-        if "```" in temiz:
-            temiz = temiz.split("```")[1]
-            if temiz.startswith("json"):
-                temiz = temiz[4:]
+def _parse_tuple_to_tr_time(t) -> str:
+    if t:
         try:
-            baslangic = temiz.index("{")
-            bitis = temiz.rindex("}") + 1
-            temiz = temiz[baslangic:bitis]
-        except ValueError as e:
-            logger.error(f"LLM JSON çerçeve bulunamadı: {e}")
-        sonuc = json.loads(temiz.strip())
-        skor = max(-100, min(100, int(sonuc.get("skor", 0))))
+            utc = datetime(*t[:6], tzinfo=timezone.utc)
+            return utc.astimezone(TR).strftime("%H:%M")
+        except (TypeError, ValueError) as e:
+            logger.debug("Haber zamanı parse: %s", e)
+    return datetime.now(TR).strftime("%H:%M")
 
-        turkce_map = {}
-        for t in sonuc.get("haberler_turkce", []):
-            turkce_map[t.get("orijinal", "")] = t.get("turkce", "")
-        for h in haberler:
-            h["turkce"] = turkce_map.get(h["title"], h["title"])
 
-        return skor, sonuc
-    except Exception as e:
-        logger.error(f"LLM haber skoru hatası: {e}")
-        return 0, {}
-
-# ─── ANA MODÜL ──────────────────────────────────────────────
-
-def calistir(config):
+def _girdi_utc(entry: Any) -> Optional[datetime]:
+    t = _zaman_tuple(entry)
+    if not t:
+        return None
     try:
-        haberler = yeni_haberler_cek()
+        return datetime(*t[:6], tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return None
 
-        if not haberler:
-            logger.info("Yeni kritik haber yok.")
-            return {
-                "modul": "haberler",
-                "puan": 50,
-                "kritik": False,
-                "llm_skor": 0,
-                "ozet": "",
-                "haber_sayisi": 0,
-                "detay": {"durum": "Yeni kritik haber yok"},
-            }
 
-        llm_skor, llm_detay = _llm_haber_skoru(haberler)
+def _rss_satiri_olustur(
+    entry: Any,
+    kategori: str,
+) -> Optional[dict[str, Any]]:
+    title = _alan(entry, "title")
+    link = _alan(entry, "link")
+    if not title and not link:
+        return None
+    raw = _alan(entry, "summary", "description")
+    eid = _girdi_id(entry)
+    return {
+        "id": eid,
+        "tier": kategori,
+        "title": title or "(başlıksız)",
+        "link": link,
+        "ozet": _kisa_ozet(raw),
+        "zaman": _girdi_zaman(entry),
+        "_ts": _girdi_utc(entry) or datetime.min.replace(tzinfo=timezone.utc),
+    }
 
-        # LLM skoru [−100,+100] → modül puanı [0,100]
-        # +100 = 90 puan (güçlü al), -100 = 10 puan (sat/bekle)
-        modul_puan = 50 + (llm_skor * 0.40)
-        modul_puan = max(10, min(90, modul_puan))
 
-        # Tier 1 haber varsa ağırlık artar
-        kritik_sayisi = sum(1 for h in haberler if h["tier"] == "kritik")
-        if kritik_sayisi >= 2:
-            modul_puan = min(90, modul_puan * 1.1)
+def _tum_kayitlari_topla() -> list[dict[str, Any]]:
+    """Tüm RSS kaynaklarındaki tüm maddeleri topla (kategori = RSS sözlük anahtarı)."""
+    out: list[dict[str, Any]] = []
+    for kategori, url_liste in (RSS_KAYNAKLAR or {}).items():
+        for url in url_liste or []:
+            url = (url or "").strip()
+            if not url:
+                continue
+            try:
+                feed = feedparser.parse(url)
+                for entry in getattr(feed, "entries", []) or []:
+                    if entry is None:
+                        continue
+                    d = _rss_satiri_olustur(entry, str(kategori))
+                    if d:
+                        out.append(d)
+            except Exception as e:
+                logger.warning("RSS hatası (%s): %s", url, e)
+    return out
 
-        kritik = llm_detay.get("kritik", False)
-        ozet   = llm_detay.get("ozet", "")
 
-        logger.info(f"Haber modülü: {len(haberler)} haber, "
-                    f"llm_skor={llm_skor}, puan={modul_puan:.1f}")
+def _sirala_ve_tekillestir(kayitlar: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    kayitlar.sort(key=lambda r: r["_ts"], reverse=True)
+    g = []
+    gord = set()
+    for r in kayitlar:
+        eid = r.get("id")
+        if eid in gord:
+            continue
+        gord.add(eid)
+        r = dict(r)
+        r.pop("_ts", None)
+        g.append(r)
+    return g
 
-        return {
-            "modul": "haberler",
-            "puan": round(modul_puan, 1),
-            "kritik": kritik,
-            "llm_skor": llm_skor,
-            "ozet": ozet,
-            "haber_sayisi": len(haberler),
-            "kritik_sayisi": kritik_sayisi,
-            "detay": {
-                "llm": f"Haber etkisi skoru: {llm_skor:+d}",
-                "ozet": ozet or "Kritik gelişme yok",
-                "haberler": haberler,
-            },
-        }
 
-    except Exception as e:
-        logger.error(f"Haber modülü hatası: {e}")
-        return {
-            "modul": "haberler",
-            "puan": 50,
-            "kritik": False,
-            "llm_skor": 0,
-            "ozet": "",
-            "detay": {"hata": str(e)},
-        }
+def son_haberler(limit: int = SON_HABER_SAYISI) -> list[dict[str, Any]]:
+    """
+    RSS'den tüm `RSS_KAYNAKLAR` uçlarını tara, birleştirip en yenilerden
+    itibaren `limit` adet listele. Sadece okuma; dosya, oylama veya sinyal yok.
+    """
+    n = max(1, min(int(limit), 50))
+    toplu = _tum_kayitlari_topla()
+    siralı = _sirala_ve_tekillestir(toplu)
+    return siralı[:n]
+
+
+def haber_listesi() -> list[dict[str, Any]]:
+    """Takma ad: son 10 haber (dashboard)."""
+    return son_haberler(SON_HABER_SAYISI)

@@ -6,28 +6,32 @@ import os
 import sys
 import threading
 from datetime import datetime, timezone, timedelta
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Bot
-from core.data_engine import get_silver_price_tl, get_xagusd_spot_last
-from core.signal_engine import sinyal_uret, build_kapanis_mesaji_usd, tam_analiz_calistir
+
+from core.data_engine import get_silver_price_dunyakatilim
+from core.signal_engine import sinyal_uret
 from core import position_store as pstore
-from filters.calendar import kilit_koy
+from filters.calendar import kilit_kontrol
 from output.api import flask_baslat
-from modules.risk import fiyat_erkun_esigi
 import config as cfg
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
 
 _TELEGRAM_LOCK_FP = None
 
+
 def _acquire_telegram_process_lock():
     """Aynı makinede ikinci bir bot sürecini engeller (getUpdates 409)."""
     global _TELEGRAM_LOCK_FP
-    if os.environ.get("MARS_DISABLE_TELEGRAM_LOCK", "").lower() in ("1", "true", "yes"):
+    if os.environ.get("MARS_DISABLE_TELEGRAM_LOCK", "").lower() in (
+        "1", "true", "yes"
+    ):
         return
     path = os.environ.get("MARS_TELEGRAM_LOCK_FILE", "/tmp/mars-finance-telegram.lock")
     f = open(path, "a+", encoding="utf-8")
@@ -46,49 +50,44 @@ def _acquire_telegram_process_lock():
     f.flush()
     _TELEGRAM_LOCK_FP = f
 
-TR             = timezone(timedelta(hours=3))
-POZISYON_DOSYA = "aktif_pozisyon.json"
+
+TR = timezone(timedelta(hours=3))
 PERFORMANS_DOSYA = "performans.json"
-LOG_DOSYA      = "sinyal_log.json"
+LOG_DOSYA = "sinyal_log.json"
+PIYASA_ARALIK_SANIYE = 60
+FIYAT_TAKIP_SANIYE = 60
+
 
 # ─── YARDIMCI ───────────────────────────────────────────────
 
-def hafta_sonu_mu():
+
+def hafta_sonu_mu() -> bool:
     return datetime.now(timezone.utc).weekday() >= 5
 
-def config_dict():
+
+def config_dict() -> dict:
     return {
         k: getattr(cfg, k)
         for k in dir(cfg)
-        if not k.startswith('_') and
-        isinstance(getattr(cfg, k), (int, float, str, list, dict))
+        if not k.startswith("_")
+        and isinstance(getattr(cfg, k), (int, float, str, list, dict))
     }
 
-def pozisyon_kaydet(giris_tl, hedef_tl, stop_tl, mesaj_id, kurul_gorusu):
-    with open(POZISYON_DOSYA, "w") as f:
-        json.dump({
-            "giris_tl": giris_tl,
-            "hedef_tl": hedef_tl,
-            "stop_tl":  stop_tl,
-            "mesaj_id": mesaj_id,
-            "kurul_gorusu": kurul_gorusu,
-            "tarih": datetime.now(TR).strftime("%Y-%m-%d %H:%M"),
-        }, f)
 
-def pozisyon_sil():
-    if os.path.exists(POZISYON_DOSYA):
-        os.remove(POZISYON_DOSYA)
-
-def pozisyon_oku():
-    if os.path.exists(POZISYON_DOSYA):
-        with open(POZISYON_DOSYA) as f:
-            return json.load(f)
-    return None
-
-def sinyal_logla(tip, giris_tl, cikis_tl=None, kar_yuzde=None,
-                 giris_tarihi=None,
-                 hedef_tl=None, stop_tl=None, kurul_gorusu=None,
-                 entry_usd=None, tp_usd=None, sinyal_id=None):
+def sinyal_logla(
+    tip,
+    giris_tl,
+    cikis_tl=None,
+    kar_yuzde=None,
+    giris_tarihi=None,
+    hedef_tl=None,
+    stop_tl=None,
+    kurul_gorusu=None,
+    entry_usd=None,
+    tp_usd=None,
+    sinyal_id=None,
+    net_kar_yuzde=None,
+):
     log = []
     if os.path.exists(LOG_DOSYA):
         with open(LOG_DOSYA) as f:
@@ -109,166 +108,214 @@ def sinyal_logla(tip, giris_tl, cikis_tl=None, kar_yuzde=None,
         "tp_usd": tp_usd,
         "signal_id": sinyal_id,
     }
+    if net_kar_yuzde is not None:
+        rec["net_kar_yuzde"] = net_kar_yuzde
     log.append(rec)
     with open(LOG_DOSYA, "w") as f:
         json.dump(log, f, ensure_ascii=False, indent=2)
 
-def performans_guncelle(kar_yuzde):
-    veri = {"toplam_kar": 0.0, "islem": 0,
-            "baslangic": datetime.now(TR).strftime("%d.%m.%Y"),
-            "bildirim": False}
+
+def performans_guncelle(kar_yuzde) -> dict:
+    veri = {
+        "toplam_kar": 0.0,
+        "islem": 0,
+        "baslangic": datetime.now(TR).strftime("%d.%m.%Y"),
+        "bildirim": False,
+    }
     if os.path.exists(PERFORMANS_DOSYA):
         with open(PERFORMANS_DOSYA) as f:
             veri = json.load(f)
-    veri["toplam_kar"] += kar_yuzde
-    veri["islem"] += 1
+    veri["toplam_kar"] = float(veri.get("toplam_kar", 0)) + float(kar_yuzde or 0)
+    veri["islem"] = int(veri.get("islem", 0)) + 1
     veri["bildirim"] = False
     with open(PERFORMANS_DOSYA, "w") as f:
         json.dump(veri, f)
     return veri
 
-# ─── SCHEDULER JOBLAR ───────────────────────────────────────
 
-async def volatilite_baslangic_job():
-    """Sinyal kilidi (metin bildirimsiz)."""
-    if hafta_sonu_mu():
-        return
-    try:
-        kilit_koy(cfg.OLAY_ONCESI_DAKIKA // 4,
-                  "COMEX volatilite penceresi başlıyor")
-    except Exception as e:
-        logger.error(f"Volatilite başlangıç kilidi: {e}")
+# ─── TELEGRAM METİNLERİ ────────────────────────────────────
+
+
+def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar: float) -> str:
+    return (
+        f"🥈 GÜMÜŞ AL SİNYALİ\n"
+        f"Giriş:   ₺{giris_tl:.2f}\n"
+        f"Hedef:   ₺{hedef_tl:.2f}\n"
+        f"Net Kar: %{net_kar:.2f}\n"
+    )
+
+
+# ─── SCHEDULER JOBLAR ──────────────────────────────────────
+
 
 async def piyasa_analizi_job():
     if hafta_sonu_mu():
         return
     try:
-        logger.info("Periyodik analiz başlıyor...")
         conf = config_dict()
-        sinyal_var, mesaj, e_usd, t_usd, sinyal_tipi, extra = sinyal_uret(conf)
+        kilit, kilit_ned = kilit_kontrol()
+        if kilit:
+            logger.info("Sinyal kilidi: %s", kilit_ned)
+            return
+        d = sinyal_uret(conf)
+        if not d.get("sinyal"):
+            if d.get("red_neden"):
+                logger.info("Sinyal yok: %s", d.get("red_neden"))
+            return
+        g_tl = d.get("giris_tl")
+        h_tl = d.get("hedef_tl")
+        netp = float(d.get("net_kar_yuzde") or 0.0)
+        skr = int(d.get("skor") or 0)
+        ahtl = d.get("atr_half_tl")
+        if g_tl is None or h_tl is None or float(g_tl) <= 0 or float(h_tl) <= 0:
+            logger.info("Sinyal verisi Eksik (giris/hedef).")
+            return
+        g_tl = float(g_tl)
+        h_tl = float(h_tl)
+        ahtl = float(ahtl) if ahtl is not None else 0.0
+        if pstore.acik_sinyal_sayisi() >= cfg.SINYAL_MAKS_AKTIF:
+            logger.info("Açık sinyal sınırı: yeni sinyal gönderilmedi.")
+            return
+        if not cfg.TELEGRAM_TOKEN or not cfg.TELEGRAM_GROUP_ID:
+            return
         bot = Bot(token=cfg.TELEGRAM_TOKEN)
-        fiyat_tl, _ = get_silver_price_tl()
-
-        if sinyal_var and mesaj and pstore.acik_sinyal_sayisi() < cfg.SINYAL_MAKS_AKTIF:
-            kurul_g = (extra or {}).get("confidence", 0) if extra else 0
-            gonderilen = await bot.send_message(
-                chat_id=cfg.TELEGRAM_GROUP_ID,
-                text=mesaj,
-                parse_mode="Markdown"
-            )
-            rsn = ((extra or {}).get("reason") or "")[:400]
-            rec = pstore.yeni_alim_ekle(
-                e_usd, t_usd, kurul_g, rsn,
-                telemesaj_id=gonderilen.message_id,
-            )
-            sid = rec.get("id") if rec else None
-            sinyal_logla(
-                "ALIM", giris_tl=fiyat_tl or 0, hedef_tl=0, stop_tl=None,
-                kurul_gorusu=kurul_g,
-                entry_usd=e_usd, tp_usd=t_usd, sinyal_id=sid,
-            )
-            logger.info(f"Scalp sinyal: {sinyal_tipi} id={sid}")
-
+        text = _mesaj_yeni_sinyal(g_tl, h_tl, netp)
+        gonderilen = await bot.send_message(
+            chat_id=cfg.TELEGRAM_GROUP_ID,
+            text=text,
+        )
+        rsn = (f"skor {skr} " + (d.get("red_neden") or ""))[:400]
+        rec = pstore.yeni_alim_ekle(
+            0.0,
+            0.0,
+            skr,
+            rsn,
+            gonderilen.message_id,
+            None,
+            g_tl,
+            h_tl,
+            ahtl,
+        )
+        sid = (rec or {}).get("id")
+        sinyal_logla(
+            "ALIM",
+            giris_tl=g_tl,
+            hedef_tl=h_tl,
+            stop_tl=None,
+            kurul_gorusu=skr,
+            sinyal_id=sid,
+            net_kar_yuzde=netp,
+        )
+        logger.info("Sinyal açıldı: skor=%s id=%s", skr, sid)
     except Exception as e:
-        logger.error(f"Piyasa analizi: {e}")
+        logger.error("Piyasa analizi: %s", e, exc_info=True)
+
 
 async def fiyat_takip_job():
-    """Açık USD sinyalleri: sadece TP (kâr) ve %80 ilerlemede erken uyarı. Stop yok."""
+    if hafta_sonu_mu():
+        return
     try:
         acik = pstore.tüm_acikler()
         if not acik:
             return
-        spot = get_xagusd_spot_last()
-        if spot is None:
-            logger.error("[takip] XAG spot yok")
+        al, sat, _m = get_silver_price_dunyakatilim()
+        if al is None or sat is None:
+            logger.error("[takip] Dünya Katılım fiyat yok")
             return
-        conf = config_dict()
+        orta = (float(al) + float(sat)) / 2.0
+        al_f, sat_f = float(al), float(sat)
+        if not cfg.TELEGRAM_TOKEN or not cfg.TELEGRAM_GROUP_ID:
+            return
         bot = Bot(token=cfg.TELEGRAM_TOKEN)
-        fiyat_tl, _ = get_silver_price_tl()
-
         for s in list(acik):
-            entry = s.get("entry_target_usd")
-            tpv = s.get("tp_usd")
-            if not entry or not tpv or entry <= 0 or tpv <= 0:
-                continue
-            erken = fiyat_erkun_esigi(entry, tpv, conf)
             mid = s.get("id")
             mes_id = s.get("telegram_message_id")
-            if spot < entry:
+            h_raw = s.get("hedef_tl")
+            g_raw = s.get("giris_tl")
+            ahh = s.get("atr_half_tl")
+            if h_raw is None or g_raw is None:
                 continue
-            if spot >= float(tpv):
-                m, net_br = build_kapanis_mesaji_usd(entry, tpv, spot, conf)
+            h_tl = float(h_raw)
+            g_tl = float(g_raw)
+            ahh = float(ahh) if ahh is not None else 0.0
+            if g_tl > 0 and ahh > 0 and orta < (g_tl - ahh):
+                m = f"⛔ Setup iptal (ters hareket, orta fiyat ₺{orta:.2f})"
                 await bot.send_message(
                     chat_id=cfg.TELEGRAM_GROUP_ID,
                     text=m,
                     reply_to_message_id=mes_id,
-                    parse_mode="Markdown"
                 )
                 sinyal_logla(
-                    "SATIS", giris_tl=fiyat_tl or 0, cikis_tl=None,
-                    kar_yuzde=net_br, giris_tarihi=s.get("created"),
-                    hedef_tl=0, entry_usd=entry, tp_usd=tpv, sinyal_id=mid,
+                    "IPTAL",
+                    giris_tl=g_tl,
+                    hedef_tl=h_tl,
+                    kar_yuzde=None,
+                    giris_tarihi=s.get("created"),
+                    sinyal_id=mid,
                 )
-                performans_guncelle(net_br)
-                pstore.sinyal_kapat(mid, spot, "TP")
-            elif (spot >= float(erken)) and not s.get("early_80_alerts_sent"):
+                pstore.sinyal_kapat(mid, 0, "SETUP_IPTAL", cikis_tl=orta)
+                continue
+            if h_tl and al_f >= h_tl - 1e-6:
+                cikis = al_f
+                pnl = ((cikis - g_tl) / g_tl) * 100.0 if g_tl > 0 else 0.0
+                msg = (
+                    f"🎯 Hedefe ulaşıldı (Dünya Katılım alış: ₺{cikis:.2f}, "
+                    f"hedef: ₺{h_tl:.2f})\n"
+                    f"Brüt tahmini kâr: %{pnl:.2f}\n"
+                )
                 await bot.send_message(
                     chat_id=cfg.TELEGRAM_GROUP_ID,
-                    text=(f"📍 Erken uyar: XAG ~%80 hedefe yakın (spot {spot:.4f}, "
-                          f"hedef {float(tpv):.4f})."),
+                    text=msg,
                     reply_to_message_id=mes_id,
                 )
-                pstore.early_alert_isaretle(mid)
-            logger.info(f"[takip] id={mid} entry={entry} spot={spot} erken={erken:.4f} tp={tpv}")
-
+                sinyal_logla(
+                    "SATIS",
+                    giris_tl=g_tl,
+                    cikis_tl=cikis,
+                    hedef_tl=h_tl,
+                    kar_yuzde=pnl,
+                    giris_tarihi=s.get("created"),
+                    sinyal_id=mid,
+                )
+                performans_guncelle(pnl)
+                pstore.sinyal_kapat(mid, 0, "TP", cikis_tl=cikis)
+            logger.info(
+                "[takip] id=%s sat=%.4f hedef=%.4f orta=%.4f",
+                mid, sat_f, h_tl, orta,
+            )
     except Exception as e:
-        logger.error(f"Fiyat takip: {e}")
+        logger.error("Fiyat takip: %s", e, exc_info=True)
 
-# ─── ANA ────────────────────────────────────────────────────
 
 async def _clear_telegram_webhook_once():
-    """Giden mesaj modu; eski webhook getUpdates ile çakışmasın diye temizlenir."""
     if not cfg.TELEGRAM_TOKEN:
         return
     try:
-        bot = Bot(token=cfg.TELEGRAM_TOKEN)
-        await bot.delete_webhook(drop_pending_updates=False)
+        await Bot(token=cfg.TELEGRAM_TOKEN).delete_webhook(
+            drop_pending_updates=False
+        )
     except Exception as e:
-        logger.error(f"Telegram delete_webhook: {e}")
+        logger.error("Telegram delete_webhook: %s", e)
+
 
 async def main():
-    logger.info("Mars Finance v2.0 başlatılıyor...")
+    logger.info("Mars Finance başlatılıyor (TL sinyal + 60s döngü)...")
     await _clear_telegram_webhook_once()
-
-    # Flask API ayrı thread'de
-    flask_thread = threading.Thread(target=flask_baslat, daemon=True)
-    flask_thread.start()
+    t = threading.Thread(target=flask_baslat, daemon=True)
+    t.start()
     logger.info("Dashboard: 0.0.0.0:5000")
-
-    scheduler = AsyncIOScheduler(timezone=timezone.utc)
-
-    # Periyodik analiz
-    for saat in cfg.ANALIZ_SAATLERI_UTC:
-        scheduler.add_job(piyasa_analizi_job, "cron",
-                          hour=saat, minute=0)
-
-    # Volatilite: yalnız kilit (Telegram yok)
-    scheduler.add_job(volatilite_baslangic_job, "cron",
-                      hour=cfg.VOLATILITE_BASLANGIC_HOUR,
-                      minute=cfg.VOLATILITE_BASLANGIC_MINUTE)
-
-    # Fiyat takibi
-    scheduler.add_job(fiyat_takip_job, "interval",
-                      minutes=cfg.FIYAT_TAKIP_INTERVAL_DAKIKA)
-
-    scheduler.start()
-    logger.info("Scheduler aktif.")
-
-    # Başlangıçta bir analiz çalıştır
+    sched = AsyncIOScheduler(timezone=timezone.utc)
+    sched.add_job(
+        piyasa_analizi_job, "interval", seconds=PIYASA_ARALIK_SANIYE, id="piyasa"
+    )
+    sched.add_job(
+        fiyat_takip_job, "interval", seconds=FIYAT_TAKIP_SANIYE, id="takip"
+    )
+    sched.start()
     await piyasa_analizi_job()
-
     while True:
-        await asyncio.sleep(60)
+        await asyncio.sleep(600)
+
 
 if __name__ == "__main__":
     _acquire_telegram_process_lock()
