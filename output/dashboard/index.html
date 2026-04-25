@@ -158,12 +158,142 @@ body::after {
   color: var(--text);
   border-color: rgba(255, 255, 255, 0.14);
 }
-.tab.active {
-  border-color: #7a9a88;
-}
 .tab.has-open {
   border-color: #7a9a88;
 }
+.tab.active {
+  background: rgba(90, 154, 122, 0.12);
+  color: var(--text);
+  border-color: rgba(90, 154, 122, 0.45);
+}
+.tab .tab-ic {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+.tab.active .tab-ic { opacity: 1; }
+.tab--text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.tab--icononly {
+  min-width: 40px;
+  padding-left: 10px;
+  padding-right: 10px;
+  justify-content: center;
+}
+.tabs--main {
+  width: 100%;
+  margin: 0 !important;
+  margin-top: 10px !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 8px;
+}
+@media (max-width: 480px) {
+  .tabs--main {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    justify-content: flex-start;
+  }
+  .tabs--main .tab { flex: 0 0 auto; }
+}
+.dash-header--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+.dash-header--stacked .dash-header__row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.open-sig-block {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+  text-align: left;
+}
+.open-sig-block__head {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.open-sig-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.open-sig-row:first-of-type { padding-top: 0; }
+.open-sig-row:last-of-type { border-bottom: none; }
+.open-sig-row .os-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.open-sig-row .os-tarih { font-size: 10px; color: var(--muted); }
+.btn-link-txt {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-link-txt:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); }
+.veto-inline { margin-top: 8px; font-size: 10px; color: var(--muted); }
+.ledger-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.ledger-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 280px;
+}
+.ledger-tbl th {
+  text-align: left;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 6px 10px 0;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.ledger-tbl td {
+  padding: 10px 8px 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-dim);
+  vertical-align: top;
+  font-feature-settings: "tnum" 1;
+}
+.ledger-tbl td.ledger-dur {
+  color: var(--text);
+  max-width: 9em;
+}
+.tradingview-host { min-height: 300px; width: 100%; }
 .tabs .badge {
   background: red;
   color: #fff;
@@ -694,9 +824,8 @@ h2.section-title { margin: 0 0 16px; }
 
 .log-bos { font-size: 12px; color: var(--muted); text-align: center; padding: 20px 16px; }
 .log-card code,
-#open-signals code,
-#signal-ledger code,
-#sinyal-log code {
+#open-signals-home code,
+#sinyal-tab-ledger code {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 10px;
   color: var(--muted2);
@@ -735,32 +864,53 @@ footer {
 <body>
 <div class="wrap">
 
-  <header class="dash-header" role="banner">
-    <div class="dash-header__brand">
+  <header class="dash-header dash-header--stacked" role="banner">
+    <div class="dash-header__row1">
       <div class="logo" aria-label="Mars Finance">MARS<em>.</em>FINANCE</div>
-      <div class="tabs" role="tablist" aria-label="Sinyal ve haber görünümleri">
-        <button type="button" class="tab active" id="tab-btn-acik" data-tab="acik" role="tab" aria-selected="true">Açık</button>
-        <button type="button" class="tab" data-tab="defter" role="tab" aria-selected="false">Defter</button>
-        <button type="button" class="tab" data-tab="sinyal" role="tab" aria-selected="false">Sinyal</button>
-        <button type="button" class="tab" data-tab="haber" role="tab" aria-selected="false">Haber <span class="badge" id="haber-badge" style="display:none" aria-hidden="true">0</span></button>
-      </div>
+      <div class="live" title="Veri tazeliği"><div class="dot" aria-hidden="true"></div><time id="son-guncelleme" datetime="--:--">--:--</time></div>
     </div>
-    <div class="live" title="Veri tazeliği"><div class="dot" aria-hidden="true"></div><time id="son-guncelleme" datetime="--:--">--:--</time></div>
+    <nav class="tabs tabs--main" role="tablist" aria-label="Ana menü">
+      <button type="button" class="tab tab--text active" id="tab-ana" data-panel="ana" role="tab" aria-selected="true" aria-label="Ana sayfa" title="Ana Sayfa">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+        <span>Ana Sayfa</span>
+      </button>
+      <button type="button" class="tab tab--text" id="tab-sinyal" data-panel="sinyal" role="tab" aria-selected="false" title="Sinyal">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span>Sinyal</span>
+      </button>
+      <button type="button" class="tab tab--icononly" id="tab-grafik" data-panel="grafik" role="tab" aria-selected="false" title="Grafik" aria-label="Grafik">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="5" y1="4" x2="5" y2="20" fill="none"/>
+          <rect x="2" y="8" width="6" height="6" rx="0.5" stroke="none"/>
+          <line x1="19" y1="3" x2="19" y2="20" fill="none"/>
+          <rect x="16" y="6" width="6" height="8" rx="0.5" stroke="none"/>
+        </svg>
+      </button>
+      <button type="button" class="tab tab--text" id="tab-piyasa" data-panel="piyasa" role="tab" aria-selected="false" title="Piyasa">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        <span>Piyasa</span>
+      </button>
+      <button type="button" class="tab tab--text" id="tab-haber" data-panel="haber" role="tab" aria-selected="false" title="Haberler">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2z"/><path d="M6 2v16"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h2"/></svg>
+        <span>Haberler</span>
+        <span class="badge" id="haber-badge" style="display:none" aria-hidden="true">0</span>
+      </button>
+    </nav>
   </header>
 
   <main id="main-views" aria-label="Görünümler — tek ekran">
     <div id="app-scene-root" class="app-scene-root" role="presentation" aria-label="Pano ekranları">
-      <div id="tab-panel-acik" class="tab-scene" data-panel="acik" role="tabpanel" aria-labelledby="tab-btn-acik" aria-label="Cockpit: fiyat, KPI, göstergeler, açık sinyaller" aria-hidden="false">
+      <div id="tab-panel-ana" class="tab-scene" data-panel="ana" role="tabpanel" aria-labelledby="tab-ana" aria-label="Ana sayfa" aria-hidden="false">
         <section class="region-prices" aria-label="Fiyat">
           <div class="price-hero" id="price-hero">
             <div class="price-hero__label">GÜMÜŞ</div>
             <div class="price-hero__row" role="group" aria-label="Alış ve satış fiyatı">
               <div class="price-metric" aria-label="Alış fiyatı">
-                <div class="price-metric__k">Satış</div>
+                <div class="price-metric__k">Alış</div>
                 <div class="price-metric__v">₺<span id="gumus-alis">--</span></div>
               </div>
               <div class="price-metric" aria-label="Satış fiyatı">
-                <div class="price-metric__k">Alış</div>
+                <div class="price-metric__k">Satış</div>
                 <div class="price-metric__v">₺<span id="gumus-satis">--</span></div>
               </div>
             </div>
@@ -772,40 +922,14 @@ footer {
             <div id="change-wrap">
               <div id="gumus-change" class="pc-change">--%</div>
             </div>
-            <div class="son-sinyal-ozet" id="son-sinyal-box" style="background:rgba(0,0,0,.2);border-radius:10px;padding:12px;margin-top:8px;font-size:11px;max-width:100%">
-              <div style="font-weight:700;margin-bottom:6px;opacity:.9">Son sinyal</div>
-              <div id="son-sinyal-body" class="log-bos" style="margin:0">—</div>
-              <div id="veto-brief" style="margin-top:8px;font-size:10px;color:var(--muted)"></div>
+            <div class="open-sig-block" id="open-signals-wrap">
+              <div class="open-sig-block__head">Açık sinyaller</div>
+              <div id="open-signals-home"><div class="log-bos" style="padding:0">Yükleniyor…</div></div>
+              <p id="veto-brief" class="veto-inline" style="display:none" aria-live="polite"></p>
             </div>
             <p class="caption-legal">Veriler Dünya Katılım'dan 60 sn. gecikmeli gelmektedir.</p>
           </div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;">
-            <div class="section-title">GÜMÜŞ 24 SAAT</div>
-            <div class="tradingview-widget-container">
-              <div id="tradingview_silver"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-              <script type="text/javascript">
-              new TradingView.widget({
-                "width": "100%",
-                "height": 300,
-                "symbol": "OANDA:XAGUSD",
-                "interval": "60",
-                "timezone": "Europe/Istanbul",
-                "theme": "dark",
-                "style": "1",
-                "locale": "tr",
-                "toolbar_bg": "#161f2e",
-                "enable_publishing": false,
-                "hide_top_toolbar": true,
-                "hide_legend": true,
-                "save_image": false,
-                "container_id": "tradingview_silver"
-              });
-              </script>
-            </div>
-          </div>
         </section>
-
         <section class="region-stats" aria-label="Sinyal istatistikleri">
           <div class="kpi-card">
             <div class="kpi-card__head">
@@ -815,7 +939,24 @@ footer {
             <div id="stats-panel"></div>
           </div>
         </section>
+      </div>
 
+      <div id="tab-panel-sinyal" class="tab-scene" data-panel="sinyal" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-sinyal" aria-label="Sinyal defteri">
+        <div class="log-card">
+          <h2 class="section-title" style="margin-top:0">Son 30 sinyal</h2>
+          <p class="kpi-card__hint" style="margin:-8px 0 12px">Signal defter — en yeni üstte</p>
+          <div id="sinyal-tab-ledger" class="ledger-wrap"><div class="log-bos">—</div></div>
+        </div>
+      </div>
+      <div id="tab-panel-grafik" class="tab-scene" data-panel="grafik" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-grafik" aria-label="Gümüş grafiği">
+        <div class="m-card" style="margin-bottom:0;padding:16px">
+          <div class="section-title">GÜMÜŞ 24 SAAT</div>
+          <div class="tradingview-host tradingview-widget-container">
+            <div id="tradingview_silver" class="tradingview_grafik"></div>
+          </div>
+        </div>
+      </div>
+      <div id="tab-panel-piyasa" class="tab-scene" data-panel="piyasa" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-piyasa" aria-label="Piyasa göstergeleri">
         <section class="region-indicators" aria-label="Piyasa göstergeleri">
           <div class="indicators">
             <h2 class="section-title">Piyasa göstergeleri</h2>
@@ -836,35 +977,17 @@ footer {
                 <div class="ind-sub" id="m-petrol-change">--</div>
               </div>
               <div class="ind-item" role="listitem">
-                <div class="ind-key">Korku Endeksi</div>
+                <div class="ind-key">Korku Endeksi (VIX)</div>
                 <div class="ind-val" id="m-vix">--</div>
                 <div class="ind-sub" id="m-vix-yorum">--</div>
               </div>
             </div>
           </div>
         </section>
-
-        <div class="log-card">
-          <h2 class="section-title" style="margin-top:0">Açık sinyaller (XAG scalping)</h2>
-          <div id="open-signals"><div class="log-bos">Yükleniyor…</div></div>
-        </div>
       </div>
-
-      <div id="tab-panel-defter" class="tab-scene" data-panel="defter" role="tabpanel" hidden aria-hidden="true" aria-label="Sinyal defteri">
+      <div id="tab-panel-haber" class="tab-scene" data-panel="haber" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-haber" aria-label="Haberler">
         <div class="log-card">
-          <h2 class="section-title" style="margin-top:0">Sinyal defteri (açık + kapanan)</h2>
-          <div id="signal-ledger"><div class="log-bos">—</div></div>
-        </div>
-      </div>
-      <div id="tab-panel-sinyal" class="tab-scene" data-panel="sinyal" role="tabpanel" hidden aria-hidden="true" aria-label="Sinyal log">
-        <div class="log-card">
-          <h2 class="section-title" style="margin-top:0">Son 10 sinyal (log)</h2>
-          <div id="sinyal-log"><div class="log-bos">Henüz sinyal kaydı yok.</div></div>
-        </div>
-      </div>
-      <div id="tab-panel-haber" class="tab-scene" data-panel="haber" role="tabpanel" hidden aria-hidden="true" aria-label="Haber">
-        <div class="log-card">
-          <h2 class="section-title" style="margin-top:0">Son 10 haber</h2>
+          <h2 class="section-title" style="margin-top:0">Haberler</h2>
           <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
         </div>
       </div>
@@ -876,31 +999,106 @@ footer {
 
 <script>
 const API = '';
-let sinyalLog = [], haberLog = [];
+let haberLog = [];
+let openSigsExpand = false;
+let lastOpenSigs = [];
+let tvInited = false, tvIniting = false;
 function _esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+function trDateGoster(iso) {
+  if (!iso) return '—';
+  const m = String(iso).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return m[3] + '.' + m[2] + '.' + m[1];
+  return _esc(String(iso).slice(0, 16));
+}
+
+function netHedefYuzde(g, h) {
+  if (g == null || h == null) return '—';
+  const gi = Number(g), he = Number(h);
+  if (!(gi > 0) || !isFinite(he)) return '—';
+  const br = 100 * (he - gi) / gi;
+  return br.toFixed(2) + '%';
+}
+
 function selectTab(name) {
-  document.querySelectorAll('.tab[data-tab]').forEach(function (t) {
-    var on = t.getAttribute('data-tab') === name;
+  document.querySelectorAll('.tab[data-panel]').forEach(function (t) {
+    const on = t.getAttribute('data-panel') === name;
     t.classList.toggle('active', on);
     t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
   document.querySelectorAll('#app-scene-root > [data-panel]').forEach(function (p) {
-    var on = p.getAttribute('data-panel') === name;
+    const on = p.getAttribute('data-panel') === name;
     p.hidden = !on;
     p.setAttribute('aria-hidden', on ? 'false' : 'true');
     try { p.inert = !on; } catch (e) {}
   });
+  if (name === 'grafik') ensureTradingView();
 }
-function initHeaderTabs() {
-  document.querySelectorAll('.tab[data-tab]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      selectTab(btn.getAttribute('data-tab'));
-    });
+
+function loadTVScript() {
+  return new Promise(function (resolve) {
+    if (window.TradingView) { resolve(); return; }
+    const s = document.createElement('script');
+    s.type = 'text/javascript';
+    s.src = 'https://s3.tradingview.com/tv.js';
+    s.onload = resolve;
+    s.onerror = resolve;
+    document.head.appendChild(s);
   });
 }
+
+function ensureTradingView() {
+  if (tvInited) return;
+  const el = document.getElementById('tradingview_silver');
+  if (!el) return;
+  if (el.getAttribute('data-tv') === '1') { tvInited = true; return; }
+  if (tvIniting) return;
+  tvIniting = true;
+  loadTVScript().then(function () {
+    tvIniting = false;
+    if (typeof TradingView === 'undefined' || tvInited) return;
+    tvInited = true;
+    el.setAttribute('data-tv', '1');
+    try {
+      new TradingView.widget({
+        width: '100%',
+        height: 300,
+        symbol: 'OANDA:XAGUSD',
+        interval: '60',
+        timezone: 'Europe/Istanbul',
+        theme: 'dark',
+        style: '1',
+        locale: 'tr',
+        toolbar_bg: '#161f2e',
+        enable_publishing: false,
+        hide_top_toolbar: true,
+        hide_legend: true,
+        save_image: false,
+        container_id: 'tradingview_silver',
+      });
+    } catch (e) { console.error('TradingView:', e); }
+  });
+}
+
+function initHeaderTabs() {
+  document.querySelectorAll('.tab[data-panel]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      selectTab(btn.getAttribute('data-panel'));
+    });
+  });
+  const wrap = document.getElementById('open-signals-wrap');
+  if (wrap) {
+    wrap.addEventListener('click', function (e) {
+      const t = e.target;
+      if (t && t.id === 'open-sig-toggle') {
+        openSigsExpand = !openSigsExpand;
+        openSignalsHomeRender(lastOpenSigs, openSigsExpand);
+      }
+    });
+  }
+}
 initHeaderTabs();
-selectTab('acik');
+selectTab('ana');
 
 function cc(v) { return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted2)'; }
 function cs(v) { if(v==null) return '--%'; return (v>0?'+':'') + v.toFixed(2) + '%'; }
@@ -921,24 +1119,30 @@ function setIndChangeText(el, degisimYuzde, aciklama) {
   setIndBorder(el, degisimYuzde ?? 0);
 }
 
-function openSignalsRender(openList) {
-  const el = document.getElementById('open-signals');
+function openSignalsHomeRender(openList, expanded) {
+  const el = document.getElementById('open-signals-home');
   if (!el) return;
-  const L = openList && openList.length ? openList : [];
-  if (!L.length) { el.innerHTML = '<div class="log-bos">Açık sinyal yok.</div>'; return; }
-  el.innerHTML = L.map(s => {
+  const L = (openList && openList.length) ? openList.slice() : [];
+  if (!L.length) {
+    el.innerHTML = '<div class="log-bos" style="padding:8px 0">Açık sinyal yok.</div>';
+    return;
+  }
+  const toShow = expanded || L.length <= 5 ? L : L.slice(0, 5);
+  const rows = toShow.map(s => {
     const g = s.giris_tl != null ? '₺' + Number(s.giris_tl).toFixed(2) : '—';
     const t = s.hedef_tl != null ? '₺' + Number(s.hedef_tl).toFixed(2) : '—';
-    const c = s.confidence != null ? s.confidence.toFixed(0) : '—';
-    const id = s.id || '—';
-    const st = s.created || '';
-    const rs = s.reason ? `<div style="font-size:10px;color:var(--muted);margin-top:4px">${_esc(s.reason).slice(0,200)}</div>` : '';
-    return `<div class="sinyal-item">
-      <div class="sinyal-ust"><span class="sinyal-tip tip-al">OPEN</span><span class="sinyal-zaman">${st}</span></div>
-      <div class="sinyal-detay">Giriş ${g} → Hedef ${t} &nbsp;·&nbsp; skor ${c} &nbsp;·&nbsp; <code style="font-size:10px">${_esc(id)}</code></div>
-      ${rs}
+    const nk = netHedefYuzde(s.giris_tl, s.hedef_tl);
+    const st = s.created || '—';
+    return `<div class="open-sig-row">
+      <div class="os-line"><span><strong style="color:var(--text)">Giriş</strong> ${g}</span><span><strong style="color:var(--text)">Hedef</strong> ${t}</span></div>
+      <div class="os-line"><span>Net kâr (tah. TP) <strong style="color:var(--silver)">${nk}</strong></span><span class="os-tarih">${_esc(st)}</span></div>
     </div>`;
   }).join('');
+  let more = '';
+  if (L.length > 5) {
+    more = '<button type="button" class="btn-link-txt" id="open-sig-toggle">' + (expanded ? 'Daha az göster' : 'Daha fazla göster') + '</button>';
+  }
+  el.innerHTML = rows + more;
 }
 
 function kpiFormatTile(label, value, sub, extraClass) {
@@ -972,67 +1176,51 @@ function statsPanelRender(st) {
   );
 }
 
-function signalLedgerRender(ledger) {
-  const el = document.getElementById('signal-ledger');
+function ledgerSiralamaYeniOnce(ledger) {
+  if (!ledger || !ledger.length) return [];
+  return ledger.slice().sort((a, b) => {
+    const ta = new Date((a.status === 'OPEN' ? a.created : (a.closed || a.created)) || 0).getTime();
+    const tb = new Date((b.status === 'OPEN' ? b.created : (b.closed || b.created)) || 0).getTime();
+    return tb - ta;
+  });
+}
+
+function durumMetni(s) {
+  const st = s.status;
+  if (st === 'OPEN') return 'Açık';
+  if (st === 'CLOSED') {
+    const n = (s.close_reason || '').toString().toUpperCase();
+    if (n === 'SETUP_IPTAL' || n === 'IPTAL') return 'İptal';
+    if (n === 'TP') {
+      return 'Hedefe ulaştı (' + trDateGoster(s.closed) + ')';
+    }
+    return 'Kapandı (' + trDateGoster(s.closed) + ')';
+  }
+  return '—';
+}
+
+function sinyalTabLedgerRender(ledger) {
+  const el = document.getElementById('sinyal-tab-ledger');
   if (!el) return;
-  const L = ledger && ledger.length ? ledger : [];
+  const L0 = ledger && ledger.length ? ledger : [];
+  const L = ledgerSiralamaYeniOnce(L0).slice(0, 30);
   if (!L.length) { el.innerHTML = '<div class="log-bos">Kayıt yok.</div>'; return; }
-  const rev = L.slice().reverse();
-  el.innerHTML = rev.map(s => {
-    const st = s.status || '—';
+  const rows = L.map(s => {
     const g0 = s.giris_tl, h0 = s.hedef_tl;
     const e = (g0 != null) ? ('₺' + Number(g0).toFixed(2)) : (s.entry_target_usd != null ? '$' + s.entry_target_usd.toFixed(2) : '—');
     const t = (h0 != null) ? ('₺' + Number(h0).toFixed(2)) : (s.tp_usd != null ? '$' + s.tp_usd.toFixed(2) : '—');
-    const ex = s.cikis_tl != null ? '₺' + Number(s.cikis_tl).toFixed(2) : (s.exit_usd != null ? '$' + s.exit_usd.toFixed(2) : '—');
-    const pnl = s.pnl_gross_pct != null ? (s.pnl_gross_pct >= 0 ? '+' : '') + s.pnl_gross_pct.toFixed(2) + '%' : '—';
-    const cr = s.created || '', cl = s.closed || '';
-    const id = s.id || '';
-    if (st === 'OPEN') {
-      return `<div class="sinyal-item"><div class="sinyal-ust"><span class="sinyal-tip tip-al">AÇIK</span><span class="sinyal-zaman">${cr}</span></div>
-        <div class="sinyal-detay">Giriş ${e} → Hedef ${t} <code style="font-size:10px">${id}</code></div></div>`;
-    }
-    return `<div class="sinyal-item"><div class="sinyal-ust"><span class="sinyal-tip tip-sat">KAPANDI</span><span class="sinyal-zaman">${cl || cr}</span></div>
-      <div class="sinyal-detay">Giriş ${e} · Çıkış ${ex} · PnL ${pnl} · ${_esc(s.close_reason)}</div></div>`;
+    const tr = s.status === 'OPEN' ? (s.created || '—') : (s.closed || s.created || '—');
+    const dm = durumMetni(s);
+    return '<tr><td style="font-size:11px;color:var(--muted)">' + _esc(tr) + '</td><td>' + e + '</td><td>' + t + '</td><td class="ledger-dur">' + _esc(dm) + '</td></tr>';
   }).join('');
-}
-
-function sinyalLogRender() {
-  const el = document.getElementById('sinyal-log');
-  if (!el) return;
-  if(!sinyalLog.length) { el.innerHTML='<div class="log-bos">Henüz sinyal kaydı yok.</div>'; return; }
-  const items = sinyalLog.filter(s => s.tip !== 'STOP').slice(0,10);
-  if(!items.length) { el.innerHTML='<div class="log-bos">Henüz sinyal kaydı yok.</div>'; return; }
-  el.innerHTML = items.map(s => {
-    const tarih = s.tarih || '--';
-    const giris = s.giris_tl!=null ? `₺${Number(s.giris_tl).toFixed(2)}` : '₺--';
-    const hedef = s.hedef_tl!=null ? `₺${Number(s.hedef_tl).toFixed(2)}` : '₺--';
-    const cikis = s.cikis_tl!=null ? `₺${Number(s.cikis_tl).toFixed(2)}` : '₺--';
-    const kar = s.kar_yuzde!=null ? `${Number(s.kar_yuzde)>=0?'+':''}${Number(s.kar_yuzde).toFixed(1)}%` : '--';
-
-    if(s.tip === 'ALIM') {
-      const u = s.entry_usd != null && s.tp_usd != null
-        ? ` &nbsp;·&nbsp; $${Number(s.entry_usd).toFixed(2)} → $${Number(s.tp_usd).toFixed(2)} USD`
-        : '';
-      const sig = s.signal_id ? ` <code style="font-size:10px">${s.signal_id}</code>` : '';
-      return `<div class="sinyal-item">
-        <div class="sinyal-ust"><span class="sinyal-tip tip-al">⬆ ALIM</span><span class="sinyal-zaman">${tarih}</span></div>
-        <div class="sinyal-detay">Giriş ${giris} · Hedef ${hedef}${u}${sig}</div>
-      </div>`;
-    }
-
-    // SATIS
-    return `<div class="sinyal-item">
-      <div class="sinyal-ust"><span class="sinyal-tip tip-sat">⬇ SATIŞ</span><span class="sinyal-zaman">${tarih}</span></div>
-      <div class="sinyal-detay">Giriş ${giris} · Çıkış ${cikis} · <span class="sinyal-kar kar-pos">${kar}</span></div>
-    </div>`;
-  }).join('');
+  el.innerHTML = '<table class="ledger-tbl" role="table" aria-label="Sinyal defteri"><thead><tr><th>Tarih</th><th>Giriş</th><th>Hedef</th><th>Durum</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 function haberLogRender() {
   const el = document.getElementById('haber-log');
   if (!el) return;
   if (!haberLog.length) { el.innerHTML = '<div class="log-bos">Haber yok (RSS tüketimi API üzerinden).</div>'; return; }
-  el.innerHTML = haberLog.slice(0, 10).map((h) =>
+  el.innerHTML = haberLog.map((h) =>
     `<div class="haber-item">
       <div style="display:flex;align-items:flex-start;gap:8px;">
         <span class="haber-tier t-${h.tier || 'genel'}">${(h.tier || 'genel').toUpperCase()}</span>
@@ -1124,35 +1312,27 @@ async function veriYukle() {
     );
 
     (function () {
-      const b = document.getElementById('son-sinyal-body');
-      const ss = d.son_sinyal;
-      if (b) {
-        if (ss && (ss.giris_tl != null || ss.hedef_tl != null)) {
-          const n = ss.net_kar_yuzde;
-          const nk = n != null && n !== '' ? ' · Net hedef %' + Number(n).toFixed(2) : '';
-          b.innerHTML = 'Giriş ₺' + Number(ss.giris_tl).toFixed(2) + ' → Hedef ₺' + Number(ss.hedef_tl).toFixed(2) + nk
-            + (ss.skor != null ? ' · skor ' + _esc(String(ss.skor)) : '') + (ss.tarih ? ' · ' + _esc(ss.tarih) : '');
+      const v = document.getElementById('veto-brief');
+      if (v) {
+        if (d.veto_neden) {
+          v.textContent = 'Son değerlendirme: ' + d.veto_neden;
+          v.style.display = 'block';
         } else {
-          b.textContent = 'Henüz sinyal kaydı yok.';
+          v.textContent = '';
+          v.style.display = 'none';
         }
       }
-      const v = document.getElementById('veto-brief');
-      if (v) { v.textContent = d.veto_neden ? ('Son değerlendirme: ' + d.veto_neden) : ''; }
     })();
 
-    openSignalsRender(d.open_signals);
+    lastOpenSigs = d.open_signals && d.open_signals.length ? d.open_signals : [];
+    openSignalsHomeRender(lastOpenSigs, openSigsExpand);
     statsPanelRender(d.stats);
-    signalLedgerRender(d.signal_ledger);
+    sinyalTabLedgerRender(d.signal_ledger);
 
-    if (d.sinyal_log && d.sinyal_log.length) sinyalLog = d.sinyal_log;
-    sinyalLogRender();
-
-    if (d.haberler && d.haberler.length) { haberLog = d.haberler.slice(0, 10); }
+    if (d.haberler && d.haberler.length) { haberLog = d.haberler.slice(0, 20); } else { haberLog = []; }
     haberLogRender();
 
     (function () {
-      var tAcik = document.getElementById('tab-btn-acik');
-      if (tAcik) tAcik.classList.toggle('has-open', (d.open_signals && d.open_signals.length > 0));
       var hb = document.getElementById('haber-badge');
       if (hb) {
         var n = haberLog.length;
