@@ -388,7 +388,7 @@ def get_gold_price_tl():
 def get_market_context() -> Dict[str, Any]:
     """
     Piyasa özeti: Twelve Data günlük seri (2 kapanış) — değişim / % değişim.
-    Eski Yahoo sembol eşlemesi TD_SYMBOL üzerinden.
+    DXY bu fonksiyonda çekilmez; sinyal motoru dxy_degisim_yuzde yok sayar (0).
     Sonuç 5 dk boyunca in-memory cache'ten servis edilir.
     """
     global _MARKET_CONTEXT_CACHE
@@ -398,7 +398,6 @@ def get_market_context() -> Dict[str, Any]:
         return _MARKET_CONTEXT_CACHE["data"]  # type: ignore[return-value]
     ctx: Dict[str, Any] = {}
     semboller = {
-        "dxy": ("DX-Y.NYB", "5d", "1d"),
         "gumus": (TICKER_XAG, "5d", "1d"),  # SI=F
     }
     for anahtar, (ticker, period, interval) in semboller.items():

@@ -229,8 +229,11 @@ def _skor_volatilite(
     if close and atr / close > 0.04:
         s = max(5.0, s - 25.0)
     dxy_roc = 0.0
-    if ctx:
-        dxy_roc = float(ctx.get("dxy_degisim_yuzde") or 0.0)
+    if ctx and ctx.get("dxy_degisim_yuzde") is not None:
+        try:
+            dxy_roc = float(ctx.get("dxy_degisim_yuzde") or 0.0)
+        except (TypeError, ValueError):
+            dxy_roc = 0.0
     esk = float(getattr(cfg, "MAKRO_DXY_ANI_ESIK", 0.5))
     if abs(dxy_roc) > esk:
         s = max(5.0, s - 20.0)
