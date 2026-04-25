@@ -16,6 +16,13 @@ _fiyat_cache = {"alis": None, "satis": None, "zaman": 0}
 _altin_cache = {"alis": None, "satis": None, "zaman": 0}
 FIYAT_CACHE_SURE = 15
 
+_MARKET_CONTEXT_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
+_MARKET_CONTEXT_TTL = 300.0
+_SILVER_MTF_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
+_MTF_TTL = 60.0
+_USDTRY_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
+_USDTRY_TTL = 60.0
+
 # Yahoo-tarzı emtia/sembol isimlerinden Twelve Data sembollerine (SI=F / GC=F COMEX)
 TICKER_XAG = "SI=F"
 TICKER_XAU = "GC=F"
@@ -181,14 +188,22 @@ def get_silver_mtf(
     1m / 5m / 15m: Twelve Data (SI) üzerinden her dilimde en fazla 500 mum.
     period_* uyumluluk için bırakıldı; gerçek pencere outputsize=500.
     Dönen: {"1m":df,"5m":df,"15m":df}
+    Sonuç 60 sn boyunca in-memory cache'ten servis edilir.
     """
     del period_1m, period_5m, period_15m
+    global _SILVER_MTF_CACHE
+    now = time.time()
+    t0 = float(_SILVER_MTF_CACHE.get("ts") or 0.0)
+    if t0 and (now - t0) < _MTF_TTL:
+        return _SILVER_MTF_CACHE["data"]
     o1m = _td_ohlcv(TICKER_XAG, "1m", 500, order="asc")
     o5m = _td_ohlcv(TICKER_XAG, "5m", 500, order="asc")
     o15 = _td_ohlcv(TICKER_XAG, "15m", 500, order="asc")
     if o1m is None and o5m is None and o15 is None:
         logger.error("XAG MTF: Twelve Data’dan veri alınamadı.")
-    return {"1m": o1m, "5m": o5m, "15m": o15}
+    out: Dict[str, Any] = {"1m": o1m, "5m": o5m, "15m": o15}
+    _SILVER_MTF_CACHE = {"data": out, "ts": now}
+    return out
 
 
 def get_xau_5m(period: str = "1mo"):
@@ -264,28 +279,38 @@ def get_silver_price_dunyakatilim():
 
 
 def get_usdtry() -> Optional[float]:
-    """Twelve Data anlık (exchange_rate / price) USD/TRY kuru."""
+    """Twelve Data anlık (exchange_rate / price) USD/TRY kuru. 60 sn cache."""
+    global _USDTRY_CACHE
+    now = time.time()
+    t0 = float(_USDTRY_CACHE.get("ts") or 0.0)
+    if t0 and (now - t0) < _USDTRY_TTL and "data" in _USDTRY_CACHE:
+        return _USDTRY_CACHE["data"]  # type: ignore[return-value]
     c = _get_td_client()
     if not c:
+        _USDTRY_CACHE = {"data": None, "ts": now}
         return None
+    val: Optional[float] = None
     try:
         resp = c.exchange_rate(symbol="USD/TRY", dp=6).execute(format="JSON")
         body: Dict[str, Any] = resp.json() if resp is not None else {}
         if body.get("status") == "ok" and "rate" in body:
-            return float(body["rate"])
+            val = float(body["rate"])
     except Exception as e:
         logger.debug("exchange_rate USD/TRY: %s", e)
-    try:
-        p = c.price(symbol="USD/TRY", dp=6)
-        resp2 = p.execute(format="JSON")
-        body2: Dict[str, Any] = resp2.json() if resp2 is not None else {}
-        if body2.get("status") == "ok":
-            for k in ("close", "price", "value"):
-                if body2.get(k) is not None:
-                    return float(body2[k])
-    except Exception as e:
-        logger.error("USD/TRY fiyat hatası: %s", e)
-    return None
+    if val is None:
+        try:
+            p = c.price(symbol="USD/TRY", dp=6)
+            resp2 = p.execute(format="JSON")
+            body2: Dict[str, Any] = resp2.json() if resp2 is not None else {}
+            if body2.get("status") == "ok":
+                for k in ("close", "price", "value"):
+                    if body2.get(k) is not None:
+                        val = float(body2[k])
+                        break
+        except Exception as e:
+            logger.error("USD/TRY fiyat hatası: %s", e)
+    _USDTRY_CACHE = {"data": val, "ts": now}
+    return val
 
 
 def get_silver_price_tl():
@@ -364,7 +389,13 @@ def get_market_context() -> Dict[str, Any]:
     """
     Piyasa özeti: Twelve Data günlük seri (2 kapanış) — değişim / % değişim.
     Eski Yahoo sembol eşlemesi TD_SYMBOL üzerinden.
+    Sonuç 5 dk boyunca in-memory cache'ten servis edilir.
     """
+    global _MARKET_CONTEXT_CACHE
+    now = time.time()
+    t0 = float(_MARKET_CONTEXT_CACHE.get("ts") or 0.0)
+    if t0 and (now - t0) < _MARKET_CONTEXT_TTL:
+        return _MARKET_CONTEXT_CACHE["data"]  # type: ignore[return-value]
     ctx: Dict[str, Any] = {}
     semboller = {
         "dxy": ("DX-Y.NYB", "5d", "1d"),
@@ -391,6 +422,7 @@ def get_market_context() -> Dict[str, Any]:
         except Exception as e:
             logger.error(f"{anahtar} context hatası: {e}")
             ctx[anahtar] = None
+    _MARKET_CONTEXT_CACHE = {"data": ctx, "ts": now}
     return ctx
 
 
