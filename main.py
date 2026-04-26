@@ -27,11 +27,8 @@ _TELEGRAM_LOCK_FP = None
 
 
 def _acquire_telegram_process_lock():
-    """Aynı makinede ikinci bir bot sürecini engeller (getUpdates 409)."""
     global _TELEGRAM_LOCK_FP
-    if os.environ.get("MARS_DISABLE_TELEGRAM_LOCK", "").lower() in (
-        "1", "true", "yes"
-    ):
+    if os.environ.get("MARS_DISABLE_TELEGRAM_LOCK", "").lower() in ("1", "true", "yes"):
         return
     path = os.environ.get("MARS_TELEGRAM_LOCK_FILE", "/tmp/mars-finance-telegram.lock")
     f = open(path, "a+", encoding="utf-8")
@@ -40,7 +37,7 @@ def _acquire_telegram_process_lock():
     except BlockingIOError:
         logger.error(
             "Telegram: başka bir süreç bu kilidi tutuyor (409). "
-            "Yalnızca bir çalışan bırakın, Railway’de replika sayısını 1 yapın veya "
+            "Yalnızca bir çalışan bırakın, Railway'de replika sayısını 1 yapın veya "
             "MARS_DISABLE_TELEGRAM_LOCK=1 ile bu kilidi (geliştirme) kapatın."
         )
         sys.exit(1)
@@ -63,6 +60,13 @@ FIYAT_TAKIP_SANIYE = 60
 
 def hafta_sonu_mu() -> bool:
     return datetime.now(timezone.utc).weekday() >= 5
+
+
+def _session_aktif() -> bool:
+    """London 10:00-12:00 TR / NY 16:30-18:30 TR"""
+    simdi = datetime.now(TR)
+    saat = simdi.hour + simdi.minute / 60.0
+    return (10.0 <= saat < 12.0) or (16.5 <= saat < 18.5)
 
 
 def config_dict() -> dict:
@@ -150,6 +154,10 @@ def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar_yuzde: float) -
 
 async def piyasa_analizi_job():
     if hafta_sonu_mu():
+        logger.info("Hafta sonu — sinyal yok.")
+        return
+    if not _session_aktif():
+        logger.info("Session dışı — sinyal yok.")
         return
     try:
         conf = config_dict()
@@ -158,9 +166,9 @@ async def piyasa_analizi_job():
             logger.info("Sinyal kilidi: %s", kilit_ned)
             return
         d = sinyal_uret(conf)
+        logger.info("Sinyal sonucu: %s", d)
         if not d.get("sinyal"):
-            if d.get("red_neden"):
-                logger.info("Sinyal yok: %s", d.get("red_neden"))
+            logger.info("Sinyal yok: %s", d.get("red_neden", "neden belirtilmedi"))
             return
         g_tl = d.get("giris_tl")
         h_tl = d.get("hedef_tl")
@@ -168,7 +176,7 @@ async def piyasa_analizi_job():
         skr = int(d.get("skor") or 0)
         ahtl = d.get("atr_half_tl")
         if g_tl is None or h_tl is None or float(g_tl) <= 0 or float(h_tl) <= 0:
-            logger.info("Sinyal verisi Eksik (giris/hedef).")
+            logger.info("Sinyal verisi eksik (giris/hedef).")
             return
         g_tl = float(g_tl)
         h_tl = float(h_tl)
@@ -177,6 +185,7 @@ async def piyasa_analizi_job():
             logger.info("Açık sinyal sınırı: yeni sinyal gönderilmedi.")
             return
         if not cfg.TELEGRAM_TOKEN or not cfg.TELEGRAM_GROUP_ID:
+            logger.warning("Telegram token/group_id eksik.")
             return
         bot = Bot(token=cfg.TELEGRAM_TOKEN)
         text = _mesaj_yeni_sinyal(g_tl, h_tl, netp)
@@ -186,15 +195,7 @@ async def piyasa_analizi_job():
         )
         rsn = (f"skor {skr} " + (d.get("red_neden") or ""))[:400]
         rec = pstore.yeni_alim_ekle(
-            0.0,
-            0.0,
-            skr,
-            rsn,
-            gonderilen.message_id,
-            None,
-            g_tl,
-            h_tl,
-            ahtl,
+            0.0, 0.0, skr, rsn, gonderilen.message_id, None, g_tl, h_tl, ahtl,
         )
         sid = (rec or {}).get("id")
         sinyal_logla(
@@ -208,7 +209,7 @@ async def piyasa_analizi_job():
         )
         logger.info("Sinyal açıldı: skor=%s id=%s", skr, sid)
     except Exception as e:
-        logger.error("Piyasa analizi: %s", e, exc_info=True)
+        logger.error("Piyasa analizi hatası: %s", e, exc_info=True)
 
 
 async def fiyat_takip_job():
@@ -291,9 +292,7 @@ async def _clear_telegram_webhook_once():
     if not cfg.TELEGRAM_TOKEN:
         return
     try:
-        await Bot(token=cfg.TELEGRAM_TOKEN).delete_webhook(
-            drop_pending_updates=False
-        )
+        await Bot(token=cfg.TELEGRAM_TOKEN).delete_webhook(drop_pending_updates=False)
     except Exception as e:
         logger.error("Telegram delete_webhook: %s", e)
 
@@ -305,12 +304,8 @@ async def main():
     t.start()
     logger.info("Dashboard: 0.0.0.0:5000")
     sched = AsyncIOScheduler(timezone=timezone.utc)
-    sched.add_job(
-        piyasa_analizi_job, "interval", seconds=PIYASA_ARALIK_SANIYE, id="piyasa"
-    )
-    sched.add_job(
-        fiyat_takip_job, "interval", seconds=FIYAT_TAKIP_SANIYE, id="takip"
-    )
+    sched.add_job(piyasa_analizi_job, "interval", seconds=PIYASA_ARALIK_SANIYE, id="piyasa")
+    sched.add_job(fiyat_takip_job, "interval", seconds=FIYAT_TAKIP_SANIYE, id="takip")
     sched.start()
     await piyasa_analizi_job()
     while True:

@@ -24,6 +24,7 @@ from core.data_engine import (
     get_silver_price_tl,
     get_usdtry,
 )
+from filters.macro_regime import belirle as macro_belirle
 
 logger = logging.getLogger(__name__)
 
@@ -261,12 +262,8 @@ def _skor_giris(o1: pd.DataFrame) -> float:
     return min(100.0, s)
 
 
-def _bilesik_skor(
-    a: float, b: float, c: float
-) -> int:
-    return int(
-        min(100, max(0, 0.38 * a + 0.32 * b + 0.30 * c))
-    )
+def _bilesik_skor(a: float, b: float, c: float, m: float) -> int:
+    return int(min(100, max(0, 0.32 * a + 0.28 * b + 0.25 * c + 0.15 * m)))
 
 
 # ——— Setup iptal: önceki sinyal sonrası fiyat, ATR/2 tersi ———
@@ -356,7 +353,15 @@ def degerlendir(
     a = _skor_trend_mom(o5, o15)
     b = _skor_volatilite(adx, float(atr15_usd or 0.0), c15, get_market_context(), cfg)
     x = _skor_giris(o1)
-    skr = _bilesik_skor(a, b, x)
+    try:
+        macro_sonuc = macro_belirle(cfg)
+        m_skor = float(macro_sonuc.get("puan") or 50.0)
+        if macro_sonuc.get("veto_spike_makro"):
+            nmk["red_neden"] = "Makro spike veto (DXY/TNX)"
+            return nmk
+    except Exception:
+        m_skor = 50.0
+    skr = _bilesik_skor(a, b, x, m_skor)
     nmk["skor"] = int(skr)
     th = int(getattr(cfg, "SKOR_ESIK", 65) or 65)
     if skr < th:
