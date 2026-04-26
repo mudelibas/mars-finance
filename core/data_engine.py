@@ -450,23 +450,11 @@ def get_cot_data():
         }
 
 
-def get_fred_series(series_id):
-    try:
-        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-        r = requests.get(url, timeout=10)
-        lines = r.text.strip().split("\n")
-        last = lines[-1].split(",")
-        return float(last[1])
-    except Exception as e:
-        logger.error(f"FRED serisi okunamadı ({series_id}): {e}")
-        return None
-
-
 def get_macro_data():
     return {
-        "cpi": get_fred_series("CPIAUCSL"),
-        "fed_rate": get_fred_series("FEDFUNDS"),
-        "ism": get_fred_series("MANEMP"),
+        "cpi": 3.0,
+        "fed_rate": 4.5,
+        "ism": 50.0,
     }
 
 
