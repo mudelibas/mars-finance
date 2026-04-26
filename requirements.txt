@@ -5,6 +5,5 @@ twelvedata
 python-telegram-bot==20.7
 apscheduler
 feedparser
-python-dotenv
 flask
 flask-cors
