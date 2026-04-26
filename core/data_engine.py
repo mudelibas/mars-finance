@@ -279,36 +279,22 @@ def get_silver_price_dunyakatilim():
 
 
 def get_usdtry() -> Optional[float]:
-    """Twelve Data anlık (exchange_rate / price) USD/TRY kuru. 60 sn cache."""
     global _USDTRY_CACHE
     now = time.time()
     t0 = float(_USDTRY_CACHE.get("ts") or 0.0)
-    if t0 and (now - t0) < _USDTRY_TTL and "data" in _USDTRY_CACHE:
-        return _USDTRY_CACHE["data"]  # type: ignore[return-value]
+    if t0 and (now - t0) < _USDTRY_TTL and _USDTRY_CACHE.get("data"):
+        return _USDTRY_CACHE["data"]
     c = _get_td_client()
     if not c:
         _USDTRY_CACHE = {"data": None, "ts": now}
         return None
     val: Optional[float] = None
     try:
-        resp = c.exchange_rate(symbol="USD/TRY", dp=6).execute(format="JSON")
-        body: Dict[str, Any] = resp.json() if resp is not None else {}
-        if body.get("status") == "ok" and "rate" in body:
-            val = float(body["rate"])
+        df = _td_ohlcv("USDTRY=X", "1d", 5, order="asc")
+        if df is not None and len(df) > 0 and "Close" in df.columns:
+            val = float(df["Close"].values[-1])
     except Exception as e:
-        logger.debug("exchange_rate USD/TRY: %s", e)
-    if val is None:
-        try:
-            p = c.price(symbol="USD/TRY", dp=6)
-            resp2 = p.execute(format="JSON")
-            body2: Dict[str, Any] = resp2.json() if resp2 is not None else {}
-            if body2.get("status") == "ok":
-                for k in ("close", "price", "value"):
-                    if body2.get(k) is not None:
-                        val = float(body2[k])
-                        break
-        except Exception as e:
-            logger.error("USD/TRY fiyat hatası: %s", e)
+        logger.error("USD/TRY fiyat hatası: %s", e)
     _USDTRY_CACHE = {"data": val, "ts": now}
     return val
 
