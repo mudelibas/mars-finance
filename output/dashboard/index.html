@@ -53,7 +53,7 @@
   --space-section: 24px;
   --space-inner: 20px;
   --main-pad-t: 12px;
-  --content-after-tabs: 28px;
+  --content-after-tabs: 20px;
   --title-to-body: 20px;
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --fw-n: 400;
@@ -86,6 +86,14 @@ body {
   letter-spacing: 0.01em;
   position: relative;
   z-index: 1;
+}
+body.view-haber {
+  background: #ffffff;
+}
+body.view-haber::before,
+body.view-haber::after {
+  opacity: 0 !important;
+  pointer-events: none;
 }
 body > .site-header,
 body > main,
@@ -172,7 +180,7 @@ body::after {
   min-height: 40px;
   width: 100%;
 }
-/* Global sekme çubuğu — ana içerikte, logo+saat hattının hemen altı */
+/* Global sekme çubuğu — simetrik dikey aralık */
 .main-tabs {
   display: flex;
   flex-wrap: nowrap;
@@ -181,7 +189,7 @@ body::after {
   gap: var(--space-1);
   width: 100%;
   margin: 0 0 var(--content-after-tabs) 0;
-  padding: var(--space-3) 0 var(--space-4) 0;
+  padding: 10px 0 10px 0;
   border-bottom: 1px solid var(--border-soft);
 }
 .main-tabs .tabs--main { margin: 0; }
@@ -205,14 +213,14 @@ body::after {
   border-color: #d2e3fc;
   box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
 }
-.tab .tab-ic { width: 20px; height: 20px; flex-shrink: 0; opacity: 0.9; }
+.tab .tab-ic { width: 22px; height: 22px; flex-shrink: 0; opacity: 0.9; }
 .tab.active .tab-ic { opacity: 1; }
 .tab--icononly {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 48px;
-  min-height: 48px;
+  min-width: 40px;
+  min-height: 40px;
   padding: 0;
 }
 .tabs--main .tab .badge {
@@ -226,24 +234,24 @@ body::after {
   .main-tabs .tabs--main { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
   .main-tabs .tab { flex: 0 0 auto; }
 }
-/* Alt sekme ekran başlığı — sekme satırı ile mesafe (Material headline) */
+/* Alt sekme ekran başlığı — sekmelere ayrılmış hava payı */
 .tab-scene > h1.tab-screen-title,
 .tab-scene h1.tab-screen-title {
-  font-size: 1.5rem;
+  font-size: 24px;
   font-weight: 400;
   line-height: 1.33;
   letter-spacing: 0;
   color: #202124;
   text-align: left;
   margin: 0 0 var(--title-to-body) 0;
-  padding: var(--space-4) 0 0 0;
+  padding: 20px 0 0 0;
 }
 .region-open-s .open-sig-block,
 .open-sig-block { margin-top: 0; text-align: left; }
 .open-sig-block { margin-bottom: 0; }
 .region-open-s { margin-bottom: 0; }
 .open-sig-block__head {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   letter-spacing: 0.15px;
   text-transform: none;
@@ -349,8 +357,8 @@ body::after {
 .tab-panels, .app-scene-root { margin-top: 0; width: 100%; }
 
 .logo {
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #202124;
@@ -370,7 +378,7 @@ body::after {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 500;
   color: #5f6368;
   letter-spacing: 0.2px;
@@ -426,7 +434,7 @@ body::after {
 }
 .price-metric__v {
   font-size: 28px;
-  font-weight: 400;
+  font-weight: 800;
   line-height: 1.2;
   font-feature-settings: "tnum" 1, "lnum" 1;
   color: var(--c-on-s);
@@ -438,7 +446,7 @@ body::after {
   display: inline;
   font: inherit;
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   margin: 0;
   letter-spacing: 0.02em;
@@ -471,7 +479,7 @@ body::after {
 .price-hero__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: 0; }
 .pill {
   text-align: center;
-  font-size: 0.8125rem;
+  font-size: 13px;
   font-weight: 500;
   color: #5f6368;
   padding: var(--space-2) var(--space-2);
@@ -480,6 +488,7 @@ body::after {
   border-radius: 8px;
   letter-spacing: 0.1px;
 }
+.pill span { font-size: inherit; font-weight: 500; }
 .pill--change { border: 1px solid var(--border); background: var(--bg-mid); border-radius: var(--radius); padding: 0; overflow: hidden; }
 .pill--change .pc-change { border: none; border-radius: 0; margin: 0; width: 100%; box-sizing: border-box; min-height: 100%; }
 #change-wrap, .pill--change#change-wrap { margin: 0; width: auto; }
@@ -489,7 +498,7 @@ body::after {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 0.8125rem;
+  font-size: 13px;
   font-weight: 500;
   padding: var(--space-2) var(--space-2);
   border-radius: 6px;
@@ -652,7 +661,7 @@ body::after {
   transition: background 0.3s, border-color 0.3s;
 }
 .ind-key {
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.33;
   text-transform: none;
@@ -661,7 +670,7 @@ body::after {
   letter-spacing: 0.1px;
 }
 .ind-val {
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 500;
   color: #202124;
   font-feature-settings: "tnum" 1, "lnum" 1;
@@ -670,7 +679,7 @@ body::after {
   margin-bottom: 6px;
 }
 .ind-sub {
-  font-size: 0.75rem;
+  font-size: 12px;
   line-height: 1.5;
   color: #5f6368;
   font-weight: 400;
@@ -698,8 +707,6 @@ body::after {
   min-width: 0;
 }
 .log-card .sinyal-item,
-.log-card .haber-item,
-#haber-log .haber-item,
 .sinyal-panel .sinyal-item {
   padding: 16px 0;
   border-bottom: 1px solid var(--border-soft);
@@ -713,8 +720,7 @@ body::after {
   background: linear-gradient(90deg, rgba(38, 166, 154, 0.04), transparent 60%);
 }
 .log-card .sinyal-item:last-child,
-.log-card .haber-item:last-child,
-#haber-log .haber-item:last-child { border-bottom: none; }
+.sinyal-panel .sinyal-item:last-child { border-bottom: none; }
 .sinyal-ust { margin-bottom: 6px; }
 .sinyal-tip { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
 .tip-al { color: #1a7a72; }
@@ -780,18 +786,41 @@ body::after {
 #stats-panel .kpi-tile--wide { grid-column: 1 / -1; }
 #stats-panel .kpi-tile--accent { border-color: #e8eaed; }
 #tab-panel-grafik .tradingview-panel { margin: 0; padding: 0; border: 0; background: none; }
-.haber-item { transition: background 0.2s, border-color 0.2s; }
-#haber-log .haber-item.haber-item--unread {
-  background: linear-gradient(90deg, rgba(41, 98, 255, 0.1), rgba(38, 166, 154, 0.04) 40%, transparent 75%);
+.haber-item { transition: border-color 0.2s, box-shadow 0.2s; }
+#haber-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
 }
-.haber-item--unread .haber-baslik { font-weight: 600; }
+#haber-log .haber-item { margin: 0; }
+#haber-log .haber-kart {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 36px 10px 10px 10px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+#haber-log .haber-item--unread .haber-kart {
+  box-shadow: 0 0 0 1px #1a73e8, 0 1px 2px rgba(0,0,0,0.04);
+  border-color: #c2d4f0;
+  background: #fbfcff;
+}
+#haber-log .haber-item--unread .haber-baslik { font-weight: 600; }
+#haber-log .haber-tier { position: absolute; top: 8px; left: 8px; margin: 0; }
+#haber-log .haber-zaman { position: absolute; top: 8px; right: 8px; text-align: right; }
 .sinyal-panel, .haberler-panel, .tradingview-panel, .piyasa-tab-inner { margin-bottom: var(--space-section); }
+body.view-haber .haberler-panel { background: none; }
 
 h2.section-title { margin: 0 0 16px; }
 .perf-header h2.section-title { margin-bottom: 0; }
 
 .haber-tier {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   padding: 4px 8px;
   border-radius: 6px;
@@ -803,8 +832,10 @@ h2.section-title { margin: 0 0 16px; }
 .haber-tier.t-onemli { background: rgba(245, 124, 0, 0.1); color: #b06000; border-color: rgba(245, 124, 0, 0.3); }
 .haber-tier.t-genel  { background: rgba(41, 98, 255, 0.08);  color: #1e4fc4; border-color: rgba(41, 98, 255, 0.25); }
 .haber-zaman { font-size: 10px; color: var(--muted); }
-.haber-baslik { font-size: 13px; color: var(--text); line-height: 1.55; word-break: break-word; }
-.haber-ozet { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.55; }
+.haber-baslik { font-size: 14px; color: var(--text); line-height: 1.55; word-break: break-word; }
+#haber-log .haber-baslik { text-decoration: none; }
+#haber-log .haber-baslik:hover { text-decoration: underline; }
+.haber-ozet { font-size: 12px; color: var(--text-dim); margin-top: 8px; line-height: 1.55; }
 
 #app-scene-root h2.section-title { text-transform: none; }
 .skor h2.section-title { text-transform: none; }
@@ -826,7 +857,7 @@ h2.section-title { margin: 0 0 16px; }
 footer {
   text-align: center;
   padding: var(--space-5) 0 var(--space-6) 0;
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 400;
   line-height: 1.5;
   color: #5f6368;
@@ -893,18 +924,18 @@ footer {
           <div class="price-hero" id="price-hero">
             <div class="price-hero__row" role="group" aria-label="Satış ve alış fiyatı">
               <div class="price-metric" aria-label="Satış fiyatı">
-                <div class="price-metric__k">Satış</div>
+                <div class="price-metric__k">Alış</div>
                 <div class="price-metric__v">₺<span id="gumus-satis">--</span></div>
               </div>
               <div class="price-metric" aria-label="Alış fiyatı">
-                <div class="price-metric__k">Alış</div>
+                <div class="price-metric__k">Satış</div>
                 <div class="price-metric__v">₺<span id="gumus-alis">--</span></div>
               </div>
             </div>
             <div class="price-hero__meta" role="group" aria-label="Ons, makas, vergi, günlük değişim">
-              <div class="pill">Ons <span id="gumus-usd-display">$--</span></div>
-              <div class="pill">Makas <span id="gumus-makas">--</span></div>
-              <div class="pill">Vergi %0.2</div>
+              <div class="pill">Ons: <span id="gumus-usd-display">$--</span></div>
+              <div class="pill">Makas: <span id="gumus-makas">--</span></div>
+              <div class="pill">Vergi: %0.2</div>
               <div class="pill pill--change" id="change-wrap">
                 <div id="gumus-change" class="pc-change">GÜNLÜK — %</div>
               </div>
@@ -1008,6 +1039,7 @@ function netHedefYuzde(g, h) {
 }
 
 function selectTab(name) {
+  document.body.classList.toggle('view-haber', name === 'haber');
   document.querySelectorAll('.tab[data-panel]').forEach(function (t) {
     const on = t.getAttribute('data-panel') === name;
     t.classList.toggle('active', on);
@@ -1261,15 +1293,11 @@ function haberLogRender() {
     const hid = h && h.id != null ? String(h.id) : '';
     const un = hid && !oku.has(hid);
     return `<div class="haber-item${un ? ' haber-item--unread' : ''}" data-haber-id="${_esc(hid)}">
-      <div style="display:flex;align-items:flex-start;gap:8px;">
+      <div class="haber-kart">
         <span class="haber-tier t-${h.tier || 'genel'}">${(h.tier || 'genel').toUpperCase()}</span>
-        <div style="flex:1">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-            <span class="haber-zaman">${h.zaman || '--'}</span>
-          </div>
-          <a class="haber-baslik" href="${_esc(h.link || '#')}" target="_blank" rel="noopener" style="color:var(--text)">${_esc(h.title || '')}</a>
-          ${h.ozet ? '<div class="haber-ozet">' + _esc(h.ozet) + '</div>' : ''}
-        </div>
+        <span class="haber-zaman">${h.zaman || '--'}</span>
+        <a class="haber-baslik" href="${_esc(h.link || '#')}" target="_blank" rel="noopener">${_esc(h.title || '')}</a>
+        ${h.ozet ? '<p class="haber-ozet">' + _esc(h.ozet) + '</p>' : ''}
       </div>
     </div>`;
   }).join('');
