@@ -201,6 +201,7 @@ def get_silver_mtf(
         df = yf.download("SI=F", period="5d", interval="15m", progress=False, auto_adjust=True)
         if df is not None and len(df) > 0:
             df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
+            df.index.name = "ts"
             o15 = _normalize_ohlcv_df(df)
         else:
             o15 = None
