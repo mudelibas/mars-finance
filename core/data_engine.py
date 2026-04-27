@@ -364,7 +364,7 @@ def get_market_context() -> Dict[str, Any]:
     ctx: Dict[str, Any] = {}
     try:
         import yfinance as yf
-        df = yf.download("SI=F", period="2d", interval="1d", progress=False, auto_adjust=True)
+        df = yf.download("SI=F", period="5d", interval="1d", progress=False, auto_adjust=True)
         if df is not None and len(df) >= 2:
             c1 = float(df["Close"].iloc[-1].item())
             c0 = float(df["Close"].iloc[-2].item())
