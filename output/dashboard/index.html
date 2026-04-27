@@ -1101,19 +1101,13 @@ function statsPanelRender(st) {
   }
   const akt = st.aktif_sinyal ?? 0;
   const hedef = st.kazanan_kapanis ?? 0;
-  const kap = st.kapanan_sinyal ?? 0;
-  const h = Number(hedef);
-  const bekle24 = st.open_older_24h != null ? st.open_older_24h : '—';
-  const denom = h + Math.max(0, Number(kap) - h);
-  let basari = '—';
-  if (denom > 0) {
-    basari = (100 * h / denom).toFixed(1) + ' %';
-  }
+  const gecici = st.open_older_24h ?? 0;
+  const basari = st.kazanma_orani_yuzde != null ? st.kazanma_orani_yuzde.toFixed(1) + ' %' : '—';
   el.innerHTML = (
     '<div class="kpi-grid">' +
     kpiFormatTile('Açık sinyal', String(akt), '') +
     kpiFormatTile('Hedefe ulaşan', String(hedef), '') +
-    kpiFormatTile('Riskli sinyal', String(bekle24), '') +
+    kpiFormatTile('Geçici başarısız', String(gecici), '') +
     kpiFormatTile('Başarı oranı', basari, '') +
     '</div>'
   );
