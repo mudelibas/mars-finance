@@ -19,7 +19,7 @@ FIYAT_CACHE_SURE = 15
 _MARKET_CONTEXT_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
 _MARKET_CONTEXT_TTL = 300.0
 _SILVER_MTF_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
-_MTF_TTL = 60.0
+_MTF_TTL = 300.0
 _USDTRY_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
 _USDTRY_TTL = 60.0
 
