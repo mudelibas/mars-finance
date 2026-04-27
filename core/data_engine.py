@@ -286,24 +286,14 @@ def get_silver_price_dunyakatilim():
 
 
 def get_usdtry() -> Optional[float]:
-    global _USDTRY_CACHE
-    now = time.time()
-    t0 = float(_USDTRY_CACHE.get("ts") or 0.0)
-    if t0 and (now - t0) < _USDTRY_TTL and _USDTRY_CACHE.get("data"):
-        return _USDTRY_CACHE["data"]
-    c = _get_td_client()
-    if not c:
-        _USDTRY_CACHE = {"data": None, "ts": now}
-        return None
-    val: Optional[float] = None
     try:
-        df = _td_ohlcv("USDTRY=X", "1d", 5, order="asc")
-        if df is not None and len(df) > 0 and "Close" in df.columns:
-            val = float(df["Close"].values[-1])
+        import yfinance as yf
+        df = yf.download("USDTRY=X", period="1d", interval="1m", progress=False, auto_adjust=True)
+        if df is not None and len(df) > 0:
+            return float(df["Close"].iloc[-1])
     except Exception as e:
         logger.error("USD/TRY fiyat hatası: %s", e)
-    _USDTRY_CACHE = {"data": val, "ts": now}
-    return val
+    return None
 
 
 def get_silver_price_tl():
@@ -379,38 +369,7 @@ def get_gold_price_tl():
 
 
 def get_market_context() -> Dict[str, Any]:
-    """
-    Piyasa özeti: Twelve Data günlük seri (2 kapanış) — değişim / % değişim.
-    DXY bu fonksiyonda çekilmez; sinyal motoru dxy_degisim_yuzde yok sayar (0).
-    Sonuç 5 dk boyunca in-memory cache'ten servis edilir.
-    """
-    global _MARKET_CONTEXT_CACHE
-    now = time.time()
-    t0 = float(_MARKET_CONTEXT_CACHE.get("ts") or 0.0)
-    if t0 and (now - t0) < _MARKET_CONTEXT_TTL:
-        return _MARKET_CONTEXT_CACHE["data"]  # type: ignore[return-value]
-    ctx: Dict[str, Any] = {}
-    semboller = {
-        "gumus": (TICKER_XAG, "5d", "1d"),  # SI=F
-    }
-    for anahtar, (ticker, period, interval) in semboller.items():
-        try:
-            df = _indir(ticker, period, interval)
-            if df is not None and len(df) >= 2 and "Close" in df:
-                vals = df["Close"].astype(float).values
-                c1, c0 = float(vals[-1]), float(vals[-2])
-                ctx[anahtar] = c1
-                ctx[f"{anahtar}_degisim"] = c1 - c0
-                ctx[f"{anahtar}_degisim_yuzde"] = (
-                    (c1 - c0) / c0 * 100 if c0 else 0.0
-                )
-            else:
-                ctx[anahtar] = None
-        except Exception as e:
-            logger.error(f"{anahtar} context hatası: {e}")
-            ctx[anahtar] = None
-    _MARKET_CONTEXT_CACHE = {"data": ctx, "ts": now}
-    return ctx
+    return {}
 
 
 def get_cot_data():
