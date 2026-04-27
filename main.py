@@ -62,13 +62,6 @@ def hafta_sonu_mu() -> bool:
     return datetime.now(timezone.utc).weekday() >= 5
 
 
-def _session_aktif() -> bool:
-    """London 10:00-12:00 TR / NY 16:30-18:30 TR"""
-    simdi = datetime.now(TR)
-    saat = simdi.hour + simdi.minute / 60.0
-    return (10.0 <= saat < 12.0) or (16.5 <= saat < 18.5)
-
-
 def config_dict() -> dict:
     return {
         k: getattr(cfg, k)
@@ -155,9 +148,6 @@ def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar_yuzde: float) -
 async def piyasa_analizi_job():
     if hafta_sonu_mu():
         logger.info("Hafta sonu — sinyal yok.")
-        return
-    if not _session_aktif():
-        logger.info("Session dışı — sinyal yok.")
         return
     try:
         conf = config_dict()
