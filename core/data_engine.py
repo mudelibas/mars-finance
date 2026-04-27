@@ -353,21 +353,6 @@ def get_gold_price_dunyakatilim():
         return None, None, None
 
 
-def get_gold_price_tl():
-    try:
-        xau = _td_ohlcv(TICKER_XAU, "5m", 50, order="asc")
-        usd_try = get_usdtry()
-        if xau is None or usd_try is None or len(xau) < 1:
-            return None, None
-        xau_usd = float(xau["Close"].values[-1])
-        u = float(usd_try)
-        xau_tl_gram = (xau_usd / 31.1035) * u
-        return xau_tl_gram, u
-    except Exception as e:
-        logger.error(f"Altın TL fiyat hatası: {e}")
-        return None, None
-
-
 def get_market_context() -> Dict[str, Any]:
     return {}
 
@@ -422,27 +407,3 @@ def get_macro_data():
         "fed_rate": 4.5,
         "ism": 50.0,
     }
-
-
-def get_gsr():
-    try:
-        xau = _td_ohlcv("GC=F", "1d", 120, order="asc")
-        xag = _td_ohlcv("SI=F", "1d", 120, order="asc")
-        if xau is None or xag is None or len(xau) < 2 or len(xag) < 2:
-            return None, None, None
-        a = xau["Close"].astype(float)
-        b = xag["Close"].astype(float)
-        common = a.index.intersection(b.index)
-        if len(common) < 2:
-            n = min(len(a), len(b))
-            gsr_seri = pd.Series(a.values[-n:] / b.values[-n:], dtype=float)
-        else:
-            gsr_seri = a.loc[common] / b.loc[common]
-        gsr_guncel = float(gsr_seri.iloc[-1])
-        gsr_ort = float(gsr_seri.mean())
-        gsr_std = float(gsr_seri.std())
-        zscore = (gsr_guncel - gsr_ort) / gsr_std if gsr_std > 0 else 0
-        return gsr_guncel, gsr_ort, zscore
-    except Exception as e:
-        logger.error(f"GSR hatası: {e}")
-        return None, None, None
