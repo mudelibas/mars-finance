@@ -220,15 +220,14 @@ def get_xau_5m(period: str = "1mo"):
 
 
 def get_xagusd_spot_last():
-    """SI (USD/oz) son kapanış — 1m veya 5m, yoksa günlük son kapanış."""
-    d = get_silver_mtf()
-    for k in ("1m", "5m"):
-        df = d.get(k) if d else None
-        if df is not None and len(df) > 0 and "Close" in df:
-            return float(df["Close"].astype(float).values[-1])
-    d1 = _td_ohlcv(TICKER_XAG, "1d", 5, order="asc")
-    if d1 is not None and len(d1) > 0:
-        return float(d1["Close"].astype(float).values[-1])
+    """SI (USD/oz) son kapanış — yfinance."""
+    try:
+        import yfinance as yf
+        df = yf.download("SI=F", period="1d", interval="1m", progress=False, auto_adjust=True)
+        if df is not None and len(df) > 0:
+            return float(df["Close"].values[-1])
+    except Exception as e:
+        logger.error(f"yfinance spot hatası: {e}")
     return None
 
 
