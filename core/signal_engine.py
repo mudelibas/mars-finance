@@ -1,7 +1,8 @@
 # --- Gümüş: Sweep + Reclaim sinyal motoru ---
-# Yapısal hedef: sweep öncesi 20 mumun en yüksek/düşük seviyesi
-# Minimum kar filtresi: yapısal hedef %1.25 kar getirmiyorsa sinyal yok
-# Hedef TL: SI=F yapısal hedef yüzdesi Dünya Katılım fiyatına uygulanır
+# Sadece LONG (AL) sinyali
+# Yapısal hedef: sweep öncesi 20 mumun en yüksek seviyesi
+# Minimum kar filtresi: %1.25
+# 15 dakika bekleme: ard arda sinyal önlenir
 
 import logging
 import os
@@ -21,12 +22,10 @@ logger = logging.getLogger(__name__)
 _ROOT = os.path.dirname(os.path.abspath(__file__))
 _SETUP_STATE_DOSYA = os.path.join(_ROOT, "signal_setup_state.json")
 
-# ─── PARAMETRELER ───
-SEVIYE_PENCERE  = 20      # kaç mumun yüksek/düşük bakılır
-MIN_KAR_CARPAN  = 1.0125  # minimum %1 net kar + spread + vergi
+SEVIYE_PENCERE = 20
+MIN_KAR_CARPAN = 1.0125
+BEKLEME_SANIYE = 900  # 15 dakika
 
-
-# ─── STATE ───
 
 def _state_yukle() -> Dict[str, Any]:
     if not os.path.exists(_SETUP_STATE_DOSYA):
@@ -46,10 +45,7 @@ def _state_kaydet(d: Dict[str, Any]) -> None:
         logger.warning("signal state yazılamadı: %s", e)
 
 
-# ─── TAHMİNİ SÜRE ───
-
 def _tahmini_sure(net_kar: float) -> int:
-    """Net kar yüzdesine göre tahmini süre (saat)."""
     if net_kar < 2:
         return 18
     elif net_kar < 3:
@@ -59,8 +55,6 @@ def _tahmini_sure(net_kar: float) -> int:
     else:
         return 47
 
-
-# ─── SWEEP + RECLAIM ───
 
 def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[float], Optional[float]]:
     if o15 is None or len(o15) < SEVIYE_PENCERE + 2:
@@ -73,14 +67,13 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
     onceki_yuksek = float(pencere["High"].max())
     onceki_dusuk  = float(pencere["Low"].min())
 
-    sweep_high  = float(sweep_mum["High"])
     sweep_low   = float(sweep_mum["Low"])
     sweep_close = float(sweep_mum["Close"])
 
     reclaim_close = float(reclaim_mum["Close"])
     reclaim_open  = float(reclaim_mum["Open"])
 
-    # LONG
+    # Sadece LONG
     if (sweep_low < onceki_dusuk and
             sweep_close > onceki_dusuk and
             reclaim_close > reclaim_open):
@@ -93,8 +86,6 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
 
     return False, None, None, None
 
-
-# ─── ANA FONKSİYON ───
 
 def degerlendir(
     config: Optional[Dict[str, Any]] = None,
@@ -112,63 +103,59 @@ def degerlendir(
         "red_neden": None,
     }
 
-# Son sinyalden 15 dakika geçmeden yeni sinyal üretme
-stt = _state_yukle()
-son = stt.get("son_sinyal") or {}
-if son.get("t"):
-    gecen = time.time() - float(son["t"])
-    if gecen < 900:  # 15 dakika = 900 saniye
-        nmk["red_neden"] = f"Son sinyalden {int((900-gecen)/60)+1} dk bekle"
-        return nmk
+    # 15 dakika bekleme kontrolü
+    stt = _state_yukle()
+    son = stt.get("son_sinyal") or {}
+    if son.get("t"):
+        gecen = time.time() - float(son["t"])
+        if gecen < BEKLEME_SANIYE:
+            kalan = int((BEKLEME_SANIYE - gecen) / 60) + 1
+            nmk["red_neden"] = f"Son sinyalden {kalan} dk bekle"
+            return nmk
 
+    # Fiyat verisi
     al, st, mks = get_silver_price_dunyakatilim()
     if al is None or st is None:
         nmk["red_neden"] = "Dünya Katılım fiyat alınamadı"
         return nmk
 
+    # Mum verisi
     mtf = get_silver_mtf()
     o15 = (mtf or {}).get("15m")
     if o15 is None or len(o15) < SEVIYE_PENCERE + 2:
         nmk["red_neden"] = "15m verisi yetersiz"
         return nmk
 
+    # Sweep + Reclaim
     sinyal, yon, giris_usd, hedef_yuzde = _sweep_reclaim(o15)
     if not sinyal:
         nmk["red_neden"] = "Sweep+Reclaim yok"
         return nmk
 
     # Minimum kar filtresi
-    if yon == "long" and hedef_yuzde < MIN_KAR_CARPAN:
+    if hedef_yuzde < MIN_KAR_CARPAN:
         nmk["red_neden"] = f"Yapısal hedef yetersiz (%{(hedef_yuzde-1)*100:.2f} < %1.25)"
-        return nmk
-    if yon == "short" and hedef_yuzde > (1 / MIN_KAR_CARPAN):
-        nmk["red_neden"] = f"Yapısal hedef yetersiz (%{(1-hedef_yuzde)*100:.2f} < %1.25)"
         return nmk
 
     # Dünya Katılım fiyatına uygula
-    if yon == "long":
-        giris_tl = float(st)
-        hedef_tl = round(giris_tl * hedef_yuzde, 4)
-    else:
-        giris_tl = float(al)
-        hedef_tl = round(giris_tl * hedef_yuzde, 4)
+    giris_tl = float(st)
+    hedef_tl = round(giris_tl * hedef_yuzde, 4)
+    net_kar  = (hedef_yuzde - 1.0) * 100.0
+    sure     = _tahmini_sure(net_kar)
 
-    net_kar = abs(hedef_yuzde - 1.0) * 100.0
-    sure = _tahmini_sure(net_kar)
-
-    nmk["sinyal"]             = True
-    nmk["yon"]                = yon
-    nmk["giris_tl"]           = round(giris_tl, 4)
-    nmk["hedef_tl"]           = round(hedef_tl, 4)
-    nmk["net_kar_yuzde"]      = round(net_kar, 2)
-    nmk["tahmini_sure_saat"]  = sure
-    nmk["red_neden"]          = None
+    nmk["sinyal"]            = True
+    nmk["yon"]               = "long"
+    nmk["giris_tl"]          = round(giris_tl, 4)
+    nmk["hedef_tl"]          = round(hedef_tl, 4)
+    nmk["net_kar_yuzde"]     = round(net_kar, 2)
+    nmk["tahmini_sure_saat"] = sure
+    nmk["red_neden"]         = None
 
     _state_kaydet({
         "son_sinyal": {
             "giris_tl":          giris_tl,
             "hedef_tl":          hedef_tl,
-            "yon":               yon,
+            "yon":               "long",
             "hedef_yuzde":       hedef_yuzde,
             "tahmini_sure_saat": sure,
             "t":                 time.time(),
