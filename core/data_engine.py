@@ -225,7 +225,7 @@ def get_xagusd_spot_last():
         import yfinance as yf
         df = yf.download("SI=F", period="1d", interval="1m", progress=False, auto_adjust=True)
         if df is not None and len(df) > 0:
-            return float(df["Close"].values[-1])
+            return float(df["Close"].iloc[-1])
     except Exception as e:
         logger.error(f"yfinance spot hatası: {e}")
     return None
