@@ -112,6 +112,15 @@ def degerlendir(
         "red_neden": None,
     }
 
+# Son sinyalden 15 dakika geçmeden yeni sinyal üretme
+stt = _state_yukle()
+son = stt.get("son_sinyal") or {}
+if son.get("t"):
+    gecen = time.time() - float(son["t"])
+    if gecen < 900:  # 15 dakika = 900 saniye
+        nmk["red_neden"] = f"Son sinyalden {int((900-gecen)/60)+1} dk bekle"
+        return nmk
+
     al, st, mks = get_silver_price_dunyakatilim()
     if al is None or st is None:
         nmk["red_neden"] = "Dünya Katılım fiyat alınamadı"
