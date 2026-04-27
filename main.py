@@ -137,11 +137,20 @@ def performans_guncelle(kar_yuzde) -> dict:
 
 def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar_yuzde: float, yon: str) -> str:
     yon_emoji = "📈 AL" if yon == "long" else "📉 SAT"
+    # Tahmini süre hesapla
+    if net_kar_yuzde < 2:
+        sure = "~18 saat"
+    elif net_kar_yuzde < 3:
+        sure = "~28 saat"
+    elif net_kar_yuzde < 4:
+        sure = "~38 saat"
+    else:
+        sure = "~47 saat"
     return (
         f"🥈 GÜMÜŞ SİNYALİ — {yon_emoji}\n"
         f"Giriş: ₺{giris_tl:.2f}\n"
-        f"Hedef: ₺{hedef_tl:.2f}\n"
-        f"Net Kar: %{net_kar_yuzde:.2f}"
+        f"Tahmini hedef: ₺{hedef_tl:.2f} (%{net_kar_yuzde:.2f})\n"
+        f"Tahmini süre: {sure}"
     )
 
 
