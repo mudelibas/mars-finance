@@ -91,17 +91,6 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
         hedef_yuzde = tp_usd / giris
         return True, "long", giris, hedef_yuzde
 
-    # SHORT
-    if (sweep_high > onceki_yuksek and
-            sweep_close < onceki_yuksek and
-            reclaim_close < reclaim_open):
-        giris = reclaim_close
-        tp_usd = onceki_dusuk
-        if giris <= 0:
-            return False, None, None, None
-        hedef_yuzde = tp_usd / giris
-        return True, "short", giris, hedef_yuzde
-
     return False, None, None, None
 
 
