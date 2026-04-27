@@ -220,12 +220,14 @@ def get_xau_5m(period: str = "1mo"):
 
 
 def get_xagusd_spot_last():
-    """SI (USD/oz) son kapanış — yfinance."""
     try:
         import yfinance as yf
         df = yf.download("SI=F", period="1d", interval="1m", progress=False, auto_adjust=True)
         if df is not None and len(df) > 0:
-            return float(df["Close"].iloc[-1].item())
+            val = df["Close"].iloc[-1]
+            if hasattr(val, 'item'):
+                return float(val.item())
+            return float(val)
     except Exception as e:
         logger.error(f"yfinance spot hatası: {e}")
     return None
