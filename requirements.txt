@@ -8,3 +8,4 @@ feedparser
 flask
 flask-cors
 yfinance
+psycopg2-binary
