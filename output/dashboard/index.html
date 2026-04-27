@@ -77,7 +77,7 @@ code, kbd, samp, pre, .log-card code, #open-signals-home code, #sinyal-tab-ledge
 }
 
 body {
-  background: var(--bg-deep);
+  background: #f5f6f8;
   color: var(--c-on-s);
   font-size: 14px;
   line-height: 1.4286;
@@ -86,14 +86,6 @@ body {
   letter-spacing: 0.01em;
   position: relative;
   z-index: 1;
-}
-body.view-haber {
-  background: #ffffff;
-}
-body.view-haber::before,
-body.view-haber::after {
-  opacity: 0 !important;
-  pointer-events: none;
 }
 body > .site-header,
 body > main,
@@ -109,30 +101,6 @@ body > .site-header {
   padding-bottom: var(--space-3);
 }
 body > main { padding-top: 0; padding-bottom: var(--space-6); }
-
-/* Açık derinlik — hafif grid hissi, TV açık arka plan */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 100% 70% at 50% -10%, rgba(41, 98, 255, 0.045) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(38, 166, 154, 0.04) 0%, transparent 50%),
-    linear-gradient(180deg, #fafbfc 0%, #ffffff 40%, #f0f3fa 100%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.35;
-  mix-blend-mode: multiply;
-}
 
 /* Kalan kartlar: alt sekmeler / nadir kullanım */
 .m-card {
@@ -171,7 +139,7 @@ body::after {
 .site-header {
   position: relative;
   z-index: 2;
-  background: var(--bg-deep);
+  background: transparent;
 }
 .header-inner {
   display: flex;
@@ -179,6 +147,7 @@ body::after {
   justify-content: space-between;
   min-height: 40px;
   width: 100%;
+  background: transparent;
 }
 /* Global sekme çubuğu — simetrik dikey aralık */
 .main-tabs {
@@ -189,7 +158,7 @@ body::after {
   gap: var(--space-1);
   width: 100%;
   margin: 0 0 var(--content-after-tabs) 0;
-  padding: 10px 0 10px 0;
+  padding: 12px 0 12px 0;
   border-bottom: 1px solid var(--border-soft);
 }
 .main-tabs .tabs--main { margin: 0; }
@@ -238,7 +207,7 @@ body::after {
 .tab-scene > h1.tab-screen-title,
 .tab-scene h1.tab-screen-title {
   font-size: 24px;
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.33;
   letter-spacing: 0;
   color: #202124;
@@ -252,7 +221,7 @@ body::after {
 .region-open-s { margin-bottom: 0; }
 .open-sig-block__head {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.15px;
   text-transform: none;
   color: #202124;
@@ -417,7 +386,7 @@ body::after {
 .price-metric {
   text-align: center;
   padding: var(--space-4) var(--space-3) var(--space-3) var(--space-3);
-  background: #fafafa;
+  background: #ffffff;
   border: 1px solid #e8eaed;
   border-radius: var(--radius);
   position: relative;
@@ -483,14 +452,23 @@ body::after {
   font-weight: 500;
   color: #5f6368;
   padding: var(--space-2) var(--space-2);
-  background: #f1f3f4;
+  background: #ffffff;
   border: 1px solid #e8eaed;
   border-radius: 8px;
   letter-spacing: 0.1px;
 }
-.pill span { font-size: inherit; font-weight: 500; }
-.pill--change { border: 1px solid var(--border); background: var(--bg-mid); border-radius: var(--radius); padding: 0; overflow: hidden; }
-.pill--change .pc-change { border: none; border-radius: 0; margin: 0; width: 100%; box-sizing: border-box; min-height: 100%; }
+.pill span { font-size: 13px; font-weight: 500; }
+.pill--change { border: none; background: transparent; border-radius: var(--radius); padding: 0; overflow: hidden; }
+.pill--change .pc-change {
+  border: none !important;
+  border-radius: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100%;
+  font-size: 13px;
+  font-weight: 500;
+}
 #change-wrap, .pill--change#change-wrap { margin: 0; width: auto; }
 #gumus-change, #change-wrap .pc-change { min-height: 40px; }
 .pc-change {
@@ -513,6 +491,11 @@ body::after {
   background: var(--nav-surface);
   color: var(--muted2);
   border-color: var(--border);
+}
+.pill--change .pc-change.up,
+.pill--change .pc-change.down,
+.pill--change .pc-change.flat {
+  border: none !important;
 }
 /* Mini gauge (inside price-hero) ═══ */
 .mini-gauge { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-soft); position: relative; z-index: 1; }
@@ -734,7 +717,7 @@ body::after {
 #tab-panel-ana .kpi-card__head { margin-bottom: var(--space-3); }
 #tab-panel-ana .kpi-card__title {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.15px;
   text-transform: none;
   color: var(--c-on-s);
@@ -805,12 +788,14 @@ body::after {
   padding: 36px 10px 10px 10px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
+#haber-log .haber-kart--siyasi { border: 1px solid rgba(192, 57, 43, 0.3); }
+#haber-log .haber-kart--finans { border: 1px solid rgba(41, 128, 185, 0.3); }
 #haber-log .haber-item--unread .haber-kart {
   box-shadow: 0 0 0 1px #1a73e8, 0 1px 2px rgba(0,0,0,0.04);
   border-color: #c2d4f0;
   background: #fbfcff;
 }
-#haber-log .haber-item--unread .haber-baslik { font-weight: 600; }
+#haber-log .haber-item--unread .haber-baslik { font-weight: 700; }
 #haber-log .haber-tier { position: absolute; top: 8px; left: 8px; margin: 0; }
 #haber-log .haber-zaman { position: absolute; top: 8px; right: 8px; text-align: right; }
 .sinyal-panel, .haberler-panel, .tradingview-panel, .piyasa-tab-inner { margin-bottom: var(--space-section); }
@@ -831,8 +816,10 @@ h2.section-title { margin: 0 0 16px; }
 .haber-tier.t-kritik { background: var(--red-bg); color: #c62828; border-color: var(--red-border); }
 .haber-tier.t-onemli { background: rgba(245, 124, 0, 0.1); color: #b06000; border-color: rgba(245, 124, 0, 0.3); }
 .haber-tier.t-genel  { background: rgba(41, 98, 255, 0.08);  color: #1e4fc4; border-color: rgba(41, 98, 255, 0.25); }
+.haber-tier.t-siyasi { background: #c0392b; color: #fff; border: none; }
+.haber-tier.t-finans { background: #2980b9; color: #fff; border: none; }
 .haber-zaman { font-size: 10px; color: var(--muted); }
-.haber-baslik { font-size: 14px; color: var(--text); line-height: 1.55; word-break: break-word; }
+.haber-baslik { font-size: 14px; font-weight: 700; color: #1a1a1a; line-height: 1.55; word-break: break-word; }
 #haber-log .haber-baslik { text-decoration: none; }
 #haber-log .haber-baslik:hover { text-decoration: underline; }
 .haber-ozet { font-size: 12px; color: var(--text-dim); margin-top: 8px; line-height: 1.55; }
@@ -890,6 +877,7 @@ footer {
         <div class="live" title="Veri tazeliği"><div class="dot" aria-hidden="true"></div><time id="son-guncelleme" datetime="--:--">--:--</time></div>
       </div>
     </div>
+    <hr style="border:none;border-top:1px solid #e8eaed;margin:0">
   </header>
 
   <main id="main-views" aria-label="Görünümler — tek ekran">
@@ -937,7 +925,7 @@ footer {
               <div class="pill">Makas: <span id="gumus-makas">--</span></div>
               <div class="pill">Vergi: %0.2</div>
               <div class="pill pill--change" id="change-wrap">
-                <div id="gumus-change" class="pc-change">GÜNLÜK — %</div>
+                <div id="gumus-change" class="pc-change">Günlük değişim — %</div>
               </div>
             </div>
           </div>
@@ -968,93 +956,19 @@ footer {
       <div id="tab-panel-grafik" class="tab-scene" data-panel="grafik" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-grafik" aria-label="Gümüş grafiği">
         <h1 class="tab-screen-title">Gümüş 24 saat</h1>
         <div class="tradingview-panel" style="margin:0">
-<!-- TradingView Widget BEGIN -->
-<!-- TradingView Widget BEGIN -->
-<div class="tradingview-widget-container">
-  <div class="tradingview-widget-container__widget"></div>
-  <div class="tradingview-widget-copyright"><a href="https://tr.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
-  {
-  "lineWidth": 2,
-  "lineType": 0,
-  "chartType": "bars",
-  "fontColor": "rgb(106, 109, 120)",
-  "gridLineColor": "rgba(46, 46, 46, 0.06)",
-  "volumeUpColor": "rgba(34, 171, 148, 0.5)",
-  "volumeDownColor": "rgba(247, 82, 95, 0.5)",
-  "backgroundColor": "#ffffff",
-  "widgetFontColor": "#0F0F0F",
-  "upColor": "#22ab94",
-  "downColor": "#f7525f",
-  "borderUpColor": "#22ab94",
-  "borderDownColor": "#f7525f",
-  "wickUpColor": "#22ab94",
-  "wickDownColor": "#f7525f",
-  "colorTheme": "light",
-  "isTransparent": false,
-  "locale": "tr",
-  "chartOnly": false,
-  "scalePosition": "right",
-  "scaleMode": "Normal",
-  "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
-  "valuesTracking": "1",
-  "changeMode": "price-and-percent",
-  "symbols": [
-    [
-      "FX_IDC:XAGTRYG|1D"
-    ],
-    [
-      "FX_IDC:XAUTRYG|1D"
-    ]
-  ],
-  "dateRanges": [
-    "1d|15"
-  ],
-  "fontSize": "10",
-  "headerFontSize": "medium",
-  "autosize": true,
-  "dateFormat": "dd/MM/yyyy",
-  "width": "100%",
-  "height": "100%",
-  "noTimeScale": false,
-  "hideDateRanges": false,
-  "hideMarketStatus": false,
-  "hideSymbolLogo": false
-}
-  </script>
+<div style="height:500px;width:100%">
+<iframe src="https://s.tradingview.com/embed-widget/advanced-chart/?locale=tr#%7B%22symbol%22%3A%22FX_IDC%3AXAGTRYG%22%2C%22interval%22%3A%2215%22%2C%22theme%22%3A%22light%22%2C%22style%22%3A%221%22%2C%22timezone%22%3A%22Europe%2FIstanbul%22%2C%22hide_top_toolbar%22%3Afalse%2C%22hide_side_toolbar%22%3Atrue%2C%22autosize%22%3Atrue%7D" style="width:100%;height:100%;border:none"></iframe>
 </div>
-<!-- TradingView Widget END -->
-<!-- TradingView Widget END -->
         </div>
       </div>
-      <div id="tab-panel-piyasa" class="tab-scene" data-panel="piyasa" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-piyasa" aria-label="Piyasa göstergeleri">
-        <h1 class="tab-screen-title">Piyasa göstergeleri</h1>
+      <div id="tab-panel-piyasa" class="tab-scene" data-panel="piyasa" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-piyasa" aria-label="Piyasalar">
+        <h1 class="tab-screen-title">Piyasalar</h1>
         <div class="piyasa-tab-inner">
-          <section class="region-indicators" aria-label="Piyasa göstergeleri">
-            <div class="indicators">
-              <div class="ind-grid" role="list">
-                <div class="ind-item" role="listitem">
-                  <div class="ind-key">Altın / Ons</div>
-                  <div class="ind-val" id="m-altin-endeks">--</div>
-                  <div class="ind-sub" id="m-altin-endeks-change">--</div>
-                </div>
-                <div class="ind-item" role="listitem">
-                  <div class="ind-key">Dolar Endeksi</div>
-                  <div class="ind-val" id="m-dxy">--</div>
-                  <div class="ind-sub" id="m-dxy-change">--</div>
-                </div>
-                <div class="ind-item" role="listitem">
-                  <div class="ind-key">Brent Petrol</div>
-                  <div class="ind-val" id="m-petrol">--</div>
-                  <div class="ind-sub" id="m-petrol-change">--</div>
-                </div>
-                <div class="ind-item" role="listitem">
-                  <div class="ind-key">Korku Endeksi (VIX)</div>
-                  <div class="ind-val" id="m-vix">--</div>
-                  <div class="ind-sub" id="m-vix-yorum">--</div>
-                </div>
-              </div>
-            </div>
+          <section class="region-indicators" aria-label="Piyasalar">
+            <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=tr#%7B%22symbol%22%3A%22TVC%3AGOLD%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22160%22%2C%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Atrue%7D" style="width:100%;height:160px;border:none;border-radius:12px;margin-bottom:12px"></iframe>
+            <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=tr#%7B%22symbol%22%3A%22FX_IDC%3AXAGTRYG%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22160%22%2C%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Atrue%7D" style="width:100%;height:160px;border:none;border-radius:12px;margin-bottom:12px"></iframe>
+            <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=tr#%7B%22symbol%22%3A%22TVC%3ADXY%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22160%22%2C%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Atrue%7D" style="width:100%;height:160px;border:none;border-radius:12px;margin-bottom:12px"></iframe>
+            <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=tr#%7B%22symbol%22%3A%22TVC%3AUSOIL%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22160%22%2C%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Atrue%7D" style="width:100%;height:160px;border:none;border-radius:12px"></iframe>
           </section>
         </div>
       </div>
@@ -1162,7 +1076,7 @@ function openSignalsHomeRender(openList, expanded) {
     const st = s.created || '—';
     return `<div class="open-sig-row">
       <div class="os-line"><span><strong style="color:var(--text)">Giriş</strong> ${g}</span><span><strong style="color:var(--text)">Hedef</strong> ${t}</span></div>
-      <div class="os-line"><span>Net kâr (tah. TP) <strong style="color:var(--silver)">${nk}</strong></span><span class="os-tarih">${_esc(st)}</span></div>
+      <div class="os-line"><span>Tahmini hedef kârı <strong style="color:var(--silver)">${nk}</strong></span><span class="os-tarih">${_esc(st)}</span></div>
     </div>`;
   }).join('');
   let more = '';
@@ -1191,8 +1105,8 @@ function statsPanelRender(st) {
   const hedef = st.kazanan_kapanis ?? 0;
   const kap = st.kapanan_sinyal ?? 0;
   const h = Number(hedef);
-  const bekle = Math.max(0, Number(kap) - h);
-  const denom = h + bekle;
+  const bekle24 = st.open_older_24h != null ? st.open_older_24h : '—';
+  const denom = h + Math.max(0, Number(kap) - h);
   let basari = '—';
   if (denom > 0) {
     basari = (100 * h / denom).toFixed(1) + ' %';
@@ -1201,7 +1115,7 @@ function statsPanelRender(st) {
     '<div class="kpi-grid">' +
     kpiFormatTile('Açık sinyal', String(akt), '') +
     kpiFormatTile('Hedefe ulaşan', String(hedef), '') +
-    kpiFormatTile('Bekleyen', String(bekle), '') +
+    kpiFormatTile('Bekleyen (24+)', String(bekle24), '') +
     kpiFormatTile('Başarı oranı', basari, '') +
     '</div>'
   );
@@ -1299,12 +1213,13 @@ function haberLogRender() {
   el.innerHTML = haberLog.map((h) => {
     const hid = h && h.id != null ? String(h.id) : '';
     const un = hid && !oku.has(hid);
+    const tier = (h.tier || 'genel').toString().toLowerCase();
+    const kartTier = tier === 'siyasi' ? ' haber-kart--siyasi' : tier === 'finans' ? ' haber-kart--finans' : '';
     return `<div class="haber-item${un ? ' haber-item--unread' : ''}" data-haber-id="${_esc(hid)}">
-      <div class="haber-kart">
-        <span class="haber-tier t-${h.tier || 'genel'}">${(h.tier || 'genel').toUpperCase()}</span>
+      <div class="haber-kart${kartTier}">
+        <span class="haber-tier t-${tier}">${(h.tier || 'genel').toUpperCase()}</span>
         <span class="haber-zaman">${h.zaman || '--'}</span>
         <a class="haber-baslik" href="${_esc(h.link || '#')}" target="_blank" rel="noopener">${_esc(h.title || '')}</a>
-        ${h.ozet ? '<p class="haber-ozet">' + _esc(h.ozet) + '</p>' : ''}
       </div>
     </div>`;
   }).join('');
@@ -1341,7 +1256,7 @@ async function veriYukle() {
     }
     const gcEl = document.getElementById('gumus-change');
     if (gcEl) {
-      gcEl.textContent = 'GÜNLÜK DEĞİŞİM ' + cs(gd);
+      gcEl.textContent = 'Günlük değişim ' + cs(gd);
       gcEl.className = 'pc-change ' + (gd>0?'up':gd<0?'down':'flat');
     }
     
