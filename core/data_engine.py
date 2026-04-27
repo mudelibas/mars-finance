@@ -356,7 +356,26 @@ def get_gold_price_dunyakatilim():
 
 
 def get_market_context() -> Dict[str, Any]:
-    return {}
+    global _MARKET_CONTEXT_CACHE
+    now = time.time()
+    t0 = float(_MARKET_CONTEXT_CACHE.get("ts") or 0.0)
+    if t0 and (now - t0) < _MARKET_CONTEXT_TTL:
+        return _MARKET_CONTEXT_CACHE["data"]
+    ctx: Dict[str, Any] = {}
+    try:
+        import yfinance as yf
+        df = yf.download("SI=F", period="2d", interval="1d", progress=False, auto_adjust=True)
+        if df is not None and len(df) >= 2:
+            c1 = float(df["Close"].iloc[-1].item())
+            c0 = float(df["Close"].iloc[-2].item())
+            ctx["gumus_degisim_yuzde"] = round((c1 - c0) / c0 * 100, 2) if c0 else 0.0
+        else:
+            ctx["gumus_degisim_yuzde"] = 0.0
+    except Exception as e:
+        logger.error(f"market context hatası: {e}")
+        ctx["gumus_degisim_yuzde"] = 0.0
+    _MARKET_CONTEXT_CACHE = {"data": ctx, "ts": now}
+    return ctx
 
 
 def get_cot_data():
