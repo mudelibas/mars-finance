@@ -225,7 +225,7 @@ async def fiyat_takip_job():
             mes_id = s.get("telegram_message_id")
             h_raw = s.get("hedef_tl")
             g_raw = s.get("giris_tl")
-            yon = s.get("aciklama") or "long"
+            yon = s.get("reason") or "long"
             if h_raw is None or g_raw is None:
                 continue
             h_tl = float(h_raw)
