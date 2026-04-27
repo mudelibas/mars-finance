@@ -7,3 +7,4 @@ apscheduler
 feedparser
 flask
 flask-cors
+yfinance
