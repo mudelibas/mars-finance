@@ -225,7 +225,7 @@ def get_xagusd_spot_last():
         import yfinance as yf
         df = yf.download("SI=F", period="1d", interval="1m", progress=False, auto_adjust=True)
         if df is not None and len(df) > 0:
-            return float(df["Close"].iloc[-1])
+            return float(df["Close"].iloc[-1].item())
     except Exception as e:
         logger.error(f"yfinance spot hatası: {e}")
     return None
@@ -290,7 +290,7 @@ def get_usdtry() -> Optional[float]:
         import yfinance as yf
         df = yf.download("USDTRY=X", period="1d", interval="1m", progress=False, auto_adjust=True)
         if df is not None and len(df) > 0:
-            return float(df["Close"].iloc[-1])
+            return float(df["Close"].iloc[-1].item())
     except Exception as e:
         logger.error("USD/TRY fiyat hatası: %s", e)
     return None
