@@ -933,7 +933,6 @@ footer {
           <div class="open-sig-block" id="open-signals-wrap">
             <div class="open-sig-block__head">Açık sinyaller</div>
             <div id="open-signals-home"><div class="log-bos" style="padding:0">Yükleniyor…</div></div>
-            <p id="veto-brief" class="veto-inline" style="display:none" aria-live="polite"></p>
           </div>
         </section>
         <section class="region-stats" aria-label="Sinyal istatistikleri">
@@ -1299,19 +1298,6 @@ async function veriYukle() {
       petD,
       petD<-1 ? 'Gümüşte artış olabilir.' : petD>1 ? 'Gümüşte düşüş olabilir.' : 'Nötr'
     );
-
-    (function () {
-      const v = document.getElementById('veto-brief');
-      if (v) {
-        if (d.veto_neden) {
-          v.textContent = 'Son değerlendirme: ' + d.veto_neden;
-          v.style.display = 'block';
-        } else {
-          v.textContent = '';
-          v.style.display = 'none';
-        }
-      }
-    })();
 
     lastOpenSigs = d.open_signals && d.open_signals.length ? d.open_signals : [];
     openSignalsHomeRender(lastOpenSigs, openSigsExpand);
