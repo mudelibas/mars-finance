@@ -46,14 +46,23 @@ def _state_kaydet(d: Dict[str, Any]) -> None:
         logger.warning("signal state yazılamadı: %s", e)
 
 
+# ─── TAHMİNİ SÜRE ───
+
+def _tahmini_sure(net_kar: float) -> int:
+    """Net kar yüzdesine göre tahmini süre (saat)."""
+    if net_kar < 2:
+        return 18
+    elif net_kar < 3:
+        return 28
+    elif net_kar < 4:
+        return 38
+    else:
+        return 47
+
+
 # ─── SWEEP + RECLAIM ───
 
 def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[float], Optional[float]]:
-    """
-    Son 2 mumda sweep+reclaim var mı?
-    Döner: (sinyal_var, yon, giris_fiyati_usd, hedef_yuzde)
-    hedef_yuzde: yapısal hedefin girişe göre yüzdesi (örn. 1.023 = %2.3 yukarı)
-    """
     if o15 is None or len(o15) < SEVIYE_PENCERE + 2:
         return False, None, None, None
 
@@ -71,7 +80,7 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
     reclaim_close = float(reclaim_mum["Close"])
     reclaim_open  = float(reclaim_mum["Open"])
 
-    # LONG: sweep dip kırdı, close seviyenin üstünde, reclaim yeşil
+    # LONG
     if (sweep_low < onceki_dusuk and
             sweep_close > onceki_dusuk and
             reclaim_close > reclaim_open):
@@ -79,10 +88,10 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
         tp_usd = onceki_yuksek
         if giris <= 0:
             return False, None, None, None
-        hedef_yuzde = tp_usd / giris  # örn. 1.023
+        hedef_yuzde = tp_usd / giris
         return True, "long", giris, hedef_yuzde
 
-    # SHORT: sweep zirve kırdı, close seviyenin altında, reclaim kırmızı
+    # SHORT
     if (sweep_high > onceki_yuksek and
             sweep_close < onceki_yuksek and
             reclaim_close < reclaim_open):
@@ -90,7 +99,7 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
         tp_usd = onceki_dusuk
         if giris <= 0:
             return False, None, None, None
-        hedef_yuzde = tp_usd / giris  # örn. 0.977
+        hedef_yuzde = tp_usd / giris
         return True, "short", giris, hedef_yuzde
 
     return False, None, None, None
@@ -109,24 +118,22 @@ def degerlendir(
         "giris_tl": 0.0,
         "hedef_tl": 0.0,
         "net_kar_yuzde": 0.0,
+        "tahmini_sure_saat": 0,
         "skor": 100,
         "red_neden": None,
     }
 
-    # Fiyat verisi
     al, st, mks = get_silver_price_dunyakatilim()
     if al is None or st is None:
         nmk["red_neden"] = "Dünya Katılım fiyat alınamadı"
         return nmk
 
-    # Mum verisi
     mtf = get_silver_mtf()
     o15 = (mtf or {}).get("15m")
     if o15 is None or len(o15) < SEVIYE_PENCERE + 2:
         nmk["red_neden"] = "15m verisi yetersiz"
         return nmk
 
-    # Sweep + Reclaim kontrolü
     sinyal, yon, giris_usd, hedef_yuzde = _sweep_reclaim(o15)
     if not sinyal:
         nmk["red_neden"] = "Sweep+Reclaim yok"
@@ -140,38 +147,39 @@ def degerlendir(
         nmk["red_neden"] = f"Yapısal hedef yetersiz (%{(1-hedef_yuzde)*100:.2f} < %1.25)"
         return nmk
 
-    # Dünya Katılım fiyatına yüzdesel uygula
+    # Dünya Katılım fiyatına uygula
     if yon == "long":
-        giris_tl = float(st)   # satış fiyatından al
+        giris_tl = float(st)
         hedef_tl = round(giris_tl * hedef_yuzde, 4)
     else:
-        giris_tl = float(al)   # alış fiyatından sat
+        giris_tl = float(al)
         hedef_tl = round(giris_tl * hedef_yuzde, 4)
 
     net_kar = abs(hedef_yuzde - 1.0) * 100.0
+    sure = _tahmini_sure(net_kar)
 
-    nmk["sinyal"]        = True
-    nmk["yon"]           = yon
-    nmk["giris_tl"]      = round(giris_tl, 4)
-    nmk["hedef_tl"]      = round(hedef_tl, 4)
-    nmk["net_kar_yuzde"] = round(net_kar, 2)
-    nmk["red_neden"]     = None
+    nmk["sinyal"]             = True
+    nmk["yon"]                = yon
+    nmk["giris_tl"]           = round(giris_tl, 4)
+    nmk["hedef_tl"]           = round(hedef_tl, 4)
+    nmk["net_kar_yuzde"]      = round(net_kar, 2)
+    nmk["tahmini_sure_saat"]  = sure
+    nmk["red_neden"]          = None
 
-    # State kaydet
     _state_kaydet({
         "son_sinyal": {
-            "giris_tl":   giris_tl,
-            "hedef_tl":   hedef_tl,
-            "yon":        yon,
-            "hedef_yuzde": hedef_yuzde,
-            "t":          time.time(),
+            "giris_tl":          giris_tl,
+            "hedef_tl":          hedef_tl,
+            "yon":               yon,
+            "hedef_yuzde":       hedef_yuzde,
+            "tahmini_sure_saat": sure,
+            "t":                 time.time(),
         }
     })
 
     return nmk
 
 
-# ─── Dış erişim ───
 sinyal_uret = degerlendir
 
 

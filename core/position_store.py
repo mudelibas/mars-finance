@@ -23,7 +23,6 @@ def _conn():
 
 
 def _init_db():
-    """Tablo yoksa oluştur."""
     try:
         with _conn() as conn:
             with conn.cursor() as cur:
@@ -40,15 +39,7 @@ def _init_db():
         logger.error(f"DB init hatası: {e}")
 
 
-# Başlangıçta tabloyu oluştur
 _init_db()
-
-
-def _rec_to_dict(row) -> dict:
-    d = dict(row["data"])
-    d["id"] = row["id"]
-    d["status"] = row["status"]
-    return d
 
 
 def acik_sinyal_sayisi() -> int:
@@ -72,10 +63,8 @@ def yeni_alim_ekle(
     giris_tl=None,
     hedef_tl=None,
     atr_half_tl=None,
+    tahmini_sure_saat=None,
 ):
-    if acik_sinyal_sayisi() >= SINYAL_MAKS_AKTIF:
-        logger.info(f"[pozisyon] yeni sinyal reddedildi: max {SINYAL_MAKS_AKTIF} açık")
-        return None
     sid = str(uuid.uuid4())[:12]
     now = datetime.now(TR).strftime("%Y-%m-%d %H:%M:%S")
     rec = {
@@ -86,6 +75,7 @@ def yeni_alim_ekle(
         "giris_tl": float(giris_tl) if giris_tl is not None else None,
         "hedef_tl": float(hedef_tl) if hedef_tl is not None else None,
         "atr_half_tl": float(atr_half_tl) if atr_half_tl is not None else None,
+        "tahmini_sure_saat": int(tahmini_sure_saat) if tahmini_sure_saat is not None else 28,
         "scales_filled": 0,
         "scales_max": SINYAL_MAKS_OLCEKLE,
         "created": now,
@@ -103,7 +93,7 @@ def yeni_alim_ekle(
                     (sid, "OPEN", json.dumps(rec))
                 )
             conn.commit()
-        logger.info(f"[pozisyon] OPEN sinyal={sid} giris_tl={rec['giris_tl']} hedef={rec['hedef_tl']}")
+        logger.info(f"[pozisyon] OPEN sinyal={sid} giris_tl={rec['giris_tl']} hedef={rec['hedef_tl']} sure={rec['tahmini_sure_saat']}s")
         return rec
     except Exception as e:
         logger.error(f"yeni_alim_ekle hatası: {e}")
@@ -195,23 +185,23 @@ def tüm_kayitlar():
 
 
 def istatistik_ozet():
+    """
+    Dinamik başarı oranı:
+    - Hedefe ulaşan (TP) → başarılı
+    - Açık + tahmini süresi dolmuş → geçici başarısız
+    - Başarı oranı = başarılı / (başarılı + geçici başarısız)
+    """
     try:
         with _conn() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("SELECT id, status, data, created_at FROM signals")
                 rows = cur.fetchall()
         now = datetime.now(TR)
+
         açık = [r for r in rows if r["status"] == "OPEN"]
         kapalı = [r for r in rows if r["status"] == "CLOSED"]
-        eski_24h = 0
-        for r in açık:
-            try:
-                ts = dict(r["data"]).get("created", "")
-                dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
-                if (now - dt) > timedelta(hours=24):
-                    eski_24h += 1
-            except Exception:
-                eski_24h += 1
+
+        # Kazanan kapananlar
         kazançlı = 0
         for r in kapalı:
             p = dict(r["data"]).get("pnl_gross_pct")
@@ -220,12 +210,29 @@ def istatistik_ozet():
                     kazançlı += 1
             except Exception:
                 pass
+
+        # Açık sinyallerde tahmini süre dolmuş olanlar → geçici başarısız
+        gecici_basarisiz = 0
+        for r in açık:
+            d = dict(r["data"])
+            sure = int(d.get("tahmini_sure_saat") or 28)
+            try:
+                ts = d.get("created", "")
+                dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
+                gecen_saat = (now - dt).total_seconds() / 3600
+                if gecen_saat > sure:
+                    gecici_basarisiz += 1
+            except Exception:
+                pass
+
         n_kap = len(kapalı)
-        success_rate_pct = round(100.0 * kazançlı / n_kap, 1) if n_kap else None
+        toplam_deger = kazançlı + gecici_basarisiz
+        success_rate_pct = round(100.0 * kazançlı / toplam_deger, 1) if toplam_deger > 0 else None
+
         return {
             "active_count": len(açık),
             "closed_count": n_kap,
-            "open_older_24h": eski_24h,
+            "open_older_24h": gecici_basarisiz,  # geçici başarısız
             "wins": kazançlı,
             "success_rate_pct": success_rate_pct,
         }

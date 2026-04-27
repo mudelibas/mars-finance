@@ -55,9 +55,6 @@ PIYASA_ARALIK_SANIYE = 60
 FIYAT_TAKIP_SANIYE = 60
 
 
-# ─── YARDIMCI ───────────────────────────────────────────────
-
-
 def hafta_sonu_mu() -> bool:
     return datetime.now(timezone.utc).weekday() >= 5
 
@@ -132,12 +129,8 @@ def performans_guncelle(kar_yuzde) -> dict:
     return veri
 
 
-# ─── TELEGRAM METİNLERİ ────────────────────────────────────
-
-
 def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar_yuzde: float, yon: str) -> str:
     yon_emoji = "📈 AL" if yon == "long" else "📉 SAT"
-    # Tahmini süre hesapla
     if net_kar_yuzde < 2:
         sure = "~18 saat"
     elif net_kar_yuzde < 3:
@@ -152,9 +145,6 @@ def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar_yuzde: float, y
         f"Tahmini hedef: ₺{hedef_tl:.2f} (%{net_kar_yuzde:.2f})\n"
         f"Tahmini süre: {sure}"
     )
-
-
-# ─── SCHEDULER JOBLAR ──────────────────────────────────────
 
 
 async def piyasa_analizi_job():
@@ -177,14 +167,12 @@ async def piyasa_analizi_job():
         netp = float(d.get("net_kar_yuzde") or 0.0)
         skr = int(d.get("skor") or 100)
         yon = d.get("yon") or "long"
+        sure = int(d.get("tahmini_sure_saat") or 28)
         if g_tl is None or h_tl is None or float(g_tl) <= 0 or float(h_tl) <= 0:
             logger.info("Sinyal verisi eksik (giris/hedef).")
             return
         g_tl = float(g_tl)
         h_tl = float(h_tl)
-        if pstore.acik_sinyal_sayisi() >= cfg.SINYAL_MAKS_AKTIF:
-            logger.info("Açık sinyal sınırı: yeni sinyal gönderilmedi.")
-            return
         if not cfg.TELEGRAM_TOKEN or not cfg.TELEGRAM_GROUP_ID:
             logger.warning("Telegram token/group_id eksik.")
             return
@@ -196,6 +184,7 @@ async def piyasa_analizi_job():
         )
         rec = pstore.yeni_alim_ekle(
             0.0, 0.0, skr, yon, gonderilen.message_id, None, g_tl, h_tl, 0.0,
+            tahmini_sure_saat=sure,
         )
         sid = (rec or {}).get("id")
         sinyal_logla(
@@ -208,7 +197,7 @@ async def piyasa_analizi_job():
             net_kar_yuzde=netp,
             yon=yon,
         )
-        logger.info("Sinyal açıldı: yon=%s id=%s", yon, sid)
+        logger.info("Sinyal açıldı: yon=%s id=%s sure=%ss", yon, sid, sure)
     except Exception as e:
         logger.error("Piyasa analizi hatası: %s", e, exc_info=True)
 
