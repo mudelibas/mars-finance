@@ -238,3 +238,41 @@ def istatistik_ozet():
             "wins": 0,
             "success_rate_pct": None,
         }
+
+def fiyat_kaydet(alis: float, satis: float, makas: float) -> None:
+    try:
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS fiyat_gecmisi (
+                        id SERIAL PRIMARY KEY,
+                        ts TIMESTAMPTZ DEFAULT NOW(),
+                        alis NUMERIC,
+                        satis NUMERIC,
+                        makas NUMERIC
+                    )
+                """)
+                cur.execute(
+                    "INSERT INTO fiyat_gecmisi (alis, satis, makas) VALUES (%s, %s, %s)",
+                    (alis, satis, makas)
+                )
+            conn.commit()
+    except Exception as e:
+        logger.error(f"fiyat_kaydet hatası: {e}")
+
+
+def fiyat_gecmisi_csv(dosya_yolu: str) -> None:
+    """PostgreSQL'deki fiyat geçmişini CSV'e aktar."""
+    try:
+        import csv
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT ts, alis, satis, makas FROM fiyat_gecmisi ORDER BY ts")
+                rows = cur.fetchall()
+        with open(dosya_yolu, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["timestamp", "alis", "satis", "makas"])
+            w.writerows(rows)
+        print(f"Kaydedildi: {dosya_yolu} ({len(rows)} satır)")
+    except Exception as e:
+        logger.error(f"fiyat_gecmisi_csv hatası: {e}")

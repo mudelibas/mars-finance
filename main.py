@@ -274,6 +274,18 @@ async def fiyat_takip_job():
         logger.error("Fiyat takip: %s", e, exc_info=True)
 
 
+async def fiyat_kayit_job():
+    if hafta_sonu_mu():
+        return
+    try:
+        al, sat, mks = get_silver_price_dunyakatilim()
+        if al and sat:
+            pstore.fiyat_kaydet(float(al), float(sat), float(mks or 0))
+            logger.info(f"Fiyat kaydedildi: alış={al} satış={sat}")
+    except Exception as e:
+        logger.error(f"Fiyat kayıt hatası: {e}")
+
+
 async def _clear_telegram_webhook_once():
     if not cfg.TELEGRAM_TOKEN:
         return
@@ -292,6 +304,7 @@ async def main():
     sched = AsyncIOScheduler(timezone=timezone.utc)
     sched.add_job(piyasa_analizi_job, "interval", seconds=PIYASA_ARALIK_SANIYE, id="piyasa")
     sched.add_job(fiyat_takip_job, "interval", seconds=FIYAT_TAKIP_SANIYE, id="takip")
+    sched.add_job(fiyat_kayit_job, "interval", minutes=15, id="fiyat_kayit")
     sched.start()
     await piyasa_analizi_job()
     while True:
