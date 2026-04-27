@@ -1,6 +1,7 @@
 # --- Gümüş: Sweep + Reclaim sinyal motoru ---
-# Skor sistemi, voting, macro, sapma filtresi yok.
-# Tek mantık: 20 mumun yüksek/düşük sweep + reclaim = sinyal
+# Yapısal hedef: sweep öncesi 20 mumun en yüksek/düşük seviyesi
+# Minimum kar filtresi: yapısal hedef %1.25 kar getirmiyorsa sinyal yok
+# Hedef TL: SI=F yapısal hedef yüzdesi Dünya Katılım fiyatına uygulanır
 
 import logging
 import os
@@ -21,8 +22,8 @@ _ROOT = os.path.dirname(os.path.abspath(__file__))
 _SETUP_STATE_DOSYA = os.path.join(_ROOT, "signal_setup_state.json")
 
 # ─── PARAMETRELER ───
-SEVIYE_PENCERE = 20      # kaç mumun yüksek/düşük bakılır
-TP_CARPAN      = 1.0125  # %1 net kar + spread + vergi
+SEVIYE_PENCERE  = 20      # kaç mumun yüksek/düşük bakılır
+MIN_KAR_CARPAN  = 1.0125  # minimum %1 net kar + spread + vergi
 
 
 # ─── STATE ───
@@ -50,8 +51,8 @@ def _state_kaydet(d: Dict[str, Any]) -> None:
 def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[float], Optional[float]]:
     """
     Son 2 mumda sweep+reclaim var mı?
-    Döner: (sinyal_var, yon, giris_fiyati, hedef_fiyati)
-    yon: 'long' veya 'short'
+    Döner: (sinyal_var, yon, giris_fiyati_usd, hedef_yuzde)
+    hedef_yuzde: yapısal hedefin girişe göre yüzdesi (örn. 1.023 = %2.3 yukarı)
     """
     if o15 is None or len(o15) < SEVIYE_PENCERE + 2:
         return False, None, None, None
@@ -70,21 +71,27 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
     reclaim_close = float(reclaim_mum["Close"])
     reclaim_open  = float(reclaim_mum["Open"])
 
-    # LONG: sweep dip kırdı ama kapanış seviyenin üzerinde + reclaim mumu yeşil
+    # LONG: sweep dip kırdı, close seviyenin üstünde, reclaim yeşil
     if (sweep_low < onceki_dusuk and
             sweep_close > onceki_dusuk and
             reclaim_close > reclaim_open):
         giris = reclaim_close
-        hedef = round(giris * TP_CARPAN, 4)
-        return True, "long", giris, hedef
+        tp_usd = onceki_yuksek
+        if giris <= 0:
+            return False, None, None, None
+        hedef_yuzde = tp_usd / giris  # örn. 1.023
+        return True, "long", giris, hedef_yuzde
 
-    # SHORT: sweep zirve kırdı ama kapanış seviyenin altında + reclaim mumu kırmızı
+    # SHORT: sweep zirve kırdı, close seviyenin altında, reclaim kırmızı
     if (sweep_high > onceki_yuksek and
             sweep_close < onceki_yuksek and
             reclaim_close < reclaim_open):
         giris = reclaim_close
-        hedef = round(giris / TP_CARPAN, 4)
-        return True, "short", giris, hedef
+        tp_usd = onceki_dusuk
+        if giris <= 0:
+            return False, None, None, None
+        hedef_yuzde = tp_usd / giris  # örn. 0.977
+        return True, "short", giris, hedef_yuzde
 
     return False, None, None, None
 
@@ -120,20 +127,28 @@ def degerlendir(
         return nmk
 
     # Sweep + Reclaim kontrolü
-    sinyal, yon, giris_usd, hedef_usd = _sweep_reclaim(o15)
+    sinyal, yon, giris_usd, hedef_yuzde = _sweep_reclaim(o15)
     if not sinyal:
         nmk["red_neden"] = "Sweep+Reclaim yok"
         return nmk
 
-    # Dünya Katılım fiyatıyla giriş
-    if yon == "long":
-        giris_tl = float(st)   # long: satış fiyatından al
-        hedef_tl = round(giris_tl * TP_CARPAN, 4)
-    else:
-        giris_tl = float(al)   # short: alış fiyatından sat
-        hedef_tl = round(giris_tl / TP_CARPAN, 4)
+    # Minimum kar filtresi
+    if yon == "long" and hedef_yuzde < MIN_KAR_CARPAN:
+        nmk["red_neden"] = f"Yapısal hedef yetersiz (%{(hedef_yuzde-1)*100:.2f} < %1.25)"
+        return nmk
+    if yon == "short" and hedef_yuzde > (1 / MIN_KAR_CARPAN):
+        nmk["red_neden"] = f"Yapısal hedef yetersiz (%{(1-hedef_yuzde)*100:.2f} < %1.25)"
+        return nmk
 
-    net_kar = (TP_CARPAN - 1.0) * 100.0  # ~%1.25
+    # Dünya Katılım fiyatına yüzdesel uygula
+    if yon == "long":
+        giris_tl = float(st)   # satış fiyatından al
+        hedef_tl = round(giris_tl * hedef_yuzde, 4)
+    else:
+        giris_tl = float(al)   # alış fiyatından sat
+        hedef_tl = round(giris_tl * hedef_yuzde, 4)
+
+    net_kar = abs(hedef_yuzde - 1.0) * 100.0
 
     nmk["sinyal"]        = True
     nmk["yon"]           = yon
@@ -145,10 +160,11 @@ def degerlendir(
     # State kaydet
     _state_kaydet({
         "son_sinyal": {
-            "giris_tl": giris_tl,
-            "hedef_tl": hedef_tl,
-            "yon":      yon,
-            "t":        time.time(),
+            "giris_tl":   giris_tl,
+            "hedef_tl":   hedef_tl,
+            "yon":        yon,
+            "hedef_yuzde": hedef_yuzde,
+            "t":          time.time(),
         }
     })
 
