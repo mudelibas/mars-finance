@@ -1,6 +1,7 @@
 """
-RSS haber akışı — sadece dashboard tüketimi.
-Groq, LLM, puan, skor ve sinyal sistemi yok: yalnızca kaynaklardan çek, en yeni N haberi döndür.
+RSS haber akışı — dashboard tüketimi.
+İki kategori: finans (mavi) ve siyasi (kırmızı).
+Anahtar kelime filtresi ile alakasız haberler elenir.
 """
 from __future__ import annotations
 
@@ -13,15 +14,14 @@ from typing import Any, Optional, Tuple
 
 import feedparser
 
-from config import RSS_KAYNAKLAR
+from config import RSS_KAYNAKLAR, HABER_FILTRE
 
 logger = logging.getLogger(__name__)
 
 TR = timezone(timedelta(hours=3))
 _TAG_RE = re.compile(r"<[^>]+>")
 
-# Varsayılan dönen haber adedi
-SON_HABER_SAYISI = 10
+SON_HABER_SAYISI = 20
 
 
 def _kisa_ozet(summary: str, max_len: int = 400) -> str:
@@ -65,16 +65,12 @@ def _girdi_id(entry: Any) -> str:
 
 def _girdi_zaman(entry: Any) -> str:
     t = _zaman_tuple(entry)
-    return _parse_tuple_to_tr_time(t)
-
-
-def _parse_tuple_to_tr_time(t) -> str:
     if t:
         try:
             utc = datetime(*t[:6], tzinfo=timezone.utc)
             return utc.astimezone(TR).strftime("%H:%M")
-        except (TypeError, ValueError) as e:
-            logger.debug("Haber zamanı parse: %s", e)
+        except (TypeError, ValueError):
+            pass
     return datetime.now(TR).strftime("%H:%M")
 
 
@@ -88,29 +84,16 @@ def _girdi_utc(entry: Any) -> Optional[datetime]:
         return None
 
 
-def _rss_satiri_olustur(
-    entry: Any,
-    kategori: str,
-) -> Optional[dict[str, Any]]:
-    title = _alan(entry, "title")
-    link = _alan(entry, "link")
-    if not title and not link:
-        return None
-    raw = _alan(entry, "summary", "description")
-    eid = _girdi_id(entry)
-    return {
-        "id": eid,
-        "tier": kategori,
-        "title": title or "(başlıksız)",
-        "link": link,
-        "ozet": _kisa_ozet(raw),
-        "zaman": _girdi_zaman(entry),
-        "_ts": _girdi_utc(entry) or datetime.min.replace(tzinfo=timezone.utc),
-    }
+def _filtre_gec(title: str, ozet: str, kategori: str) -> bool:
+    """Haber başlık veya özeti kategori anahtar kelimelerinden birini içeriyor mu?"""
+    kelimeler = HABER_FILTRE.get(kategori, [])
+    if not kelimeler:
+        return True
+    metin = (title + " " + ozet).lower()
+    return any(k.lower() in metin for k in kelimeler)
 
 
 def _tum_kayitlari_topla() -> list[dict[str, Any]]:
-    """Tüm RSS kaynaklarındaki tüm maddeleri topla (kategori = RSS sözlük anahtarı)."""
     out: list[dict[str, Any]] = []
     for kategori, url_liste in (RSS_KAYNAKLAR or {}).items():
         for url in url_liste or []:
@@ -122,9 +105,26 @@ def _tum_kayitlari_topla() -> list[dict[str, Any]]:
                 for entry in getattr(feed, "entries", []) or []:
                     if entry is None:
                         continue
-                    d = _rss_satiri_olustur(entry, str(kategori))
-                    if d:
-                        out.append(d)
+                    title = _alan(entry, "title")
+                    link = _alan(entry, "link")
+                    if not title and not link:
+                        continue
+                    raw = _alan(entry, "summary", "description")
+                    ozet = _kisa_ozet(raw)
+
+                    if not _filtre_gec(title, ozet, str(kategori)):
+                        continue
+
+                    eid = _girdi_id(entry)
+                    out.append({
+                        "id": eid,
+                        "tier": str(kategori),
+                        "title": title or "(başlıksız)",
+                        "link": link,
+                        "ozet": ozet,
+                        "zaman": _girdi_zaman(entry),
+                        "_ts": _girdi_utc(entry) or datetime.min.replace(tzinfo=timezone.utc),
+                    })
             except Exception as e:
                 logger.warning("RSS hatası (%s): %s", url, e)
     return out
@@ -146,10 +146,6 @@ def _sirala_ve_tekillestir(kayitlar: list[dict[str, Any]]) -> list[dict[str, Any
 
 
 def son_haberler(limit: int = SON_HABER_SAYISI) -> list[dict[str, Any]]:
-    """
-    RSS'den tüm `RSS_KAYNAKLAR` uçlarını tara, birleştirip en yenilerden
-    itibaren `limit` adet listele. Sadece okuma; dosya, oylama veya sinyal yok.
-    """
     n = max(1, min(int(limit), 50))
     toplu = _tum_kayitlari_topla()
     siralı = _sirala_ve_tekillestir(toplu)
@@ -157,5 +153,4 @@ def son_haberler(limit: int = SON_HABER_SAYISI) -> list[dict[str, Any]]:
 
 
 def haber_listesi() -> list[dict[str, Any]]:
-    """Takma ad: son 10 haber (dashboard)."""
     return son_haberler(SON_HABER_SAYISI)
