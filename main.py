@@ -184,7 +184,7 @@ async def piyasa_analizi_job():
         )
         rec = pstore.yeni_alim_ekle(
             0.0, 0.0, skr, yon, gonderilen.message_id, None, g_tl, h_tl, 0.0,
-            tahmini_sure_saat=sure,
+            tahmini_sure_saat=sure, yon=yon,
         )
         sid = (rec or {}).get("id")
         sinyal_logla(
@@ -223,7 +223,7 @@ async def fiyat_takip_job():
             mes_id = s.get("telegram_message_id")
             h_raw = s.get("hedef_tl")
             g_raw = s.get("giris_tl")
-            yon = s.get("reason") or "long"
+            yon = s.get("yon") or "long"
             if h_raw is None or g_raw is None:
                 continue
             h_tl = float(h_raw)

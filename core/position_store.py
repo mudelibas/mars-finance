@@ -64,6 +64,7 @@ def yeni_alim_ekle(
     hedef_tl=None,
     atr_half_tl=None,
     tahmini_sure_saat=None,
+    yon: str = "long",
 ):
     sid = str(uuid.uuid4())[:12]
     now = datetime.now(TR).strftime("%Y-%m-%d %H:%M:%S")
@@ -81,6 +82,7 @@ def yeni_alim_ekle(
         "created": now,
         "confidence": float(confidence or 0.0),
         "reason": reason_short or "",
+        "yon": yon,
         "telegram_message_id": telemesaj_id,
         "meta": meta or {},
         "early_80_alerts_sent": False,
