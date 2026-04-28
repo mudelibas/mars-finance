@@ -1058,6 +1058,22 @@ function setIndChangeText(el, degisimYuzde, aciklama) {
   setIndBorder(el, degisimYuzde ?? 0);
 }
 
+function _gerisayimMetni(created, tahminiSureStr) {
+  if (!created || !tahminiSureStr) return null;
+  const sure = parseInt(tahminiSureStr, 10);
+  if (!(sure > 0)) return null;
+  // "2026-04-28 05:27:36" → TR+3 varsayımıyla parse
+  const iso = String(created).replace(' ', 'T') + '+03:00';
+  const bitis = new Date(new Date(iso).getTime() + sure * 3600 * 1000);
+  const kalan = bitis - Date.now();
+  if (kalan <= 0) return { metin: 'Süre aşıldı', asimdi: true };
+  const toplamDk = Math.floor(kalan / 60000);
+  const saat = Math.floor(toplamDk / 60);
+  const dk = toplamDk % 60;
+  const metin = saat > 0 ? `${saat}s ${dk}dk kaldı` : `${dk}dk kaldı`;
+  return { metin, asimdi: false };
+}
+
 function openSignalsHomeRender(openList, expanded) {
   const el = document.getElementById('open-signals-home');
   if (!el) return;
@@ -1072,9 +1088,14 @@ function openSignalsHomeRender(openList, expanded) {
     const t = s.hedef_tl != null ? '₺' + Number(s.hedef_tl).toFixed(2) : '—';
     const nk = netHedefYuzde(s.giris_tl, s.hedef_tl);
     const st = s.created || '—';
-    return `<div class="open-sig-row">
+    const gs = _gerisayimMetni(s.created, s.tahmini_sure_saat);
+    const gsHtml = gs
+      ? `<span style="font-size:10px;color:${gs.asimdi ? 'var(--red)' : 'var(--muted)'}">⏱ ${gs.metin}</span>`
+      : '';
+    return `<div class="open-sig-row" data-sid="${_esc(s.id || '')}">
       <div class="os-line"><span><strong style="color:var(--text)">Giriş</strong> ${g}</span><span><strong style="color:var(--text)">Hedef</strong> ${t}</span></div>
       <div class="os-line"><span>Tahmini hedef kârı <strong style="color:var(--silver)">${nk}</strong></span><span class="os-tarih">${_esc(st)}</span></div>
+      ${gsHtml ? `<div class="os-line" style="margin-top:2px">${gsHtml}</div>` : ''}
     </div>`;
   }).join('');
   let more = '';
@@ -1318,6 +1339,12 @@ async function veriYukle() {
 
 window.onload=veriYukle;
 setInterval(veriYukle,30000);
+// Geri sayımı her dakika API'ye gitmeden yenile
+setInterval(function() {
+  if (lastOpenSigs && lastOpenSigs.length) {
+    openSignalsHomeRender(lastOpenSigs, openSigsExpand);
+  }
+}, 60000);
 </script>
 </body>
 </html>
