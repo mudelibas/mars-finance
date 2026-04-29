@@ -1074,7 +1074,7 @@ function _gerisayimMetni(created, tahminiSureStr) {
   const iso = String(created).replace(' ', 'T') + '+03:00';
   const bitis = new Date(new Date(iso).getTime() + sure * 3600 * 1000);
   const kalan = bitis - Date.now();
-  if (kalan <= 0) return { metin: 'Süre aşıldı', asimdi: true };
+  if (kalan <= 0) return { metin: 'Riskli', asimdi: true };
   const toplamDk = Math.floor(kalan / 60000);
   const saat = Math.floor(toplamDk / 60);
   const dk = toplamDk % 60;
@@ -1098,7 +1098,7 @@ function openSignalsHomeRender(openList, expanded) {
     const st = s.created || '—';
     const gs = _gerisayimMetni(s.created, s.tahmini_sure_saat);
     const gsHtml = gs
-      ? `<span style="font-size:10px;color:${gs.asimdi ? 'var(--red)' : 'var(--muted)'}">⏱ ${gs.metin}</span>`
+      ? `<span style="font-size:10px;color:${gs.asimdi ? 'var(--red)' : 'var(--green)'}">⏱ ${gs.metin}</span>`
       : '';
     return `<div class="open-sig-row" data-sid="${_esc(s.id || '')}">
       <div class="os-line"><span><strong style="color:var(--text)">Giriş</strong> ${g} ${gsHtml}</span><span><strong style="color:var(--text)">Hedef</strong> ${t}</span></div>
