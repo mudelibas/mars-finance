@@ -1,7 +1,6 @@
 import fcntl
 import logging
 import asyncio
-import json
 import os
 import sys
 import threading
@@ -49,8 +48,6 @@ def _acquire_telegram_process_lock():
 
 
 TR = timezone(timedelta(hours=3))
-PERFORMANS_DOSYA = "performans.json"
-LOG_DOSYA = "sinyal_log.json"
 PIYASA_ARALIK_SANIYE = 60
 FIYAT_TAKIP_SANIYE = 60
 
@@ -66,67 +63,6 @@ def config_dict() -> dict:
         if not k.startswith("_")
         and isinstance(getattr(cfg, k), (int, float, str, list, dict))
     }
-
-
-def sinyal_logla(
-    tip,
-    giris_tl,
-    cikis_tl=None,
-    kar_yuzde=None,
-    giris_tarihi=None,
-    hedef_tl=None,
-    stop_tl=None,
-    skor=None,
-    entry_usd=None,
-    tp_usd=None,
-    sinyal_id=None,
-    net_kar_yuzde=None,
-    yon=None,
-):
-    log = []
-    if os.path.exists(LOG_DOSYA):
-        with open(LOG_DOSYA) as f:
-            log = json.load(f)
-    if giris_tarihi is None and tip == "ALIM":
-        giris_tarihi = datetime.now(TR).strftime("%Y-%m-%d %H:%M")
-    rec = {
-        "tip": tip,
-        "tarih": datetime.now(TR).strftime("%Y-%m-%d %H:%M"),
-        "giris_tarihi": giris_tarihi,
-        "giris_tl": giris_tl,
-        "cikis_tl": cikis_tl,
-        "hedef_tl": hedef_tl,
-        "stop_tl": stop_tl,
-        "kar_yuzde": kar_yuzde,
-        "skor": skor,
-        "entry_usd": entry_usd,
-        "tp_usd": tp_usd,
-        "signal_id": sinyal_id,
-        "yon": yon,
-    }
-    if net_kar_yuzde is not None:
-        rec["net_kar_yuzde"] = net_kar_yuzde
-    log.append(rec)
-    with open(LOG_DOSYA, "w") as f:
-        json.dump(log, f, ensure_ascii=False, indent=2)
-
-
-def performans_guncelle(kar_yuzde) -> dict:
-    veri = {
-        "toplam_kar": 0.0,
-        "islem": 0,
-        "baslangic": datetime.now(TR).strftime("%d.%m.%Y"),
-        "bildirim": False,
-    }
-    if os.path.exists(PERFORMANS_DOSYA):
-        with open(PERFORMANS_DOSYA) as f:
-            veri = json.load(f)
-    veri["toplam_kar"] = float(veri.get("toplam_kar", 0)) + float(kar_yuzde or 0)
-    veri["islem"] = int(veri.get("islem", 0)) + 1
-    veri["bildirim"] = False
-    with open(PERFORMANS_DOSYA, "w") as f:
-        json.dump(veri, f)
-    return veri
 
 
 def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar_yuzde: float, yon: str) -> str:
@@ -187,16 +123,6 @@ async def piyasa_analizi_job():
             tahmini_sure_saat=sure, yon=yon,
         )
         sid = (rec or {}).get("id")
-        sinyal_logla(
-            "ALIM",
-            giris_tl=g_tl,
-            hedef_tl=h_tl,
-            stop_tl=None,
-            skor=skr,
-            sinyal_id=sid,
-            net_kar_yuzde=netp,
-            yon=yon,
-        )
         logger.info("Sinyal açıldı: yon=%s id=%s sure=%ss", yon, sid, sure)
     except Exception as e:
         logger.error("Piyasa analizi hatası: %s", e, exc_info=True)
@@ -242,9 +168,6 @@ async def fiyat_takip_job():
                     text=msg,
                     reply_to_message_id=mes_id,
                 )
-                sinyal_logla("SATIS", giris_tl=g_tl, cikis_tl=cikis, hedef_tl=h_tl,
-                             kar_yuzde=pnl, giris_tarihi=s.get("created"), sinyal_id=mid, yon=yon)
-                performans_guncelle(pnl)
                 pstore.sinyal_kapat(mid, 0, "TP", cikis_tl=cikis)
 
             elif yon == "short" and sat_f <= h_tl + 1e-6:
@@ -260,9 +183,6 @@ async def fiyat_takip_job():
                     text=msg,
                     reply_to_message_id=mes_id,
                 )
-                sinyal_logla("SATIS", giris_tl=g_tl, cikis_tl=cikis, hedef_tl=h_tl,
-                             kar_yuzde=pnl, giris_tarihi=s.get("created"), sinyal_id=mid, yon=yon)
-                performans_guncelle(pnl)
                 pstore.sinyal_kapat(mid, 0, "TP", cikis_tl=cikis)
 
             else:

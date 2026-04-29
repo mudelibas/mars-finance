@@ -1,11 +1,8 @@
-import json
 import os
 import sys
 import time
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
-
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
@@ -29,39 +26,8 @@ app = Flask(__name__, static_folder="dashboard")
 CORS(app)
 
 TR = timezone(timedelta(hours=3))
-LOG_DOSYA = "sinyal_log.json"
 _cache = {"veri": None, "zaman": 0.0}
 CACHE_SURE = 60
-
-PERFORMANS_DOSYA = "performans.json"
-
-
-def _sinyal_log_oku() -> List[Any]:
-    if not os.path.exists(LOG_DOSYA):
-        return []
-    with open(LOG_DOSYA, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def _performans_oku() -> Dict[str, Any]:
-    if not os.path.exists(PERFORMANS_DOSYA):
-        return {}
-    with open(PERFORMANS_DOSYA, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def _son_sinyal_kayit(log: List[Any]) -> Optional[Dict[str, Any]]:
-    for r in reversed(log):
-        if r.get("tip") == "ALIM":
-            return {
-                "giris_tl": r.get("giris_tl"),
-                "hedef_tl": r.get("hedef_tl"),
-                "net_kar_yuzde": r.get("net_kar_yuzde"),
-                "skor": r.get("skor", r.get("kurul_gorusu")),
-                "tarih": r.get("tarih") or r.get("giris_tarihi"),
-                "signal_id": r.get("signal_id"),
-            }
-    return None
 
 
 def _config_dict() -> dict:
@@ -86,21 +52,13 @@ def durum():
         pctx = get_market_context() or {}
         gumus_degisim = pctx.get("gumus_degisim_yuzde") or 0
 
-        log = _sinyal_log_oku()
-        son_sinyal = _son_sinyal_kayit(log)
-
         ev = sinyal_uret(_config_dict())
         veto = None if ev.get("sinyal") else (ev.get("red_neden") or None)
 
         st = pstore.istatistik_ozet()
-        pf = _performans_oku()
-        toplam_isl = int(pf.get("islem", 0) or 0)
-        if toplam_isl < int(st.get("closed_count") or 0):
-            toplam_isl = int(st.get("closed_count") or 0)
 
         open_sig = pstore.tüm_acikler()
         ledger = pstore.tüm_kayitlar()[-50:]
-        log_tail = list(reversed(log))[:20] if log else []
 
         veri = {
             "gumus_alis": gumus_alis,
@@ -108,13 +66,11 @@ def durum():
             "gumus_makas": gumus_makas,
             "altin_alis": altin_alis,
             "altin_satis": altin_satis,
-            "son_sinyal": son_sinyal,
-            "sinyal_log": log_tail,
             "open_signals": open_sig,
             "signal_ledger": ledger,
             "stats": {
                 "kazanma_orani_yuzde": st.get("success_rate_pct"),
-                "toplam_islem_sayisi": toplam_isl,
+                "toplam_islem_sayisi": int(st.get("closed_count") or 0),
                 "kapanan_sinyal": st.get("closed_count", 0),
                 "kazanan_kapanis": st.get("wins", 0),
                 "aktif_sinyal": st.get("active_count", 0),
