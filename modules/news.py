@@ -90,7 +90,8 @@ def _filtre_gec(title: str, ozet: str, kategori: str) -> bool:
     if not kelimeler:
         return True
     metin = (title + " " + ozet).lower()
-    return any(k.lower() in metin for k in kelimeler)
+    eslesen = sum(1 for k in kelimeler if k.lower() in metin)
+    return eslesen >= 2
 
 
 def _tum_kayitlari_topla() -> list[dict[str, Any]]:
