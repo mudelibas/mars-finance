@@ -286,6 +286,14 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
   color: var(--text);
   max-width: 9em;
 }
+.ledger-tbl td.ledger-dur--risk {
+  color: var(--red);
+  font-weight: 600;
+}
+.ledger-tbl td.ledger-dur--ok {
+  color: var(--green);
+  font-weight: 600;
+}
 .tradingview-host { min-height: 300px; width: 100%; }
 .tabs .badge {
   background: var(--red);
@@ -1150,20 +1158,25 @@ function ledgerSiralamaYeniOnce(ledger) {
   });
 }
 
-function durumMetni(s) {
+function durumLedgerHucre(s) {
   const st = s.status;
   if (st === 'OPEN') {
     const sure = parseInt(s.tahmini_sure_saat || 28);
     const iso = String(s.created || '').replace(' ', 'T') + '+03:00';
     const gecenSaat = (Date.now() - new Date(iso).getTime()) / 3600000;
-    if (gecenSaat > sure) return '<span style="color:var(--red);font-weight:600">Riskli</span>';
-    return '<span>Açık</span>';
+    if (gecenSaat > sure) return { cls: 'ledger-dur ledger-dur--risk', text: 'Riskli' };
+    return { cls: 'ledger-dur', text: 'Açık' };
   }
   if (st === 'CLOSED') {
     const n = (s.close_reason || '').toString().toUpperCase();
-    if (n === 'TP') return '<span style="color:var(--green);font-weight:600">Başarılı (' + trDateGoster(s.closed) + ')</span>';
+    if (n === 'TP') {
+      return {
+        cls: 'ledger-dur ledger-dur--ok',
+        text: 'Başarılı (' + trDateGoster(s.closed) + ')',
+      };
+    }
   }
-  return '—';
+  return { cls: 'ledger-dur', text: '—' };
 }
 
 function sinyalTabLedgerRender(ledger) {
@@ -1177,8 +1190,8 @@ function sinyalTabLedgerRender(ledger) {
     const e = (g0 != null) ? ('₺' + Number(g0).toFixed(2)) : (s.entry_target_usd != null ? '$' + s.entry_target_usd.toFixed(2) : '—');
     const t = (h0 != null) ? ('₺' + Number(h0).toFixed(2)) : (s.tp_usd != null ? '$' + s.tp_usd.toFixed(2) : '—');
     const tr = s.status === 'OPEN' ? (s.created || '—') : (s.closed || s.created || '—');
-    const dm = durumMetni(s);
-    return '<tr><td style="font-size:11px;color:var(--muted)">' + _esc(tr) + '</td><td>' + e + '</td><td>' + t + '</td><td class="ledger-dur">' + _esc(dm) + '</td></tr>';
+    const du = durumLedgerHucre(s);
+    return '<tr><td style="font-size:11px;color:var(--muted)">' + _esc(tr) + '</td><td>' + e + '</td><td>' + t + '</td><td class="' + du.cls + '">' + _esc(du.text) + '</td></tr>';
   }).join('');
   el.innerHTML = '<table class="ledger-tbl" role="table" aria-label="Sinyal defteri"><thead><tr><th>Tarih</th><th>Giriş</th><th>Hedef</th><th>Durum</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
