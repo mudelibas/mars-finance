@@ -119,7 +119,7 @@ async def piyasa_analizi_job():
             text=text,
         )
         rec = pstore.yeni_alim_ekle(
-            0.0, 0.0, skr, yon, gonderilen.message_id, None, g_tl, h_tl, 0.0,
+            yon, gonderilen.message_id, None, g_tl, h_tl,
             tahmini_sure_saat=sure, yon=yon,
         )
         sid = (rec or {}).get("id")
@@ -160,21 +160,6 @@ async def fiyat_takip_job():
                 pnl = ((cikis - g_tl) / g_tl) * 100.0 if g_tl > 0 else 0.0
                 msg = (
                     f"🎯 Hedefe ulaşıldı (AL)\n"
-                    f"Giriş: ₺{g_tl:.2f} → Çıkış: ₺{cikis:.2f}\n"
-                    f"Kâr: %{pnl:.2f}"
-                )
-                await bot.send_message(
-                    chat_id=cfg.TELEGRAM_GROUP_ID,
-                    text=msg,
-                    reply_to_message_id=mes_id,
-                )
-                pstore.sinyal_kapat(mid, 0, "TP", cikis_tl=cikis)
-
-            elif yon == "short" and sat_f <= h_tl + 1e-6:
-                cikis = sat_f
-                pnl = ((g_tl - cikis) / g_tl) * 100.0 if g_tl > 0 else 0.0
-                msg = (
-                    f"🎯 Hedefe ulaşıldı (SAT)\n"
                     f"Giriş: ₺{g_tl:.2f} → Çıkış: ₺{cikis:.2f}\n"
                     f"Kâr: %{pnl:.2f}"
                 )

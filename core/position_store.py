@@ -10,8 +10,6 @@ from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from config import SINYAL_MAKS_AKTIF, SINYAL_MAKS_OLCEKLE
-
 logger = logging.getLogger(__name__)
 TR = timezone(timedelta(hours=3))
 
@@ -42,27 +40,12 @@ def _init_db():
 _init_db()
 
 
-def acik_sinyal_sayisi() -> int:
-    try:
-        with _conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT COUNT(*) FROM signals WHERE status = 'OPEN'")
-                return cur.fetchone()[0]
-    except Exception as e:
-        logger.error(f"acik_sinyal_sayisi hatası: {e}")
-        return 0
-
-
 def yeni_alim_ekle(
-    entry_usd=0.0,
-    tp_usd=0.0,
-    confidence=0.0,
     reason_short="",
     telemesaj_id=None,
     meta=None,
     giris_tl=None,
     hedef_tl=None,
-    atr_half_tl=None,
     tahmini_sure_saat=None,
     yon: str = "long",
 ):
@@ -71,21 +54,14 @@ def yeni_alim_ekle(
     rec = {
         "id": sid,
         "status": "OPEN",
-        "entry_target_usd": float(entry_usd) if entry_usd else 0.0,
-        "tp_usd": float(tp_usd) if tp_usd else 0.0,
         "giris_tl": float(giris_tl) if giris_tl is not None else None,
         "hedef_tl": float(hedef_tl) if hedef_tl is not None else None,
-        "atr_half_tl": float(atr_half_tl) if atr_half_tl is not None else None,
         "tahmini_sure_saat": int(tahmini_sure_saat) if tahmini_sure_saat is not None else 28,
-        "scales_filled": 0,
-        "scales_max": SINYAL_MAKS_OLCEKLE,
         "created": now,
-        "confidence": float(confidence or 0.0),
         "reason": reason_short or "",
         "yon": yon,
         "telegram_message_id": telemesaj_id,
         "meta": meta or {},
-        "early_80_alerts_sent": False,
     }
     try:
         with _conn() as conn:
@@ -150,22 +126,6 @@ def sinyal_kapat(
     except Exception as e:
         logger.error(f"sinyal_kapat hatası: {e}")
         return None
-
-
-def early_alert_isaretle(sinyal_id):
-    try:
-        with _conn() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute("SELECT data FROM signals WHERE id = %s AND status = 'OPEN'", (sinyal_id,))
-                row = cur.fetchone()
-                if not row:
-                    return
-                d = dict(row["data"])
-                d["early_80_alerts_sent"] = True
-                cur.execute("UPDATE signals SET data = %s WHERE id = %s", (json.dumps(d), sinyal_id))
-            conn.commit()
-    except Exception as e:
-        logger.error(f"early_alert_isaretle hatası: {e}")
 
 
 def tüm_kayitlar():

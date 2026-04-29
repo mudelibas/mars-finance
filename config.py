@@ -5,14 +5,6 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_GROUP_ID = os.getenv("TELEGRAM_GROUP_ID")
 TWELVEDATA_API_KEY = os.getenv("TWELVEDATA_API_KEY")
 
-# ─── Sinyal yönetimi & hedefler ─────────────────────────────
-SINYAL_MAKS_AKTIF = 2
-SINYAL_MAKS_OLCEKLE = 3
-NET_KAR_MIN_YDE = 1.0
-VERGI_YDE = 0.2
-SKOR_ESIK = 65
-SAPMA_BAZ_YDE = 0.3
-SWEEP_MIN_MUM = 3
 STALE_DATA_DAKIKA = 15
 
 # ─── RSS Kaynakları ──────────────────────────────────────────

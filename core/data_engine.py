@@ -20,8 +20,6 @@ _MARKET_CONTEXT_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
 _MARKET_CONTEXT_TTL = 300.0
 _SILVER_MTF_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
 _MTF_TTL = 300.0
-_USDTRY_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
-_USDTRY_TTL = 60.0
 
 # Yahoo-tarzı emtia/sembol isimlerinden Twelve Data sembollerine (SI=F / GC=F COMEX)
 TICKER_XAG = "SI=F"
@@ -29,12 +27,6 @@ TICKER_XAU = "GC=F"
 TD_SYMBOL = {
     "SI=F": "SI",
     "GC=F": "GC",
-    "DX-Y.NYB": "DXY",
-    "^TNX": "TNX",
-    "^VIX": "VIX",
-    "^GSPC": "SPX",
-    "BZ=F": "BRN",
-    "USDTRY=X": "USD/TRY",
 }
 
 # yfinance aralık → Twelve Data
@@ -68,33 +60,6 @@ def _yf_interval_to_td(yf_interval: str) -> str:
     if m is not None:
         return m
     return yf_interval
-
-
-def _period_to_outputsize(period: str, yf_interval: str) -> int:
-    """Yaklaşık barmış gibi: yf period/interval → outputsize (1–5000, üst sınır 5000)."""
-    p = (period or "1mo").lower()
-    num = 30
-    if p.endswith("d"):
-        try:
-            num = int(p.replace("d", ""))
-        except ValueError:
-            num = 5
-    elif p.endswith("mo"):
-        try:
-            num = 30 * int(p.replace("mo", ""))
-        except ValueError:
-            num = 30
-    elif p.endswith("y") or p.endswith("yr"):
-        try:
-            num = 365 * int(re.sub(r"[^0-9]", "", p) or 1)
-        except ValueError:
-            num = 90
-    intv = (yf_interval or "1d").lower()
-    if intv in ("1m", "2m", "5m", "15m", "30m", "1h", "2h", "4h", "1d"):
-        bars = {"1m": 390, "5m": 78, "15m": 26, "1h": 24, "1d": 1}.get(intv, 24) * num
-    else:
-        bars = num
-    return int(max(5, min(5000, bars if bars > 0 else 30)))
 
 
 def _normalize_ohlcv_df(df: pd.DataFrame) -> Optional[pd.DataFrame]:
@@ -172,15 +137,6 @@ def _td_ohlcv(
     return out
 
 
-def _indir(ticker, period, yf_interval):
-    """
-    Eski yfinance sözleşmesi: (ticker, period, yf aralığı) → OHLCV DataFrame.
-    Artık Twelve Data kullanır; ticker Yahoo benzeri (örn. ^TNX, GC=F) olabilir.
-    """
-    osz = _period_to_outputsize(period, yf_interval)
-    return _td_ohlcv(ticker, yf_interval, osz, order="asc")
-
-
 def get_silver_mtf(
     period_1m: str = "5d", period_5m: str = "1mo", period_15m: str = "2mo"
 ):
@@ -214,11 +170,6 @@ def get_silver_mtf(
     return out
 
 
-def get_xau_5m(period: str = "1mo"):
-    del period
-    return _td_ohlcv(TICKER_XAU, "5m", 500, order="asc")
-
-
 def get_xagusd_spot_last():
     try:
         import yfinance as yf
@@ -231,20 +182,6 @@ def get_xagusd_spot_last():
     except Exception as e:
         logger.error(f"yfinance spot hatası: {e}")
     return None
-
-
-def get_silver_data(interval: str = "1h", period: str = "60d"):
-    df = _indir(TICKER_XAG, period, interval)
-    if df is None:
-        raise ValueError(f"Gümüş verisi alınamadı ({interval})")
-    return df
-
-
-def get_gold_data(interval: str = "1h", period: str = "60d"):
-    df = _indir(TICKER_XAU, period, interval)
-    if df is None:
-        raise ValueError(f"Altın verisi alınamadı ({interval})")
-    return df
 
 
 def get_silver_price_dunyakatilim():
@@ -285,34 +222,6 @@ def get_silver_price_dunyakatilim():
         if a is not None and s is not None:
             return a, s, _dunya_makas(a, s)
         return None, None, None
-
-
-def get_usdtry() -> Optional[float]:
-    try:
-        import yfinance as yf
-        df = yf.download("USDTRY=X", period="1d", interval="1m", progress=False, auto_adjust=True)
-        if df is not None and len(df) > 0:
-            return float(df["Close"].iloc[-1].item())
-    except Exception as e:
-        logger.error("USD/TRY fiyat hatası: %s", e)
-    return None
-
-
-def get_silver_price_tl():
-    """
-    Sapma filtresi: SI son USD/oz (Twelve Data) ve USD/TRY → TL/gram
-    (Dünya Katılım fiyatıyla karşılaştırmak için aynı birim).
-    """
-    try:
-        spot = get_xagusd_spot_last()
-        usd_try = get_usdtry()
-        if spot is None or usd_try is None:
-            return None, None
-        try_per_gram = (float(spot) / 31.1035) * float(usd_try)
-        return float(try_per_gram), float(usd_try)
-    except Exception as e:
-        logger.error(f"TL fiyat hatası (gümüş): {e}")
-        return None, None
 
 
 def get_gold_price_dunyakatilim():
@@ -377,54 +286,3 @@ def get_market_context() -> Dict[str, Any]:
     _MARKET_CONTEXT_CACHE = {"data": ctx, "ts": now}
     return ctx
 
-
-def get_cot_data():
-    try:
-        url = "https://www.cftc.gov/dea/newcot/f_disagg.txt"
-        response = requests.get(url, timeout=15)
-        lines = response.text.strip().split("\n")
-        for line in lines:
-            if "SILVER" in line.upper():
-                parts = line.split(",")
-                try:
-                    report_date = parts[2].strip().strip('"')
-                    comm_long = float(parts[7].strip())
-                    comm_short = float(parts[8].strip())
-                    noncomm_long = float(parts[13].strip())
-                    noncomm_short = float(parts[14].strip())
-                    open_interest = float(parts[3].strip())
-                    total = comm_long + comm_short
-                    short_ratio = (comm_short / total) * 100 if total > 0 else 50
-                    net_spekulatif = noncomm_long - noncomm_short
-                    return {
-                        "short_ratio": short_ratio,
-                        "comm_long": comm_long,
-                        "comm_short": comm_short,
-                        "net_spekulatif": net_spekulatif,
-                        "open_interest": open_interest,
-                        "tarih": report_date,
-                    }
-                except Exception as e:
-                    logger.error(f"COT satır ayrıştırma: {e}")
-        return {
-            "short_ratio": 50,
-            "net_spekulatif": 0,
-            "open_interest": 0,
-            "tarih": "bilinmiyor",
-        }
-    except Exception as e:
-        logger.error(f"COT hatası: {e}")
-        return {
-            "short_ratio": 50,
-            "net_spekulatif": 0,
-            "open_interest": 0,
-            "tarih": "bilinmiyor",
-        }
-
-
-def get_macro_data():
-    return {
-        "cpi": 3.0,
-        "fed_rate": 4.5,
-        "ism": 50.0,
-    }
