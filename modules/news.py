@@ -86,12 +86,14 @@ def _girdi_utc(entry: Any) -> Optional[datetime]:
 
 def _filtre_gec(title: str, ozet: str, kategori: str) -> bool:
     """Haber başlık veya özeti kategori anahtar kelimelerinden birini içeriyor mu?"""
-    kelimeler = HABER_FILTRE.get(kategori, [])
+    kelimeler = (HABER_FILTRE.get("finans", []) or []) + (HABER_FILTRE.get("siyasi", []) or [])
     if not kelimeler:
         return True
+    t = (title or "").lower()
     metin = (title + " " + ozet).lower()
-    eslesen = sum(1 for k in kelimeler if k.lower() in metin)
-    return eslesen >= 2
+    baslik_eslesen = sum(1 for k in kelimeler if k.lower() in t)
+    toplam_eslesen = sum(1 for k in kelimeler if k.lower() in metin)
+    return baslik_eslesen >= 1 and toplam_eslesen >= 2
 
 
 def _tum_kayitlari_topla() -> list[dict[str, Any]]:

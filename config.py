@@ -21,13 +21,12 @@ RSS_KAYNAKLAR = {
 # ─── Haber Filtre Kelimeleri ─────────────────────────────────
 HABER_FILTRE = {
     "finans": [
-        "altın", "gümüş", "dolar", "faiz", "enflasyon",
-        "merkez bankası", "fed", "borsa", "emtia", "petrol",
-        "döviz", "euro", "sterlin", "brent", "ham petrol",
+        "altın", "gümüş", "dolar", "fed", "emtia",
+        "petrol", "çin", "elektrik", "güneş enerjisi",
     ],
     "siyasi": [
-        "trump", "israil", "ortadoğu", "suriye", "rusya",
-        "savaş", "gerilim", "hürmüz", "yaptırım", "iran",
-        "ateşkes", "barış", "çatışma", "gerginlik",
+        "trump", "israil", "ortadoğu", "rusya",
+        "savaş", "hürmüz", "yaptırım", "iran",
+        "ateşkes",
     ],
 }
