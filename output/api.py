@@ -118,6 +118,7 @@ def durum():
                 "kapanan_sinyal": st.get("closed_count", 0),
                 "kazanan_kapanis": st.get("wins", 0),
                 "aktif_sinyal": st.get("active_count", 0),
+                "open_older_24h": st.get("open_older_24h", 0),
             },
             "haberler": haber_listesi()[:10],
             "veto_neden": veto,
