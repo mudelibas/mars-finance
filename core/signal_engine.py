@@ -25,11 +25,11 @@ _son_sinyal_mum_ts: Any | None = None
 
 def _tahmini_sure(net_kar: float) -> int:
     if net_kar < 2:
-        return 18
+        return 26
     elif net_kar < 3:
-        return 28
+        return 31
     elif net_kar < 4:
-        return 38
+        return 41
     else:
         return 47
 

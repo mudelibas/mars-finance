@@ -68,11 +68,11 @@ def config_dict() -> dict:
 def _mesaj_yeni_sinyal(giris_tl: float, hedef_tl: float, net_kar_yuzde: float, yon: str) -> str:
     yon_emoji = "📈 AL" if yon == "long" else "📉 SAT"
     if net_kar_yuzde < 2:
-        sure = "~18 saat"
+        sure = "~26 saat"
     elif net_kar_yuzde < 3:
-        sure = "~28 saat"
+        sure = "~31 saat"
     elif net_kar_yuzde < 4:
-        sure = "~38 saat"
+        sure = "~41 saat"
     else:
         sure = "~47 saat"
     return (
