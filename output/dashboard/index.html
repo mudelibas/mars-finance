@@ -1093,9 +1093,8 @@ function openSignalsHomeRender(openList, expanded) {
       ? `<span style="font-size:10px;color:${gs.asimdi ? 'var(--red)' : 'var(--muted)'}">⏱ ${gs.metin}</span>`
       : '';
     return `<div class="open-sig-row" data-sid="${_esc(s.id || '')}">
-      <div class="os-line"><span><strong style="color:var(--text)">Giriş</strong> ${g}</span><span><strong style="color:var(--text)">Hedef</strong> ${t}</span></div>
+      <div class="os-line"><span><strong style="color:var(--text)">Giriş</strong> ${g} ${gsHtml}</span><span><strong style="color:var(--text)">Hedef</strong> ${t}</span></div>
       <div class="os-line"><span>Tahmini hedef kârı <strong style="color:var(--silver)">${nk}</strong></span><span class="os-tarih">${_esc(st)}</span></div>
-      ${gsHtml ? `<div class="os-line" style="margin-top:2px">${gsHtml}</div>` : ''}
     </div>`;
   }).join('');
   let more = '';
@@ -1124,12 +1123,20 @@ function statsPanelRender(st) {
   const hedef = st.kazanan_kapanis ?? 0;
   const gecici = st.open_older_24h ?? 0;
   const basari = st.kazanma_orani_yuzde != null ? st.kazanma_orani_yuzde.toFixed(1) + ' %' : '—';
+  let basariValStyle = 'font-weight:700';
+  const ko = st.kazanma_orani_yuzde;
+  if (ko != null) {
+    if (ko < 50) basariValStyle += ';color:var(--red)';
+    else basariValStyle += ';color:var(--green)';
+  }
   el.innerHTML = (
     '<div class="kpi-grid">' +
     kpiFormatTile('Açık sinyal', String(akt), '') +
     kpiFormatTile('Hedefe ulaşan', String(hedef), '') +
     kpiFormatTile('Riskli sinyal', String(gecici), '') +
-    kpiFormatTile('Başarı oranı', basari, '') +
+    '<div class="kpi-tile">' +
+    '<span class="kpi-tile__label">' + _esc('Başarı oranı') + '</span>' +
+    '<span class="kpi-tile__val" style="' + basariValStyle + '">' + _esc(basari) + '</span></div>' +
     '</div>'
   );
 }
