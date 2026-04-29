@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 SEVIYE_PENCERE = 20
 MIN_KAR_CARPAN = 1.0125
 
+_son_sinyal_giris: float | None = None
+_son_sinyal_mum_ts: Any | None = None
+
 
 def _tahmini_sure(net_kar: float) -> int:
     if net_kar < 2:
@@ -65,6 +68,7 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
 def degerlendir(
     config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    global _son_sinyal_giris, _son_sinyal_mum_ts
     del config
 
     nmk: Dict[str, Any] = {
@@ -115,6 +119,18 @@ def degerlendir(
     nmk["net_kar_yuzde"]     = round(net_kar, 2)
     nmk["tahmini_sure_saat"] = sure
     nmk["red_neden"]         = None
+
+    son_mum_ts = o15.iloc[-1].name
+    if _son_sinyal_mum_ts == son_mum_ts:
+        if _son_sinyal_giris is not None and giris_tl >= _son_sinyal_giris:
+            nmk["sinyal"] = False
+            nmk["red_neden"] = "Aynı mumda daha iyi fiyat bekleniyor"
+            return nmk
+        _son_sinyal_giris = giris_tl
+        _son_sinyal_mum_ts = son_mum_ts
+    else:
+        _son_sinyal_giris = giris_tl
+        _son_sinyal_mum_ts = son_mum_ts
 
     return nmk
 

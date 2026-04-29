@@ -6,9 +6,8 @@ from typing import Any, Dict, Optional
 
 import pandas as pd
 import requests
-from twelvedata import TDClient
 
-from config import STALE_DATA_DAKIKA, TWELVEDATA_API_KEY
+from config import STALE_DATA_DAKIKA
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +23,6 @@ _MTF_TTL = 300.0
 # Yahoo-tarzı emtia/sembol isimlerinden Twelve Data sembollerine (SI=F / GC=F COMEX)
 TICKER_XAG = "SI=F"
 TICKER_XAU = "GC=F"
-TD_SYMBOL = {
-    "SI=F": "SI",
-    "GC=F": "GC",
-}
 
 # yfinance aralık → Twelve Data
 _YF_INT_TO_TD = {
@@ -48,20 +43,6 @@ def _dunya_makas(alis, satis):
     return None
 
 
-def _get_td_client() -> Optional[TDClient]:
-    if not TWELVEDATA_API_KEY:
-        logger.error("TWELVEDATA_API_KEY tanımlı değil")
-        return None
-    return TDClient(apikey=TWELVEDATA_API_KEY)
-
-
-def _yf_interval_to_td(yf_interval: str) -> str:
-    m = _YF_INT_TO_TD.get(yf_interval)
-    if m is not None:
-        return m
-    return yf_interval
-
-
 def _normalize_ohlcv_df(df: pd.DataFrame) -> Optional[pd.DataFrame]:
     if df is None or len(df) == 0:
         return None
@@ -80,61 +61,6 @@ def _normalize_ohlcv_df(df: pd.DataFrame) -> Optional[pd.DataFrame]:
     if "Close" not in out.columns:
         return None
     return out.sort_index()
-
-
-def _td_ohlcv(
-    yahoo_like_symbol: str,
-    yf_interval: str,
-    outputsize: int,
-    order: str = "asc",
-) -> Optional[pd.DataFrame]:
-    td_sym = TD_SYMBOL.get(yahoo_like_symbol, yahoo_like_symbol)
-    int_td = _yf_interval_to_td(yf_interval)
-    if int_td not in {
-        "1min",
-        "2min",
-        "5min",
-        "15min",
-        "30min",
-        "45min",
-        "1h",
-        "2h",
-        "4h",
-        "8h",
-        "1day",
-        "1week",
-        "1month",
-    }:
-        int_td = "1day" if (yf_interval or "1d") in ("1d", "1day") else "5min"
-    client = _get_td_client()
-    if not client:
-        return None
-    try:
-        ts = client.time_series(
-            symbol=td_sym,
-            interval=int_td,
-            outputsize=min(5000, max(1, int(outputsize))),
-            order=order,
-            timezone="UTC",
-        )
-        df = ts.as_pandas()
-    except Exception as e:
-        logger.error(f"Twelve Data time_series hata ({td_sym} {int_td}): {e}")
-        return None
-    if df is None or len(df) == 0:
-        return None
-    out = _normalize_ohlcv_df(df)
-    if out is None or len(out) < 1:
-        return None
-    son_zaman = out.index[-1]
-    if hasattr(son_zaman, "tzinfo") and son_zaman.tzinfo is None:
-        son_zaman = son_zaman.tz_localize("UTC")
-    gecen = (datetime.now(timezone.utc) - son_zaman).total_seconds() / 60
-    if yf_interval in ("5m", "15m") and gecen > STALE_DATA_DAKIKA:
-        logger.warning(
-            f"{td_sym} ({yf_interval}) verisi {gecen:.0f} dk eski (eşik {STALE_DATA_DAKIKA})."
-        )
-    return out
 
 
 def get_silver_mtf(
