@@ -5,9 +5,6 @@
 # 15 dakika bekleme: ard arda sinyal önlenir
 
 import logging
-import os
-import json
-import time
 from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
@@ -19,30 +16,8 @@ from core.data_engine import (
 
 logger = logging.getLogger(__name__)
 
-_ROOT = os.path.dirname(os.path.abspath(__file__))
-_SETUP_STATE_DOSYA = os.path.join(_ROOT, "signal_setup_state.json")
-
 SEVIYE_PENCERE = 20
 MIN_KAR_CARPAN = 1.0125
-BEKLEME_SANIYE = 900  # 15 dakika
-
-
-def _state_yukle() -> Dict[str, Any]:
-    if not os.path.exists(_SETUP_STATE_DOSYA):
-        return {}
-    try:
-        with open(_SETUP_STATE_DOSYA, encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return {}
-
-
-def _state_kaydet(d: Dict[str, Any]) -> None:
-    try:
-        with open(_SETUP_STATE_DOSYA, "w", encoding="utf-8") as f:
-            json.dump(d, f, ensure_ascii=False, indent=2)
-    except OSError as e:
-        logger.warning("signal state yazılamadı: %s", e)
 
 
 def _tahmini_sure(net_kar: float) -> int:
@@ -103,16 +78,6 @@ def degerlendir(
         "red_neden": None,
     }
 
-    # 15 dakika bekleme kontrolü
-    stt = _state_yukle()
-    son = stt.get("son_sinyal") or {}
-    if son.get("t"):
-        gecen = time.time() - float(son["t"])
-        if gecen < BEKLEME_SANIYE:
-            kalan = int((BEKLEME_SANIYE - gecen) / 60) + 1
-            nmk["red_neden"] = f"Son sinyalden {kalan} dk bekle"
-            return nmk
-
     # Fiyat verisi
     al, st, mks = get_silver_price_dunyakatilim()
     if al is None or st is None:
@@ -150,17 +115,6 @@ def degerlendir(
     nmk["net_kar_yuzde"]     = round(net_kar, 2)
     nmk["tahmini_sure_saat"] = sure
     nmk["red_neden"]         = None
-
-    _state_kaydet({
-        "son_sinyal": {
-            "giris_tl":          giris_tl,
-            "hedef_tl":          hedef_tl,
-            "yon":               "long",
-            "hedef_yuzde":       hedef_yuzde,
-            "tahmini_sure_saat": sure,
-            "t":                 time.time(),
-        }
-    })
 
     return nmk
 
