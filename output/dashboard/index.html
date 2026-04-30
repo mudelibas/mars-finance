@@ -981,7 +981,86 @@ footer {
       <div id="tab-panel-haber" class="tab-scene" data-panel="haber" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-haber" aria-label="Haberler">
         <h1 class="tab-screen-title">Haberler</h1>
         <div class="haberler-panel" id="haber-panel-wrap">
-          <div id="haber-log"><div class="log-bos">Henüz haber kaydı yok.</div></div>
+
+          <!-- FED GERİ SAYIM -->
+          <div style="margin-bottom:24px">
+            <p style="font-size:13px;color:var(--muted);margin:0 0 4px 0">Sıradaki FED Kararına</p>
+            <p id="fed-countdown" style="font-size:15px;font-weight:600;color:var(--text);margin:0">— gün — saat — dakika — saniye kaldı</p>
+          </div>
+
+          <!-- TRUMP NE DEDİ -->
+          <div style="margin-bottom:24px">
+            <h2 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 12px 0">Trump Ne Dedi?</h2>
+            <div id="trump-posts">
+              <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 4px 0">30 Nis 2026 · 14:32</p>
+                <p style="font-size:13px;color:var(--text);margin:0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              </div>
+              <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 4px 0">30 Nis 2026 · 11:15</p>
+                <p style="font-size:13px;color:var(--text);margin:0">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+              </div>
+              <div style="margin-bottom:0;padding-bottom:0">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 4px 0">29 Nis 2026 · 22:47</p>
+                <p style="font-size:13px;color:var(--text);margin:0">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- GÜMÜŞ & ALTIN SON DAKİKA -->
+          <div style="margin-bottom:24px">
+            <h2 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 12px 0">Gümüş & Altın Son Dakika</h2>
+            <div id="gumus-altin-haberler">
+              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">17:11</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Gümüş fiyatları rekor kırdı, analistler yorum yaptı</p>
+              </div>
+              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">15:25</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Altın ons fiyatı Fed beklentisiyle geriledi</p>
+              </div>
+              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">13:40</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Gümüş talebinde Çin kaynaklı artış gözlemlendi</p>
+              </div>
+              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">11:05</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Altın yatırımcıları enflasyon verisini bekliyor</p>
+              </div>
+              <div>
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">09:30</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Gümüş ETF alımları hız kazandı</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- POLİTİKA -->
+          <div style="margin-bottom:24px">
+            <h2 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 12px 0">Politika</h2>
+            <div id="politika-haberler">
+              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">16:45</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">İran ile müzakereler yeniden başladı, piyasalar izliyor</p>
+              </div>
+              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">14:20</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Trump yeni yaptırım paketini açıkladı</p>
+              </div>
+              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">12:37</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Hürmüz Boğazı'nda gerilim tırmanıyor</p>
+              </div>
+              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">10:15</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Ortadoğu'da ateşkes görüşmeleri sürdü</p>
+              </div>
+              <div>
+                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">08:52</p>
+                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Rusya petrol ihracatında kısıtlamaya gidiyor</p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
