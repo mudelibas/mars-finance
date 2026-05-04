@@ -194,7 +194,7 @@ async def main():
     logger.info("Dashboard: 0.0.0.0:5000")
     sched = AsyncIOScheduler(timezone=timezone.utc)
     sched.add_job(piyasa_analizi_job, "interval", seconds=PIYASA_ARALIK_SANIYE, id="piyasa")
-    sched.add_job(fiyat_takip_job, "interval", seconds=FIYAT_TAKIP_SANIYE, id="takip")
+    sched.add_job(fiyat_takip_job, "interval", seconds=30, id="takip", start_date=datetime.now(timezone.utc).replace(second=30, microsecond=0))
     sched.start()
     await piyasa_analizi_job()
     while True:
