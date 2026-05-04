@@ -49,7 +49,7 @@ def _acquire_telegram_process_lock():
 
 TR = timezone(timedelta(hours=3))
 PIYASA_ARALIK_SANIYE = 60
-FIYAT_TAKIP_SANIYE = 60
+FIYAT_TAKIP_SANIYE = 30
 
 
 def hafta_sonu_mu() -> bool:
