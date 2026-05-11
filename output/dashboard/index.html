@@ -1262,7 +1262,7 @@ function sinyalTabLedgerRender(ledger) {
   const el = document.getElementById('sinyal-tab-ledger');
   if (!el) return;
   const L0 = ledger && ledger.length ? ledger : [];
-  const L = ledgerSiralamaYeniOnce(L0).slice(0, 30);
+  const L = ledgerSiralamaYeniOnce(L0).slice(0, 110);
   if (!L.length) { el.innerHTML = '<div class="log-bos">Kayıt yok.</div>'; return; }
   const rows = L.map(s => {
     const g0 = s.giris_tl, h0 = s.hedef_tl;
