@@ -32,6 +32,13 @@ def _init_db():
                         created_at TIMESTAMPTZ DEFAULT NOW()
                     )
                 """)
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS sinyal_state (
+                        key TEXT PRIMARY KEY,
+                        value TEXT NOT NULL,
+                        updated_at TIMESTAMPTZ DEFAULT NOW()
+                    )
+                """)
             conn.commit()
     except Exception as e:
         logger.error(f"DB init hatası: {e}")
@@ -253,3 +260,28 @@ def istatistik_ozet():
             "wins": 0,
             "success_rate_pct": None,
         }
+
+        def state_oku(key: str) -> Optional[str]:
+    try:
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT value FROM sinyal_state WHERE key = %s", (key,))
+                row = cur.fetchone()
+                return row[0] if row else None
+    except Exception as e:
+        logger.error(f"state_oku hatası: {e}")
+        return None
+
+
+        def _state_yaz(key: str, value: str):
+    try:
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO sinyal_state (key, value, updated_at)
+                    VALUES (%s, %s, NOW())
+                    ON CONFLICT (key) DO UPDATE SET value = %s, updated_at = NOW()
+                """, (key, value, value))
+            conn.commit()
+    except Exception as e:
+        logger.error(f"state_yaz hatası: {e}")
