@@ -74,6 +74,8 @@ def durum():
                 "kazanan_kapanis": st.get("wins", 0),
                 "aktif_sinyal": st.get("active_count", 0),
                 "open_older_24h": st.get("open_older_24h", 0),
+                "ort_sure_saat": st.get("ort_sure_saat"),
+                "strict_success_rate_pct": st.get("strict_success_rate_pct"),
             },
             "veto_neden": veto,
             "guncelleme": datetime.now(TR).replace(microsecond=0).isoformat(),
