@@ -1022,7 +1022,7 @@ function openSignalsHomeRender(openList, expanded) {
       : '';
     return `<div class="open-sig-row" data-sid="${_esc(s.id || '')}">
       <div class="os-line"><span><strong style="color:var(--text)">Giriş</strong> ${g} ${gsHtml}</span><span><strong style="color:var(--text)">Hedef</strong> ${t}</span></div>
-      <div class="os-line"><span>Tahmini hedef kârı <strong style="color:var(--silver)">${nk}</strong></span><span class="os-tarih">${_esc(st)}</span></div>
+      <div class="os-line"><span class="os-tarih">${_esc(st)}</span><span>Tahmini hedef kârı <strong style="color:var(--silver)">${nk}</strong></span></div>
     </div>`;
   }).join('');
   let more = '';
