@@ -3,9 +3,13 @@
 # Yapısal hedef: sweep öncesi 20 mumun en yüksek seviyesi
 # Minimum kar filtresi: %1.25
 # 15 dakika bekleme: ard arda sinyal önlenir
+from datetime import datetime, timezone, timedelta
+TR = timezone(timedelta(hours=3))
 
 import logging
 from typing import Any, Dict, Optional, Tuple
+
+from core.position_store import state_oku, state_yaz
 
 import pandas as pd
 
@@ -120,17 +124,26 @@ def degerlendir(
     nmk["tahmini_sure_saat"] = sure
     nmk["red_neden"]         = None
 
-    son_mum_ts = o15.iloc[-1].name
-    if _son_sinyal_mum_ts == son_mum_ts:
-        if _son_sinyal_giris is not None and (giris_tl >= _son_sinyal_giris or (_son_sinyal_giris - giris_tl) < 0.50):
-            nmk["sinyal"] = False
-            nmk["red_neden"] = "Aynı mumda daha iyi fiyat bekleniyor"
-            return nmk
-        _son_sinyal_giris = giris_tl
-        _son_sinyal_mum_ts = son_mum_ts
-    else:
-        _son_sinyal_giris = giris_tl
-        _son_sinyal_mum_ts = son_mum_ts
+    from datetime import datetime as _dt
+    son_giris_str = state_oku("son_sinyal_giris")
+    son_zaman_str = state_oku("son_sinyal_zaman")
+
+    if son_giris_str and son_zaman_str:
+        try:
+            son_giris = float(son_giris_str)
+            son_zaman = _dt.strptime(son_zaman_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
+            fark_dk = (datetime.now(TR) - son_zaman).total_seconds() / 60
+            if fark_dk < 15:
+                if giris_tl >= son_giris or (son_giris - giris_tl) < 0.50:
+                    state_yaz("son_sinyal_giris", str(giris_tl))
+                    nmk["sinyal"] = False
+                    nmk["red_neden"] = "Aynı mumda daha iyi fiyat bekleniyor"
+                    return nmk
+        except Exception:
+            pass
+
+    state_yaz("son_sinyal_giris", str(giris_tl))
+    state_yaz("son_sinyal_zaman", datetime.now(TR).strftime("%Y-%m-%d %H:%M:%S"))
 
     return nmk
 
