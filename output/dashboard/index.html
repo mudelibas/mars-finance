@@ -1033,13 +1033,15 @@ function statsPanelRender(st) {
     strictStyle += st.strict_success_rate_pct < 50 ? ';color:var(--red)' : ';color:var(--green)';
   }
   el.innerHTML = (
-    '<div class="kpi-grid" style="margin-bottom:var(--space-2);grid-template-columns:1fr 1fr">' +
+    '<div class="kpi-grid" style="margin-bottom:var(--space-2);grid-template-columns:1fr 1fr 1fr">' +
     '<div class="kpi-tile" style="min-height:48px">' +
     '<span class="kpi-tile__label">Ort. hedefe ulaşma</span>' +
     '<span class="kpi-tile__val" style="font-size:16px">' + ortSure + '</span></div>' +
     '<div class="kpi-tile" style="min-height:48px">' +
     '<span class="kpi-tile__label">Süre içi başarı</span>' +
-    '<span class="kpi-tile__val" style="font-size:16px;' + strictStyle + '">' + strictBasari + '</span></div>' +
+    '<div class="kpi-tile" style="min-height:48px">' +
+    '<span class="kpi-tile__label">Ort. net kâr</span>' +
+    '<span class="kpi-tile__val" style="font-size:16px;font-weight:700;color:var(--green)">%' + (st.ort_kar_pct != null ? st.ort_kar_pct.toFixed(2) : '—') + '</span></div>' +
     '</div>' +
     '<div class="kpi-grid">' +
     kpiFormatTile('Açık sinyal', String(akt), '') +

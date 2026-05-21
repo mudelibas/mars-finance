@@ -204,7 +204,18 @@ def istatistik_ozet():
             except Exception:
                 pass
         ort_sure_saat = round(sum(sureler) / len(sureler), 1) if sureler else None
-
+        karlar = []
+        for r in kapalı:
+            d = dict(r["data"])
+            if d.get("close_reason") != "TP":
+                continue
+            try:
+                p = d.get("pnl_gross_pct")
+                if p is not None:
+                    karlar.append(float(p))
+            except Exception:
+                pass
+        ort_kar_pct = round(sum(karlar) / len(karlar), 2) if karlar else None
         # Strict başarı oranı: sadece tahmini süre içinde kapanan TP'ler olumlu
         strict_kazanli = 0
         for r in kapalı:
@@ -231,6 +242,7 @@ def istatistik_ozet():
             "success_rate_pct": success_rate_pct,
             "ort_sure_saat": ort_sure_saat,
             "strict_success_rate_pct": strict_success_rate_pct,
+            "ort_kar_pct": ort_kar_pct,
         }
     except Exception as e:
         logger.error(f"istatistik_ozet hatası: {e}")
