@@ -187,7 +187,7 @@ def istatistik_ozet():
             except Exception:
                 pass
 
-n_kap = len(kapalı)
+        n_kap = len(kapalı)
         toplam_deger = kazançlı + gecici_basarisiz
         success_rate_pct = round(100.0 * kazançlı / toplam_deger, 1) if toplam_deger > 0 else None
 
