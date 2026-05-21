@@ -1,5 +1,3 @@
-# --- Açık sinyal takibi: PostgreSQL kalıcı depolama ---
-
 import json
 import os
 import uuid
@@ -154,12 +152,6 @@ def tüm_kayitlar():
 
 
 def istatistik_ozet():
-    """
-    Dinamik başarı oranı:
-    - Hedefe ulaşan (TP) → başarılı
-    - Açık + tahmini süresi dolmuş → geçici başarısız
-    - Başarı oranı = başarılı / (başarılı + geçici başarısız)
-    """
     try:
         with _conn() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -170,7 +162,6 @@ def istatistik_ozet():
         açık = [r for r in rows if r["status"] == "OPEN"]
         kapalı = [r for r in rows if r["status"] == "CLOSED"]
 
-        # Kazanan kapananlar
         kazançlı = 0
         for r in kapalı:
             p = dict(r["data"]).get("pnl_gross_pct")
@@ -180,7 +171,6 @@ def istatistik_ozet():
             except Exception:
                 pass
 
-        # Açık sinyallerde tahmini süre dolmuş olanlar → geçici başarısız
         gecici_basarisiz = 0
         for r in açık:
             d = dict(r["data"])
@@ -198,7 +188,6 @@ def istatistik_ozet():
         toplam_deger = kazançlı + gecici_basarisiz
         success_rate_pct = round(100.0 * kazançlı / toplam_deger, 1) if toplam_deger > 0 else None
 
-        # Ortalama hedefe ulaşma süresi (sadece TP kapananlar)
         sureler = []
         for r in kapalı:
             d = dict(r["data"])
@@ -211,6 +200,7 @@ def istatistik_ozet():
             except Exception:
                 pass
         ort_sure_saat = round(sum(sureler) / len(sureler), 1) if sureler else None
+
         karlar = []
         for r in kapalı:
             d = dict(r["data"])
@@ -223,7 +213,7 @@ def istatistik_ozet():
             except Exception:
                 pass
         ort_kar_pct = round(sum(karlar) / len(karlar), 2) if karlar else None
-        # Strict başarı oranı: sadece tahmini süre içinde kapanan TP'ler olumlu
+
         strict_kazanli = 0
         for r in kapalı:
             d = dict(r["data"])
@@ -259,9 +249,13 @@ def istatistik_ozet():
             "open_older_24h": 0,
             "wins": 0,
             "success_rate_pct": None,
+            "ort_sure_saat": None,
+            "strict_success_rate_pct": None,
+            "ort_kar_pct": None,
         }
 
-        def state_oku(key: str) -> Optional[str]:
+
+def state_oku(key: str) -> Optional[str]:
     try:
         with _conn() as conn:
             with conn.cursor() as cur:
