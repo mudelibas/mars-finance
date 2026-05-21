@@ -22,7 +22,6 @@
   --text-dim:  #434651;
   --muted:     #787b86;
   --muted2:    #787b86;
-  /* Göstergeler / vurgu */
   --silver:    #4a5568;
   --gold:      #9a7b2e;
   --green:     #26a69a;
@@ -43,7 +42,6 @@
   --shadow-lift: 0 2px 12px rgba(0,0,0,0.08);
   --radius:    16px;
   --radius-sm: 12px;
-  /* 8pt grid: Google/MD3 tarzı ritim */
   --space-1: 8px;
   --space-2: 12px;
   --space-3: 16px;
@@ -102,7 +100,6 @@ body > .site-header {
 }
 body > main { padding-top: 0; padding-bottom: var(--space-6); }
 
-/* Kalan kartlar: alt sekmeler / nadir kullanım */
 .m-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -133,8 +130,7 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
 #tab-panel-ana .price-hero::before,
 #tab-panel-ana .price-hero::after { display: none; }
 
-/* Sekme içi düz alan */
-.log-card, .indicators, .skor, .haberler-panel, .sinyal-panel { margin-bottom: var(--space-section); }
+.log-card, .indicators, .skor, .sinyal-panel { margin-bottom: var(--space-section); }
 
 .site-header {
   position: relative;
@@ -149,7 +145,6 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
   width: 100%;
   background: transparent;
 }
-/* Global sekme çubuğu — simetrik dikey aralık */
 .main-tabs {
   display: flex;
   flex-wrap: nowrap;
@@ -202,7 +197,6 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
   .main-tabs .tabs--main { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
   .main-tabs .tab { flex: 0 0 auto; }
 }
-/* Alt sekme ekran başlığı — sekmelere ayrılmış hava payı */
 .tab-scene > h1.tab-screen-title,
 .tab-scene h1.tab-screen-title {
   font-size: 24px;
@@ -306,8 +300,6 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
   vertical-align: middle;
   line-height: 1.2;
 }
-/* Tab content — single active view: hidden = source of truth, no overlap */
-/* — Tek sahne (scene): aynı anda sadece bir [data-panel] <main> içinde — */
 #app-scene-root {
   width: 100%;
   position: relative;
@@ -371,7 +363,6 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
 }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
-/* Bölüm alt başlıkları (iç) */
 .section-title {
   font-size: 10px;
   font-weight: 600;
@@ -504,7 +495,6 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
 .pill--change .pc-change.flat {
   border: none !important;
 }
-/* Mini gauge (inside price-hero) ═══ */
 .mini-gauge { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-soft); position: relative; z-index: 1; }
 .mini-gauge .perf-inline {
   display: flex;
@@ -626,7 +616,6 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
   line-height: 1.1;
 }
 
-/* Piyasa göstergeleri: dış kutu yok, döşeme kutular */
 .indicators { padding: 0; background: none; border: none; box-shadow: none; margin-bottom: var(--space-section); }
 .indicators * { letter-spacing: 0 !important; }
 .indicators .section-title,
@@ -679,7 +668,6 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
   letter-spacing: 0.1px;
 }
 
-/* ═══ Skor: timeline-style rows (inner cards) ═══ */
 .skor { padding: 24px; }
 .skor-grid { display: flex; flex-direction: column; gap: 0; }
 .m-empty { text-align: center; padding: 28px 20px; color: var(--muted); min-height: 100px; display: flex; align-items: center; justify-content: center; }
@@ -720,7 +708,6 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
 .sinyal-kar { font-size: 13px; }
 .kar-pos { color: #1a7a72; } .kar-neg { color: #c62828; }
 
-/* Sinyal performansı (düz) */
 #tab-panel-ana .kpi-card__head { margin-bottom: var(--space-3); }
 #tab-panel-ana .kpi-card__title {
   font-size: 16px;
@@ -776,60 +763,8 @@ body > main { padding-top: 0; padding-bottom: var(--space-6); }
 #stats-panel .kpi-tile--wide { grid-column: 1 / -1; }
 #stats-panel .kpi-tile--accent { border-color: #e8eaed; }
 #tab-panel-grafik .tradingview-panel { margin: 0; padding: 0; border: 0; background: none; }
-.haber-item { transition: border-color 0.2s, box-shadow 0.2s; }
-#haber-log {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: none;
-  border: 0;
-  margin: 0;
-  padding: 0;
-}
-#haber-log .haber-item { margin: 0; }
-#haber-log .haber-kart {
-  position: relative;
-  background: #fff;
-  border: 1px solid #e8eaed;
-  border-radius: 8px;
-  padding: 36px 10px 10px 10px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-#haber-log .haber-kart--siyasi { border: 1px solid rgba(192, 57, 43, 0.3); }
-#haber-log .haber-kart--finans { border: 1px solid rgba(41, 128, 185, 0.3); }
-#haber-log .haber-item--unread .haber-kart {
-  box-shadow: 0 0 0 1px #1a73e8, 0 1px 2px rgba(0,0,0,0.04);
-  border-color: #c2d4f0;
-  background: #fbfcff;
-}
-#haber-log .haber-item--unread .haber-baslik { font-weight: 700; }
-#haber-log .haber-tier { position: absolute; top: 8px; left: 8px; margin: 0; }
-#haber-log .haber-zaman { position: absolute; top: 8px; right: 8px; text-align: right; }
-.sinyal-panel, .haberler-panel, .tradingview-panel, .piyasa-tab-inner { margin-bottom: var(--space-section); }
-body.view-haber .haberler-panel { background: none; }
 
-h2.section-title { margin: 0 0 16px; }
-.perf-header h2.section-title { margin-bottom: 0; }
-
-.haber-tier {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border: 1px solid;
-}
-.haber-tier.t-kritik { background: var(--red-bg); color: #c62828; border-color: var(--red-border); }
-.haber-tier.t-onemli { background: rgba(245, 124, 0, 0.1); color: #b06000; border-color: rgba(245, 124, 0, 0.3); }
-.haber-tier.t-genel  { background: rgba(41, 98, 255, 0.08);  color: #1e4fc4; border-color: rgba(41, 98, 255, 0.25); }
-.haber-tier.t-siyasi { background: #c0392b; color: #fff; border: none; }
-.haber-tier.t-finans { background: #2980b9; color: #fff; border: none; }
-.haber-zaman { font-size: 10px; color: var(--muted); }
-.haber-baslik { font-size: 14px; font-weight: 700; color: #1a1a1a; line-height: 1.55; word-break: break-word; }
-#haber-log .haber-baslik { text-decoration: none; }
-#haber-log .haber-baslik:hover { text-decoration: underline; }
-.haber-ozet { font-size: 12px; color: var(--text-dim); margin-top: 8px; line-height: 1.55; }
+.sinyal-panel, .tradingview-panel, .piyasa-tab-inner { margin-bottom: var(--space-section); }
 
 #app-scene-root h2.section-title { text-transform: none; }
 .skor h2.section-title { text-transform: none; }
@@ -871,7 +806,6 @@ footer {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Legacy price-row / skor-puan (if referenced) */
 .skor-puan { font-size: 11px; }
 .bar-g, .bar-y, .bar-r { border-radius: 1px; }
 </style>
@@ -906,10 +840,6 @@ footer {
         </button>
         <button type="button" class="tab tab--icononly" id="tab-piyasa" data-panel="piyasa" role="tab" aria-selected="false" aria-label="Piyasa" title="Piyasa">
           <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-        </button>
-        <button type="button" class="tab tab--icononly" id="tab-haber" data-panel="haber" role="tab" aria-selected="false" aria-label="Haberler" title="Haberler">
-          <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2z"/><path d="M6 2v16"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h2"/></svg>
-          <span class="badge" id="haber-badge" style="display:none" aria-hidden="true">0</span>
         </button>
       </nav>
     </div>
@@ -978,91 +908,6 @@ footer {
           </section>
         </div>
       </div>
-      <div id="tab-panel-haber" class="tab-scene" data-panel="haber" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-haber" aria-label="Haberler">
-        <h1 class="tab-screen-title">Haberler</h1>
-        <div class="haberler-panel" id="haber-panel-wrap">
-
-          <!-- FED GERİ SAYIM -->
-          <div style="margin-bottom:24px">
-            <p style="font-size:13px;color:var(--muted);margin:0 0 4px 0">Sıradaki FED Kararına</p>
-            <p id="fed-countdown" style="font-size:15px;font-weight:600;color:var(--text);margin:0">— gün — saat — dakika — saniye kaldı</p>
-          </div>
-
-          <!-- TRUMP NE DEDİ -->
-          <div style="margin-bottom:24px">
-            <h2 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 12px 0">Trump Ne Dedi?</h2>
-            <div id="trump-posts">
-              <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 4px 0">30 Nis 2026 · 14:32</p>
-                <p style="font-size:13px;color:var(--text);margin:0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-              </div>
-              <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 4px 0">30 Nis 2026 · 11:15</p>
-                <p style="font-size:13px;color:var(--text);margin:0">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-              </div>
-              <div style="margin-bottom:0;padding-bottom:0">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 4px 0">29 Nis 2026 · 22:47</p>
-                <p style="font-size:13px;color:var(--text);margin:0">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- GÜMÜŞ & ALTIN SON DAKİKA -->
-          <div style="margin-bottom:24px">
-            <h2 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 12px 0">Gümüş & Altın Son Dakika</h2>
-            <div id="gumus-altin-haberler">
-              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">17:11</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Gümüş fiyatları rekor kırdı, analistler yorum yaptı</p>
-              </div>
-              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">15:25</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Altın ons fiyatı Fed beklentisiyle geriledi</p>
-              </div>
-              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">13:40</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Gümüş talebinde Çin kaynaklı artış gözlemlendi</p>
-              </div>
-              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">11:05</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Altın yatırımcıları enflasyon verisini bekliyor</p>
-              </div>
-              <div>
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">09:30</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Gümüş ETF alımları hız kazandı</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- POLİTİKA -->
-          <div style="margin-bottom:24px">
-            <h2 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 12px 0">Politika</h2>
-            <div id="politika-haberler">
-              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">16:45</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">İran ile müzakereler yeniden başladı, piyasalar izliyor</p>
-              </div>
-              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">14:20</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Trump yeni yaptırım paketini açıkladı</p>
-              </div>
-              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">12:37</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Hürmüz Boğazı'nda gerilim tırmanıyor</p>
-              </div>
-              <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">10:15</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Ortadoğu'da ateşkes görüşmeleri sürdü</p>
-              </div>
-              <div>
-                <p style="font-size:10px;color:var(--muted);margin:0 0 2px 0">08:52</p>
-                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0">Rusya petrol ihracatında kısıtlamaya gidiyor</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
     </div>
   </main>
 
@@ -1070,7 +915,6 @@ footer {
 
 <script>
 const API = '';
-let haberLog = [];
 let openSigsExpand = false;
 let lastOpenSigs = [];
 function _esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1091,7 +935,6 @@ function netHedefYuzde(g, h) {
 }
 
 function selectTab(name) {
-  document.body.classList.toggle('view-haber', name === 'haber');
   document.querySelectorAll('.tab[data-panel]').forEach(function (t) {
     const on = t.getAttribute('data-panel') === name;
     t.classList.toggle('active', on);
@@ -1123,7 +966,6 @@ function initHeaderTabs() {
   }
 }
 initHeaderTabs();
-initHaberOkunduClicks();
 selectTab('ana');
 
 function cc(v) { return v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--muted2)'; }
@@ -1149,7 +991,6 @@ function _gerisayimMetni(created, tahminiSureStr) {
   if (!created || !tahminiSureStr) return null;
   const sure = parseInt(tahminiSureStr, 10);
   if (!(sure > 0)) return null;
-  // "2026-04-28 05:27:36" → TR+3 varsayımıyla parse
   const iso = String(created).replace(' ', 'T') + '+03:00';
   const bitis = new Date(new Date(iso).getTime() + sure * 3600 * 1000);
   const kalan = bitis - Date.now();
@@ -1275,71 +1116,6 @@ function sinyalTabLedgerRender(ledger) {
   el.innerHTML = '<table class="ledger-tbl" role="table" aria-label="Sinyal defteri"><thead><tr><th>Tarih</th><th>Giriş</th><th>Hedef</th><th>Durum</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
-var MARS_HABER_OKU_LS = 'mars_finance_haber_okunmus_id';
-function _haberOkunmusKumesi() {
-  try {
-    return new Set((JSON.parse(localStorage.getItem(MARS_HABER_OKU_LS) || '[]') || []).map(String));
-  } catch (e) { return new Set(); }
-}
-function _haberOkuKaydetId(id) {
-  if (id == null) return;
-  const s = _haberOkunmusKumesi();
-  s.add(String(id));
-  try { localStorage.setItem(MARS_HABER_OKU_LS, JSON.stringify(Array.from(s))); } catch (e) { /* yok */ }
-}
-function _haberOkunmadiSay(l) {
-  const oku = _haberOkunmusKumesi();
-  return (l || []).filter(function (h) { return h && h.id != null && !oku.has(String(h.id)); }).length;
-}
-function guncelleHaberBadge() {
-  var n = _haberOkunmadiSay(haberLog);
-  var hb = document.getElementById('haber-badge');
-  if (hb) {
-    hb.textContent = String(n);
-    hb.style.display = n > 0 ? 'inline-block' : 'none';
-    hb.setAttribute('aria-hidden', n > 0 ? 'false' : 'true');
-  }
-}
-function initHaberOkunduClicks() {
-  var root = document.getElementById('haber-log');
-  if (!root) return;
-  root.addEventListener('click', function (e) {
-    var t = e.target;
-    if (!t || !t.closest) return;
-    var a = t.closest('a.haber-baslik');
-    if (!a) return;
-    var row = a.closest('.haber-item');
-    if (!row) return;
-    var id = row.getAttribute('data-haber-id');
-    if (id) {
-      _haberOkuKaydetId(id);
-      row.classList.remove('haber-item--unread');
-      guncelleHaberBadge();
-    }
-  });
-}
-
-function haberLogRender() {
-  const el = document.getElementById('haber-log');
-  if (!el) return;
-  if (!haberLog.length) { el.innerHTML = '<div class="log-bos">Haber yok (RSS tüketimi API üzerinden).</div>'; guncelleHaberBadge(); return; }
-  const oku = _haberOkunmusKumesi();
-  el.innerHTML = haberLog.map((h) => {
-    const hid = h && h.id != null ? String(h.id) : '';
-    const un = hid && !oku.has(hid);
-    const tier = (h.tier || 'genel').toString().toLowerCase();
-    const kartTier = tier === 'siyasi' ? ' haber-kart--siyasi' : tier === 'finans' ? ' haber-kart--finans' : '';
-    return `<div class="haber-item${un ? ' haber-item--unread' : ''}" data-haber-id="${_esc(hid)}">
-      <div class="haber-kart${kartTier}">
-        <span class="haber-tier t-${tier}">${(h.tier || 'genel').toUpperCase()}</span>
-        <span class="haber-zaman">${h.zaman || '--'}</span>
-        <a class="haber-baslik" href="${_esc(h.link || '#')}" target="_blank" rel="noopener">${_esc(h.title || '')}</a>
-      </div>
-    </div>`;
-  }).join('');
-  guncelleHaberBadge();
-}
-
 function setIdText(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
@@ -1348,12 +1124,9 @@ function setIdText(id, value) {
 async function veriYukle() {
   setIdText('son-guncelleme', '···');
   try {
-    console.log('🔍 API URL:', API+'/api/durum');
     const r = await fetch(API+'/api/durum');
-    console.log('📡 Response status:', r.status);
     if(!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
-    console.log('📊 Data received:', d);
 
     const ga=d.gumus_alis, gs=d.gumus_satis, gm=d.gumus_makas;
     const gd=d.gumus_degisim??0;
@@ -1373,7 +1146,7 @@ async function veriYukle() {
       gcEl.textContent = 'Günlük değişim ' + cs(gd);
       gcEl.className = 'pc-change ' + (gd>0?'up':gd<0?'down':'flat');
     }
-    
+
     const p = d.piyasa_gostergeler || {};
     const vix = p.vix ?? 0, dxy = p.dxy ?? 0, dxyD = p.dxy_degisim ?? 0;
     const altinEndeks = p.altin ?? 0, altinEndeksD = p.altin_degisim_yuzde ?? 0;
@@ -1420,9 +1193,6 @@ async function veriYukle() {
     statsPanelRender(d.stats);
     sinyalTabLedgerRender(d.signal_ledger);
 
-    if (d.haberler && d.haberler.length) { haberLog = d.haberler.slice(0, 20); } else { haberLog = []; }
-    haberLogRender();
-
     {
       const gu = d.guncelleme || '';
       if (gu.length >= 16) {
@@ -1440,7 +1210,6 @@ async function veriYukle() {
 
 window.onload=veriYukle;
 setInterval(veriYukle,30000);
-// Geri sayımı her dakika API'ye gitmeden yenile
 setInterval(function() {
   if (lastOpenSigs && lastOpenSigs.length) {
     openSignalsHomeRender(lastOpenSigs, openSigsExpand);

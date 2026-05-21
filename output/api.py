@@ -18,7 +18,6 @@ from core.data_engine import (
 )
 from core.signal_engine import sinyal_uret
 from core import position_store as pstore
-from modules.news import haber_listesi
 import config as cfg
 
 logger = logging.getLogger(__name__)
@@ -76,7 +75,6 @@ def durum():
                 "aktif_sinyal": st.get("active_count", 0),
                 "open_older_24h": st.get("open_older_24h", 0),
             },
-            "haberler": haber_listesi()[:10],
             "veto_neden": veto,
             "guncelleme": datetime.now(TR).replace(microsecond=0).isoformat(),
             "gumus_usd": xag_usd,
