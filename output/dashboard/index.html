@@ -830,17 +830,6 @@ footer {
         <button type="button" class="tab tab--icononly" id="tab-sinyal" data-panel="sinyal" role="tab" aria-selected="false" aria-label="Sinyal" title="Sinyal">
           <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         </button>
-        <button type="button" class="tab tab--icononly" id="tab-grafik" data-panel="grafik" role="tab" aria-selected="false" title="Grafik" aria-label="Grafik">
-          <svg class="tab-ic" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <line x1="5" y1="4" x2="5" y2="20" fill="none"/>
-            <rect x="2" y="8" width="6" height="6" rx="0.5" stroke="none"/>
-            <line x1="19" y1="3" x2="19" y2="20" fill="none"/>
-            <rect x="16" y="6" width="6" height="8" rx="0.5" stroke="none"/>
-          </svg>
-        </button>
-        <button type="button" class="tab tab--icononly" id="tab-piyasa" data-panel="piyasa" role="tab" aria-selected="false" aria-label="Piyasa" title="Piyasa">
-          <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-        </button>
       </nav>
     </div>
     <div id="app-scene-root" class="app-scene-root" role="presentation" aria-label="Pano ekranları">
@@ -882,30 +871,10 @@ footer {
           </div>
         </section>
       </div>
-
       <div id="tab-panel-sinyal" class="tab-scene" data-panel="sinyal" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-sinyal" aria-label="Sinyal defteri">
         <h1 class="tab-screen-title">Son 30 sinyal</h1>
         <div class="sinyal-panel" id="sinyal-panel-wrap">
           <div id="sinyal-tab-ledger" class="ledger-wrap"><div class="log-bos">—</div></div>
-        </div>
-      </div>
-      <div id="tab-panel-grafik" class="tab-scene" data-panel="grafik" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-grafik" aria-label="Gümüş grafiği">
-        <h1 class="tab-screen-title">Gümüş 24 saat</h1>
-        <div class="tradingview-panel" style="margin:0">
-<div style="height:500px;width:100%">
-<iframe src="https://s.tradingview.com/embed-widget/advanced-chart/?locale=tr#%7B%22symbol%22%3A%22FX_IDC%3AXAGTRYG%22%2C%22interval%22%3A%2215%22%2C%22theme%22%3A%22light%22%2C%22style%22%3A%221%22%2C%22timezone%22%3A%22Europe%2FIstanbul%22%2C%22hide_top_toolbar%22%3Afalse%2C%22hide_side_toolbar%22%3Atrue%2C%22autosize%22%3Atrue%7D" style="width:100%;height:100%;border:none"></iframe>
-</div>
-        </div>
-      </div>
-      <div id="tab-panel-piyasa" class="tab-scene" data-panel="piyasa" role="tabpanel" hidden aria-hidden="true" aria-labelledby="tab-piyasa" aria-label="Piyasalar">
-        <h1 class="tab-screen-title">Piyasalar</h1>
-        <div class="piyasa-tab-inner">
-          <section class="region-indicators" aria-label="Piyasalar">
-            <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=tr#%7B%22symbol%22%3A%22TVC%3AGOLD%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22160%22%2C%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Atrue%7D" style="width:100%;height:160px;border:none;border-radius:12px;margin-bottom:12px"></iframe>
-            <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=tr#%7B%22symbol%22%3A%22FX_IDC%3AXAGTRYG%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22160%22%2C%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Atrue%7D" style="width:100%;height:160px;border:none;border-radius:12px;margin-bottom:12px"></iframe>
-            <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=tr#%7B%22symbol%22%3A%22TVC%3ADXY%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22160%22%2C%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Atrue%7D" style="width:100%;height:160px;border:none;border-radius:12px;margin-bottom:12px"></iframe>
-            <iframe src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=tr#%7B%22symbol%22%3A%22TVC%3AUSOIL%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22160%22%2C%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Atrue%7D" style="width:100%;height:160px;border:none;border-radius:12px"></iframe>
-          </section>
         </div>
       </div>
     </div>
