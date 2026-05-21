@@ -273,7 +273,7 @@ def istatistik_ozet():
         return None
 
 
-        def _state_yaz(key: str, value: str):
+def state_yaz(key: str, value: str):
     try:
         with _conn() as conn:
             with conn.cursor() as cur:
