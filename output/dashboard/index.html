@@ -1063,15 +1063,15 @@ function statsPanelRender(st) {
   if (st.strict_success_rate_pct != null) {
     strictStyle += st.strict_success_rate_pct < 50 ? ';color:var(--red)' : ';color:var(--green)';
   }
-  el.innerHTML += '<div class="kpi-grid" style="margin-bottom:var(--space-2)">' +
+  el.innerHTML = (
+    '<div class="kpi-grid" style="margin-bottom:var(--space-2)">' +
     '<div class="kpi-tile" style="min-height:48px">' +
     '<span class="kpi-tile__label">Ort. hedefe ulaşma</span>' +
     '<span class="kpi-tile__val" style="font-size:16px">' + ortSure + '</span></div>' +
     '<div class="kpi-tile" style="min-height:48px">' +
     '<span class="kpi-tile__label">Süre içi başarı</span>' +
     '<span class="kpi-tile__val" style="font-size:16px;' + strictStyle + '">' + strictBasari + '</span></div>' +
-    '</div>';
-  el.innerHTML = (
+    '</div>' +
     '<div class="kpi-grid">' +
     kpiFormatTile('Açık sinyal', String(akt), '') +
     kpiFormatTile('Hedefe ulaşan', String(hedef), '') +
