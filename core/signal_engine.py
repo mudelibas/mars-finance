@@ -122,7 +122,7 @@ def degerlendir(
 
     son_mum_ts = o15.iloc[-1].name
     if _son_sinyal_mum_ts == son_mum_ts:
-        if _son_sinyal_giris is not None and giris_tl >= _son_sinyal_giris:
+        if _son_sinyal_giris is not None and (giris_tl >= _son_sinyal_giris or (_son_sinyal_giris - giris_tl) < 0.50):
             nmk["sinyal"] = False
             nmk["red_neden"] = "Aynı mumda daha iyi fiyat bekleniyor"
             return nmk
