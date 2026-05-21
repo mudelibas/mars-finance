@@ -187,16 +187,50 @@ def istatistik_ozet():
             except Exception:
                 pass
 
-        n_kap = len(kapalı)
+n_kap = len(kapalı)
         toplam_deger = kazançlı + gecici_basarisiz
         success_rate_pct = round(100.0 * kazançlı / toplam_deger, 1) if toplam_deger > 0 else None
+
+        # Ortalama hedefe ulaşma süresi (sadece TP kapananlar)
+        sureler = []
+        for r in kapalı:
+            d = dict(r["data"])
+            if d.get("close_reason") != "TP":
+                continue
+            try:
+                created = datetime.strptime(d["created"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
+                closed = datetime.strptime(d["closed"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
+                sureler.append((closed - created).total_seconds() / 3600)
+            except Exception:
+                pass
+        ort_sure_saat = round(sum(sureler) / len(sureler), 1) if sureler else None
+
+        # Strict başarı oranı: sadece tahmini süre içinde kapanan TP'ler olumlu
+        strict_kazanli = 0
+        for r in kapalı:
+            d = dict(r["data"])
+            if d.get("close_reason") != "TP":
+                continue
+            try:
+                sure = int(d.get("tahmini_sure_saat") or 28)
+                created = datetime.strptime(d["created"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
+                closed = datetime.strptime(d["closed"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
+                gecen = (closed - created).total_seconds() / 3600
+                if gecen <= sure:
+                    strict_kazanli += 1
+            except Exception:
+                pass
+        strict_toplam = strict_kazanli + gecici_basarisiz
+        strict_success_rate_pct = round(100.0 * strict_kazanli / strict_toplam, 1) if strict_toplam > 0 else None
 
         return {
             "active_count": len(açık),
             "closed_count": n_kap,
-            "open_older_24h": gecici_basarisiz,  # geçici başarısız
+            "open_older_24h": gecici_basarisiz,
             "wins": kazançlı,
             "success_rate_pct": success_rate_pct,
+            "ort_sure_saat": ort_sure_saat,
+            "strict_success_rate_pct": strict_success_rate_pct,
         }
     except Exception as e:
         logger.error(f"istatistik_ozet hatası: {e}")

@@ -1057,6 +1057,20 @@ function statsPanelRender(st) {
     if (ko < 50) basariValStyle += ';color:var(--red)';
     else basariValStyle += ';color:var(--green)';
   }
+  const ortSure = st.ort_sure_saat != null ? st.ort_sure_saat + ' saat' : '—';
+  const strictBasari = st.strict_success_rate_pct != null ? st.strict_success_rate_pct.toFixed(1) + ' %' : '—';
+  let strictStyle = 'font-weight:700';
+  if (st.strict_success_rate_pct != null) {
+    strictStyle += st.strict_success_rate_pct < 50 ? ';color:var(--red)' : ';color:var(--green)';
+  }
+  el.innerHTML += '<div class="kpi-grid" style="margin-bottom:var(--space-2)">' +
+    '<div class="kpi-tile" style="min-height:48px">' +
+    '<span class="kpi-tile__label">Ort. hedefe ulaşma</span>' +
+    '<span class="kpi-tile__val" style="font-size:16px">' + ortSure + '</span></div>' +
+    '<div class="kpi-tile" style="min-height:48px">' +
+    '<span class="kpi-tile__label">Süre içi başarı</span>' +
+    '<span class="kpi-tile__val" style="font-size:16px;' + strictStyle + '">' + strictBasari + '</span></div>' +
+    '</div>';
   el.innerHTML = (
     '<div class="kpi-grid">' +
     kpiFormatTile('Açık sinyal', String(akt), '') +
