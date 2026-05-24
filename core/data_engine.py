@@ -91,7 +91,18 @@ def get_silver_mtf(
     except Exception as e:
         logger.error(f"yfinance MTF hatası: {e}")
         o15 = None
-    out: Dict[str, Any] = {"1m": None, "5m": None, "15m": o15}
+        try:
+        df1h = yf.download("SI=F", period="60d", interval="1h", progress=False, auto_adjust=True)
+        if df1h is not None and len(df1h) > 0:
+            df1h.columns = [c[0] if isinstance(c, tuple) else c for c in df1h.columns]
+            df1h.index.name = "ts"
+            o1h = _normalize_ohlcv_df(df1h)
+        else:
+            o1h = None
+    except Exception as e:
+        logger.error(f"yfinance 1h hatası: {e}")
+        o1h = None
+    out: Dict[str, Any] = {"1m": None, "5m": None, "15m": o15, "1h": o1h}
     _SILVER_MTF_CACHE = {"data": out, "ts": now}
     return out
 
