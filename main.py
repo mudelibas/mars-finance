@@ -163,11 +163,17 @@ async def fiyat_takip_job():
                     f"Giriş: ₺{g_tl:.2f} → Çıkış: ₺{cikis:.2f}\n"
                     f"Kâr: %{pnl:.2f}"
                 )
-                await bot.send_message(
-                    chat_id=cfg.TELEGRAM_GROUP_ID,
-                    text=msg,
-                    reply_to_message_id=mes_id,
-                )
+                try:
+                    await bot.send_message(
+                        chat_id=cfg.TELEGRAM_GROUP_ID,
+                        text=msg,
+                        reply_to_message_id=mes_id,
+                    )
+                except Exception:
+                    await bot.send_message(
+                        chat_id=cfg.TELEGRAM_GROUP_ID,
+                        text=msg,
+                    )
                 pstore.sinyal_kapat(mid, 0, "TP", cikis_tl=cikis)
 
             else:
