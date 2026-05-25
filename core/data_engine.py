@@ -20,11 +20,9 @@ _MARKET_CONTEXT_TTL = 300.0
 _SILVER_MTF_CACHE: Dict[str, Any] = {"data": None, "ts": 0.0}
 _MTF_TTL = 300.0
 
-# Yahoo-tarzı emtia/sembol isimlerinden Twelve Data sembollerine (SI=F / GC=F COMEX)
 TICKER_XAG = "SI=F"
 TICKER_XAU = "GC=F"
 
-# yfinance aralık → Twelve Data
 _YF_INT_TO_TD = {
     "1m": "1min",
     "2m": "2min",
@@ -66,20 +64,16 @@ def _normalize_ohlcv_df(df: pd.DataFrame) -> Optional[pd.DataFrame]:
 def get_silver_mtf(
     period_1m: str = "5d", period_5m: str = "1mo", period_15m: str = "2mo"
 ):
-    """
-    15m: yfinance (SI=F) üzerinden 500 mum.
-    1m ve 5m artık kullanılmıyor, None döner.
-    Dönen: {"1m": None, "5m": None, "15m": df}
-    Sonuç 300 sn boyunca in-memory cache'ten servis edilir.
-    """
     del period_1m, period_5m, period_15m
     global _SILVER_MTF_CACHE
     now = time.time()
     t0 = float(_SILVER_MTF_CACHE.get("ts") or 0.0)
     if t0 and (now - t0) < _MTF_TTL:
         return _SILVER_MTF_CACHE["data"]
+
+    import yfinance as yf
+
     try:
-        import yfinance as yf
         df = yf.download("SI=F", period="5d", interval="15m", progress=False, auto_adjust=True)
         if df is not None and len(df) > 0:
             df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
@@ -91,7 +85,8 @@ def get_silver_mtf(
     except Exception as e:
         logger.error(f"yfinance MTF hatası: {e}")
         o15 = None
-        try:
+
+    try:
         df1h = yf.download("SI=F", period="60d", interval="1h", progress=False, auto_adjust=True)
         if df1h is not None and len(df1h) > 0:
             df1h.columns = [c[0] if isinstance(c, tuple) else c for c in df1h.columns]
@@ -102,6 +97,7 @@ def get_silver_mtf(
     except Exception as e:
         logger.error(f"yfinance 1h hatası: {e}")
         o1h = None
+
     out: Dict[str, Any] = {"1m": None, "5m": None, "15m": o15, "1h": o1h}
     _SILVER_MTF_CACHE = {"data": out, "ts": now}
     return out
@@ -147,9 +143,7 @@ def get_silver_price_dunyakatilim():
             satis = float(match.group(2).replace(",", "."))
             makas = _dunya_makas(alis, satis)
             _fiyat_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
-            logger.info(
-                f"Gümüş fiyatı: alış={alis}, satış={satis}, makas={makas}"
-            )
+            logger.info(f"Gümüş fiyatı: alış={alis}, satış={satis}, makas={makas}")
             return alis, satis, makas
         logger.error("Gümüş fiyatı regex eşleşmedi - HTML yapısı değişmiş olabilir")
         return None, None, None
@@ -187,9 +181,7 @@ def get_gold_price_dunyakatilim():
             satis = float(match.group(2).replace(",", ""))
             makas = _dunya_makas(alis, satis)
             _altin_cache = {"alis": alis, "satis": satis, "zaman": time.time()}
-            logger.info(
-                f"Altın fiyatı: alış={alis}, satış={satis}, makas={makas}"
-            )
+            logger.info(f"Altın fiyatı: alış={alis}, satış={satis}, makas={makas}")
             return alis, satis, makas
         logger.error("Altın fiyatı regex eşleşmedi - HTML yapısı değişmiş olabilir")
         return None, None, None
@@ -222,4 +214,3 @@ def get_market_context() -> Dict[str, Any]:
         ctx["gumus_degisim_yuzde"] = 0.0
     _MARKET_CONTEXT_CACHE = {"data": ctx, "ts": now}
     return ctx
-
