@@ -1,30 +1,17 @@
-# --- Gümüş: Sweep + Reclaim sinyal motoru ---
-# Sadece LONG (AL) sinyali
-# Yapısal hedef: sweep öncesi 20 mumun en yüksek seviyesi
-# Minimum kar filtresi: %1.25
-# 15 dakika bekleme: ard arda sinyal önlenir
 from datetime import datetime, timezone, timedelta
-TR = timezone(timedelta(hours=3))
-
 import logging
 from typing import Any, Dict, Optional, Tuple
 
-from core.position_store import state_oku, state_yaz
-
 import pandas as pd
 
-from core.data_engine import (
-    get_silver_mtf,
-    get_silver_price_dunyakatilim,
-)
+from core.data_engine import get_silver_mtf, get_silver_price_dunyakatilim
+from core.position_store import state_oku, state_yaz
 
 logger = logging.getLogger(__name__)
+TR = timezone(timedelta(hours=3))
 
 SEVIYE_PENCERE = 20
 MIN_KAR_CARPAN = 1.0125
-
-_son_sinyal_giris: float | None = None
-_son_sinyal_mum_ts: Any | None = None
 
 
 def _tahmini_sure(net_kar: float) -> int:
@@ -55,7 +42,6 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
     reclaim_close = float(reclaim_mum["Close"])
     reclaim_open  = float(reclaim_mum["Open"])
 
-    # Sadece LONG
     if (sweep_low < onceki_dusuk and
             sweep_close > onceki_dusuk and
             reclaim_close > reclaim_open):
@@ -72,7 +58,6 @@ def _sweep_reclaim(o15: pd.DataFrame) -> Tuple[bool, Optional[str], Optional[flo
 def degerlendir(
     config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    global _son_sinyal_giris, _son_sinyal_mum_ts
     del config
 
     nmk: Dict[str, Any] = {
@@ -86,19 +71,18 @@ def degerlendir(
         "red_neden": None,
     }
 
-    # Fiyat verisi
     al, st, mks = get_silver_price_dunyakatilim()
     if al is None or st is None:
         nmk["red_neden"] = "Dünya Katılım fiyat alınamadı"
         return nmk
 
-    # Mum verisi
     mtf = get_silver_mtf()
     o15 = (mtf or {}).get("15m")
     if o15 is None or len(o15) < SEVIYE_PENCERE + 2:
         nmk["red_neden"] = "15m verisi yetersiz"
         return nmk
-        o1h = (mtf or {}).get("1h")
+
+    o1h = (mtf or {}).get("1h")
     if o1h is not None and len(o1h) >= 50:
         ema50 = o1h["Close"].ewm(span=50, adjust=False).mean().iloc[-1]
         guncel_fiyat = float(o1h["Close"].iloc[-1])
@@ -106,18 +90,27 @@ def degerlendir(
             nmk["red_neden"] = "1h EMA50 altında, trend aşağı"
             return nmk
 
-    # Sweep + Reclaim
     sinyal, yon, giris_usd, hedef_yuzde = _sweep_reclaim(o15)
     if not sinyal:
         nmk["red_neden"] = "Sweep+Reclaim yok"
         return nmk
 
-    # Minimum kar filtresi
     if hedef_yuzde < MIN_KAR_CARPAN:
         nmk["red_neden"] = f"Yapısal hedef yetersiz (%{(hedef_yuzde-1)*100:.2f} < %1.25)"
         return nmk
 
-    # Dünya Katılım fiyatına uygula
+    rsi_seri = o15["Close"].diff()
+    kazanc = rsi_seri.clip(lower=0)
+    kayip = -rsi_seri.clip(upper=0)
+    ort_kazanc = kazanc.ewm(span=14, adjust=False).mean()
+    ort_kayip = kayip.ewm(span=14, adjust=False).mean()
+    rs = ort_kazanc / ort_kayip
+    rsi = 100 - (100 / (1 + rs))
+    rsi_son = float(rsi.iloc[-1])
+    if rsi_son > 30:
+        nmk["red_neden"] = f"RSI {rsi_son:.1f} > 30, aşırı satım yok"
+        return nmk
+
     giris_tl = float(st)
     hedef_tl = round(giris_tl * hedef_yuzde, 4)
     net_kar  = (hedef_yuzde - 1.0) * 100.0
@@ -131,26 +124,13 @@ def degerlendir(
     nmk["tahmini_sure_saat"] = sure
     nmk["red_neden"]         = None
 
-    from datetime import datetime as _dt
-    from core.data_engine import get_silver_mtf
-    rsi_seri = o15["Close"].diff()
-    kazanc = rsi_seri.clip(lower=0)
-    kayip = -rsi_seri.clip(upper=0)
-    ort_kazanc = kazanc.ewm(span=14, adjust=False).mean()
-    ort_kayip = kayip.ewm(span=14, adjust=False).mean()
-    rs = ort_kazanc / ort_kayip
-    rsi = 100 - (100 / (1 + rs))
-    rsi_son = float(rsi.iloc[-1])
-    if rsi_son > 30:
-        nmk["red_neden"] = f"RSI {rsi_son:.1f} > 30, aşırı satım yok"
-        return nmk
     son_giris_str = state_oku("son_sinyal_giris")
     son_zaman_str = state_oku("son_sinyal_zaman")
 
     if son_giris_str and son_zaman_str:
         try:
             son_giris = float(son_giris_str)
-            son_zaman = _dt.strptime(son_zaman_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
+            son_zaman = datetime.strptime(son_zaman_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TR)
             fark_dk = (datetime.now(TR) - son_zaman).total_seconds() / 60
             if fark_dk < 15:
                 if giris_tl >= son_giris or (son_giris - giris_tl) < 0.50:
