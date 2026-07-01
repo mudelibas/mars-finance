@@ -82,14 +82,6 @@ def degerlendir(
         nmk["red_neden"] = "15m verisi yetersiz"
         return nmk
 
-    o1h = (mtf or {}).get("1h")
-    if o1h is not None and len(o1h) >= 50:
-        ema50 = o1h["Close"].ewm(span=50, adjust=False).mean().iloc[-1]
-        guncel_fiyat = float(o1h["Close"].iloc[-1])
-        if guncel_fiyat < ema50:
-            nmk["red_neden"] = "1h EMA50 altında, trend aşağı"
-            return nmk
-
     sinyal, yon, giris_usd, hedef_yuzde = _sweep_reclaim(o15)
     if not sinyal:
         nmk["red_neden"] = "Sweep+Reclaim yok"
@@ -97,18 +89,6 @@ def degerlendir(
 
     if hedef_yuzde < MIN_KAR_CARPAN:
         nmk["red_neden"] = f"Yapısal hedef yetersiz (%{(hedef_yuzde-1)*100:.2f} < %1.25)"
-        return nmk
-
-    rsi_seri = o15["Close"].diff()
-    kazanc = rsi_seri.clip(lower=0)
-    kayip = -rsi_seri.clip(upper=0)
-    ort_kazanc = kazanc.ewm(span=14, adjust=False).mean()
-    ort_kayip = kayip.ewm(span=14, adjust=False).mean()
-    rs = ort_kazanc / ort_kayip
-    rsi = 100 - (100 / (1 + rs))
-    rsi_son = float(rsi.iloc[-1])
-    if rsi_son > 30:
-        nmk["red_neden"] = f"RSI {rsi_son:.1f} > 30, aşırı satım yok"
         return nmk
 
     giris_tl = float(st)
